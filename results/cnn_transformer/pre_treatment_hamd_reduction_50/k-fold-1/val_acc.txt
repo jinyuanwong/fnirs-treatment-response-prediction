@@ -1,1 +1,0 @@
- accuracy: 0.8 | sensitivity: 0.5 | specificity: 1.0 | duration: 0 | F1-score: 0.7809500098228455 | AUC: 0.75 || current_time_seed: 1706088666| message: v1| parameter: {'hb_path': 'data.npy'}| monitor_metric: accuracy

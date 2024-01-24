@@ -1,0 +1,1 @@
+scp -r ./allData $s5:~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/
