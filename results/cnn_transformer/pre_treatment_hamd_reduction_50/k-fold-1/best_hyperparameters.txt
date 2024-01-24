@@ -1,0 +1,22 @@
+hyperparameters = {
+    Test = Adding CLS and using Traditional Position encoding (10000)and CNN encoding 
+    batch_size = 128 
+    kernel_size_1 = (4, 5) 
+    stride_size_1 = (1, 2) 
+    kernel_size_2 = (1, 5) 
+    stride_size_2 = (1, 2) 
+    kernel_size = [(4, 5), (1, 5)] 
+    stride_size = [(1, 2), (1, 2)] 
+    output_channel = 4 
+    d_model = 64 
+    dropout_rate = 0.4 
+    n_layers = 12 
+    FFN_units = 256 
+    n_heads = 4 
+    num_class = 2 
+    activation = gelu 
+    num_of_last_dense = 2 
+    l2_rate = 0.001 
+    learning_rate = CustomSchedule(d_model * FFN_units * n_layers, 200) 
+    optimizer = tf.keras.optimizers.AdamW(learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-9) 
+}

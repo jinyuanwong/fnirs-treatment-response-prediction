@@ -1,4 +1,5 @@
 
+For simple running the code and training 
 
 
 Explaination of different files

@@ -1,0 +1,2 @@
+accuracy,sensitivity,specificity,duration,F1-score,AUC
+0.66667,0.0,0.8,39.78098,0.66667,0.4

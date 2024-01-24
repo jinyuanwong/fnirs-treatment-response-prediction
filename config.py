@@ -12,8 +12,8 @@ import numpy as np
 #         'HbO-right-PSFC-classification'
 #         ]
 
-INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
-# INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50'] # for prognosis
+# INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
+INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50'] # for prognosis
 
 # INPUT_HB_TYPE = [
 #                 'HbO-left-STG-classification',
@@ -43,15 +43,15 @@ MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
 # PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-Lowmid-High/'
 PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD/'
 
-DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
-# DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
+# DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
+DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
 
 
 MONITOR_METRIC = 'accuracy'  # 'val_accuracy'
 
 PARAMETER = {
     'graphsage_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'neighbour_matrix.npy',
         'depth': np.random.choice([1, 2, 3, 4]),
         'n_layers': np.random.choice([2, 4, 6]),
@@ -61,7 +61,7 @@ PARAMETER = {
         'lstm_unit': np.random.choice([64, 128, 256])
     },
     'mvg_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'multiview_adj_matrix5.npy',
         'batch_size': 128,
         'mvg_layers_depth': 1,  # np.random.choice([1,2,3,4])
@@ -71,7 +71,7 @@ PARAMETER = {
         'l2_rate': 0.001  # np.random.choice([0.001, 0.005, 0.01]),
     },
     'mgm_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'multiview_adj_matrix5.npy',
         'batch_size': 128,
         'n_layers': 12,  # np.random.choice([2, 4, 6]),
@@ -81,33 +81,33 @@ PARAMETER = {
         'lstm_unit': np.random.choice([64, 128, 256])
     },
     'cnn_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
     },
     'gnn': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'neighbour_matrix.npy',
     },
     'comb_cnn': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
     },
     'gnn_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'euclidean_matrix.npy',
     },
     'rggcnn_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'neighbour_matrix.npy',
         'rggcnn_layers': 4
     },    
     'gin_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'neighbour_matrix.npy',
     },
     'transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
     },
     'mgn_transformer': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'euclidean_mgn_matrix.npy',
         'batch_size': 128,
         'mvg_layers_depth': 1,  # np.random.choice([1,2,3,4])
@@ -133,7 +133,7 @@ PARAMETER = {
         'activation': 'relu'
     },
     'yu_gnn': {
-        'hb_path': 'correct_channel_data.npy',
+        'hb_path': 'data.npy',
         'adj_path': 'A_1.npy',
     },
 }
