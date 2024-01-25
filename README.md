@@ -16,9 +16,6 @@
     > `scripts/bash/response_prediction.sh`
 
 - use this bash file to terminate the file
-    > `scripts/bash/clear.sh`
-
-
 
 
 ### Compare and run different tradition machine learning models 
