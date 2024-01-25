@@ -13,12 +13,12 @@ import os
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
 from sklearn.preprocessing import label_binarize
 
-output_fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/results/ML_results/pre_post_treatment_hamd_reduction_50'
+output_fold = './results/ML_results/pre_post_treatment_hamd_reduction_50'
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
     
-
-def pre_post_read_hb_label(HB_TYPE, combine_type, fold='/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/pre_post_treatment_hamd_reduction_50'):
+combine_type = 'substract'
+def pre_post_read_hb_label(HB_TYPE, combine_type, fold='./allData/prognosis/pre_post_treatment_hamd_reduction_50'):
     # read data 
     hb = np.load(fold + '/data.npy')
     label = np.load(fold + '/label.npy')
@@ -83,7 +83,7 @@ for name, model in models.items():
             HB_TYPE_accuraies[HB_TYPE] = []
             HB_TYPE_y_pred_and_y_test[HB_TYPE] = []
 
-            hb_2d, label = pre_post_read_hb_label(HB_TYPE, combine_type='substract')
+            hb_2d, label = pre_post_read_hb_label(HB_TYPE, combine_type=combine_type)
             # Apply LOOCV to train the model
             # Initialize LeaveOneOut
             loo = LeaveOneOut()
@@ -121,4 +121,4 @@ for name, model in models.items():
         save_result['HB_TYPE_y_pred_and_y_test'] = HB_TYPE_y_pred_and_y_test
         
         res[f'{num_time}'] = save_result
-    np.save(output_fold + f'/{name}_result.npy', res)
+    np.save(output_fold + f'/{name}_{combine_type}_result.npy', res)
