@@ -2,7 +2,7 @@
 
 
 ### Explaination of different files
-- train_transformer.py 
+- train.py 
     - Description: use this to train the deep learning model 
 
 - config.py 

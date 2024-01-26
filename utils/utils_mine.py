@@ -29,7 +29,7 @@ from sklearn import preprocessing
 def get_specificity(y_true, y_pred):
 
     # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    
+
     # 明确指定labels参数
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
 
@@ -88,8 +88,6 @@ def shuffle(x_data, y_data):
         new_x_data[i] = x_data[length[i]]
         new_y_data[i] = y_data[length[i]]
     return new_x_data, new_y_data
-
-
 
 
 def plot_epochs_metric(hist, file_name, metric='loss') -> object:
@@ -268,9 +266,11 @@ def generate_fnirs_adj():
             matrix[i, i-1] = 1
     return matrix
 
+
 def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
-    connectivity = np.load(connect_file_path) 
+    connectivity = np.load(connect_file_path)
     return connectivity
+
 
 def save_data_to_file(filename, df, info=None):
     try:
@@ -344,7 +344,7 @@ def normalize_individual(data):
     #     mean = np.mean(data, axis=1, keepdims=True)
     #     std = np.std(data, axis=1, keepdims=True)
     # normalized_data = (data - mean)/std
-    
+
     for i in range(data.shape[0]):
         # Calculate the mean and standard deviation for the current subject
         mean = np.mean(data[i])
@@ -352,10 +352,10 @@ def normalize_individual(data):
 
         # Perform z-normalization for the current subject
         normalized_data[i] = (data[i] - mean) / std
-        
+
     # mean = np.mean(data, axis=(1,2))
     # std = np.std(data, axis=(1,2))
-    
+
     return normalized_data
 
 
@@ -399,10 +399,10 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
 
     label = np.load(file_name + '/label.npy')
     label = onehotEncode(label.astype(int))
-    
-    if model_name == 'comb_cnn':                     
+
+    if model_name == 'comb_cnn':
         label = label.astype('float32')
-        
+
     idx = np.random.permutation(data.shape[0])
 
     k = num_of_k
@@ -422,18 +422,18 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
     # Y_train = label[idx[nb_test:]]
     # print(f'X_train.shape -> {X_train.shape}')
     # print(f'Y_train.shape -> {Y_train.shape}')
-    
+
     # if model_name in ['gnn_transformer', 'gnn', 'yu_gnn', 'mvg_transformer', 'mgn_transformer', 'graphsage_transformer']:
     #     if model_name == 'gnn_transformer' or model_name == 'gnn':
     #         adj = np.load(file_name + '/euclidean_matrix.npy')
     #     if model_name == 'yu_gnn':
     #         adj = np.load(file_name + '/A.npy')[...,1] # read HbO_correlation
     #     if model_name == 'mvg_transformer':
-    #         adj = np.load(file_name + '/multiview_adj_matrix5.npy') 
+    #         adj = np.load(file_name + '/multiview_adj_matrix5.npy')
     #     if model_name == 'mgm_transformer':
-    #         adj = np.load(file_name + '/multiview_adj_matrix5.npy')     
+    #         adj = np.load(file_name + '/multiview_adj_matrix5.npy')
     #     if model_name == 'mgn_transformer':
-    #         adj = np.load(file_name + '/euclidean_mgn_matrix.npy') 
+    #         adj = np.load(file_name + '/euclidean_mgn_matrix.npy')
     #     if model_name == 'graphsage_transformer':
     #         adj = np.load(file_name + '/multiview_adj_matrix5.npy')[...,0]
     if adj_path is not None:
@@ -445,9 +445,66 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
     else:
         return X_train, X_test, Y_train, Y_test
 
+
+def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None):
+
+    data = np.load(file_name + '/' + hb_path)
+
+    if model_name != 'chao_cfnn' and model_name != 'zhu_xgboost':
+        data = data.reshape((data.shape[0], data.shape[1], data.shape[2], 1))
+        # if data shape is like 458, 125, 52
+        # change to 458, 52, 125
+        if data.shape[2] == 52:
+            data = np.transpose(data, (0, 2, 1, 3))
+
+    label = np.load(file_name + '/label.npy')
+    label = onehotEncode(label.astype(int))
+
+    if model_name == 'comb_cnn':
+        label = label.astype('float32')
+
+    if adj_path is not None:
+        adj = np.load(file_name + '/' + adj_path)
+        return data, label, adj
+    else:
+        return data, label
+
+def split_k_fold_cross_validation(data, label, k, num_of_k_fold, adj=None):
+    total_number = data.shape[0]
+    one_fold_number = total_number//num_of_k_fold
+    X_val = data[k*one_fold_number:(k+1)*one_fold_number]
+    Y_val = label[k*one_fold_number:(k+1)*one_fold_number]
+    X_train = np.concatenate(
+        (data[0:k*one_fold_number], data[(k+1)*one_fold_number:]))
+    Y_train = np.concatenate(
+        (label[0:k*one_fold_number], label[(k+1)*one_fold_number:]))
+
+    if adj is None:
+        return X_train, Y_train, X_val, Y_val
+    else:
+        adj_val = adj[k*one_fold_number:(k+1)*one_fold_number]
+        adj_train = np.concatenate(
+            (adj[0:k*one_fold_number], adj[(k+1)*one_fold_number:]))
+        return X_train, Y_train, X_val, Y_val, adj_train, adj_val
+
+def LOOCV_CV(data, label, num, adj=None):
+    X_val = data[num]
+    Y_val = label[num]
+    X_train = np.concatenate((data[0:num], data[num+1:]), axis=0)
+    Y_train = np.concatenate((label[0:num], label[num+1:]), axis=0)
+
+    if adj is None:
+        return X_train, Y_train, X_val, Y_val
+    else:
+        adj_val = adj[num]
+        adj_train = adj[[i for i in range(adj.shape[0]) if i != num]]   
+        return X_train, Y_train, X_val, Y_val, adj_train, adj_val
+
+
 # def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
-#     connectivity = np.load(connect_file_path) 
+#     connectivity = np.load(connect_file_path)
 #     return connectivity
+
 
 def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_onehot=None):
 
@@ -508,6 +565,7 @@ def save_logs(model, output_directory, result_name, hist, y_pred, y_true, durati
     hist_df_metrics = calculate_metrics(
         y_true, y_pred, duration, y_true_onehot, y_pred_onehot)
     hist_df_metrics.to_csv(output_directory + 'df_metrics.csv', index=False)
+
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):

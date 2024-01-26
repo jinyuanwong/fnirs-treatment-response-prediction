@@ -13,9 +13,32 @@ import os
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
 from sklearn.preprocessing import label_binarize
 
-output_fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/results/ML_results'
+output_fold = './results/ML_results/DMFC/pre_post_treatment_hamd_reduction_50'
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
+    
+combine_type = 'substract'
+def pre_post_read_hb_label(HB_TYPE, combine_type, fold='./allData/prognosis/DMFC/pre_post_treatment_hamd_reduction_50'):
+    # read data 
+    hb = np.load(fold + '/data.npy')
+    label = np.load(fold + '/label.npy')
+    # Delete NaN values from hb
+    hb = np.nan_to_num(hb)
+    
+    if HB_TYPE == 'HbO':
+        hb1 = hb[..., 0, 0]
+        hb2 = hb[..., 0, 1]
+    elif HB_TYPE == 'HbR':
+        hb1 = hb[..., 1, 0]
+        hb2 = hb[..., 1, 1]
+    elif HB_TYPE == 'HbT':
+        hb1 = hb[..., 2, 0]
+        hb2 = hb[..., 2, 1]
+    if combine_type == 'substract':
+        hb = hb2 - hb1
+        
+    hb_2d = np.reshape(hb, (hb.shape[0], -1))
+    return hb_2d, label
 
 def get_metrics(y_true, y_pred):
     # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
@@ -57,30 +80,17 @@ for name, model in models.items():
         hb_result = {}
         HB_TYPE_accuraies = {}
         HB_TYPE_y_pred_and_y_test = {}
-        for HB_TYPE in ['HbO', 'HbR', 'HbO+HbR']:
+        for HB_TYPE in ['HbO', 'HbR', 'HbT']:
             HB_TYPE_accuraies[HB_TYPE] = []
             HB_TYPE_y_pred_and_y_test[HB_TYPE] = []
 
-            # read data 
-            fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/pre_treatment_hamd_reduction_50'
-
-            hb = np.load(fold + '/data.npy')
-            label = np.load(fold + '/label.npy')
-
-            if HB_TYPE == 'HbO':
-                hb = hb[...,:hb.shape[-1]//2]
-            elif HB_TYPE == 'HbR':
-                hb = hb[...,hb.shape[-1]//2:]
-            hb_2d = np.reshape(hb, (hb.shape[0], -1))
-
+            hb_2d, label = pre_post_read_hb_label(HB_TYPE, combine_type=combine_type)
             # Apply LOOCV to train the model
             # Initialize LeaveOneOut
             loo = LeaveOneOut()
 
             # 存储每个模型的准确率
             accuracies = {}
-
-
 
             # Loop over each train/test split
             for train_index, test_index in loo.split(hb_2d):
@@ -112,4 +122,4 @@ for name, model in models.items():
         save_result['HB_TYPE_y_pred_and_y_test'] = HB_TYPE_y_pred_and_y_test
         
         res[f'{num_time}'] = save_result
-    np.save(output_fold + f'/{name}_result.npy', res)
+    np.save(output_fold + f'/{name}_{combine_type}_result.npy', res)

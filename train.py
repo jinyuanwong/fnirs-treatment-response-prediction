@@ -35,25 +35,6 @@ num_of_k_fold = 10
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
 
 
-def split_k_fold_cross_validation(data, label, k, num_of_k_fold, adj=None):
-    total_number = data.shape[0]
-    one_fold_number = total_number//num_of_k_fold
-    X_val = data[k*one_fold_number:(k+1)*one_fold_number]
-    Y_val = label[k*one_fold_number:(k+1)*one_fold_number]
-    X_train = np.concatenate(
-        (data[0:k*one_fold_number], data[(k+1)*one_fold_number:]))
-    Y_train = np.concatenate(
-        (label[0:k*one_fold_number], label[(k+1)*one_fold_number:]))
-
-    if adj is None:
-        return X_train, Y_train, X_val, Y_val
-    else:
-        adj_val = adj[k*one_fold_number:(k+1)*one_fold_number]
-        adj_train = np.concatenate(
-            (adj[0:k*one_fold_number], adj[(k+1)*one_fold_number:]))
-        return X_train, Y_train, X_val, Y_val, adj_train, adj_val
-
-
 class TrainModel():
     def __init__(self, model_name, sweep_config=None):
         self.batch_size = 8
