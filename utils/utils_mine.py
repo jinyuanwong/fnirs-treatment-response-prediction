@@ -488,15 +488,15 @@ def split_k_fold_cross_validation(data, label, k, num_of_k_fold, adj=None):
         return X_train, Y_train, X_val, Y_val, adj_train, adj_val
 
 def LOOCV_CV(data, label, num, adj=None):
-    X_val = data[num]
-    Y_val = label[num]
+    X_val = data[num:num+1]
+    Y_val = label[num:num+1]
     X_train = np.concatenate((data[0:num], data[num+1:]), axis=0)
     Y_train = np.concatenate((label[0:num], label[num+1:]), axis=0)
 
     if adj is None:
         return X_train, Y_train, X_val, Y_val
     else:
-        adj_val = adj[num]
+        adj_val = adj[num:num+1]
         adj_train = adj[[i for i in range(adj.shape[0]) if i != num]]   
         return X_train, Y_train, X_val, Y_val, adj_train, adj_val
 
