@@ -29,7 +29,7 @@ tf.random.set_seed(current_time)
 
 preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
 default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
-
+SPECIFY_FOLD = config.SPECIFY_FOLD
 # hbo_fold_path = './allData/Output_npy/twoDoctor/nor-all-hbo-hc-mdd'
 
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
@@ -67,8 +67,11 @@ class TrainModel():
                 else:
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, None)
-                num_of_k_fold = data.shape[0]
-                for k in range(num_of_k_fold):
+                if SPECIFY_FOLD: 
+                    num_of_k_fold = SPECIFY_FOLD
+                else:
+                    num_of_k_fold = range(data.shape[0])
+                for k in num_of_k_fold:
 
                     if using_adj:
                         X_train, Y_train, X_val, Y_val, adj_train, adj_val = LOOCV_CV(

@@ -27,6 +27,9 @@ IS_USING_WANDB = False
 
 MAX_EPOCHS = 1000
 
+SPECIFY_FOLD = [i for i in range(55, 65)]
+
+
 MODELS_NEED_ADJ_MATRIX = ['graphsage_transformer',
                           'mvg_transformer',
                           'gnn_transformer',
