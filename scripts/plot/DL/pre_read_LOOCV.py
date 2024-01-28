@@ -20,7 +20,7 @@ if not os.path.exists(output_fold):
 
 y_test_path = f'allData/prognosis/{time}'
 
-total_fold = 65
+total_fold = 65 # '65' or '45
 
 
 def loop_iteration_find_best_performance_id(total_itr, model, verbose=True):
@@ -97,6 +97,12 @@ def get_metrics(y_true, y_pred):
 
 mcnet_metric = get_metrics(y_test, mcnet_pred)
 cnntr_metric = get_metrics(y_test, cnntr_pred)
+
+metric_dic = {
+    'MCNet': mcnet_metric,
+    'CNNTR': cnntr_metric
+}
+
 # metrics = [mcnet_metric, cnntr_metric]
 metrics = []
 for index, value in enumerate(mcnet_metric):
@@ -139,3 +145,18 @@ plt.tight_layout()
 
 plt.savefig(output_fold+f'/result.png')
 # plt.show()
+
+
+def generate_md_table():
+    print('| Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
+    print('|------------|----------|-------------|-------------|----------|')
+    for model_name in models:
+        print(f'| {model_name}      |', end='')
+        for i in range(4):
+            metric_name = metrics_name[i]
+            val = metric_dic[model_name][i]
+            print(f' {val:.4f}  |', end='')
+        print()
+
+
+generate_md_table()
