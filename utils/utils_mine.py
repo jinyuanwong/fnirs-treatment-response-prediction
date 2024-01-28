@@ -450,12 +450,12 @@ def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None):
 
     data = np.load(file_name + '/' + hb_path)
 
-    if model_name != 'chao_cfnn' and model_name != 'zhu_xgboost':
-        data = data.reshape((data.shape[0], data.shape[1], data.shape[2], 1))
-        # if data shape is like 458, 125, 52
-        # change to 458, 52, 125
-        if data.shape[2] == 52:
-            data = np.transpose(data, (0, 2, 1, 3))
+    # if model_name != 'chao_cfnn' and model_name != 'zhu_xgboost':
+    #     data = data.reshape((data.shape[0], data.shape[1], data.shape[2], 1))
+    #     # if data shape is like 458, 125, 52
+    #     # change to 458, 52, 125
+    #     if data.shape[2] == 52:
+    #         data = np.transpose(data, (0, 2, 1, 3))
 
     label = np.load(file_name + '/label.npy')
     label = onehotEncode(label.astype(int))
