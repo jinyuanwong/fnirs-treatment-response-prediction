@@ -86,6 +86,9 @@ PARAMETER = {
     'cnn_transformer': {
         'hb_path': 'data.npy',
     },
+    'pre_post_cnn_transformer': {
+        'hb_path': 'data.npy',
+    },
     'gnn': {
         'hb_path': 'data.npy',
         'adj_path': 'neighbour_matrix.npy',
