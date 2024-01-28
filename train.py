@@ -150,8 +150,8 @@ class TrainModel():
 
     def create_classifier(self, classifier_name, output_directory, callbacks, input_shape, epochs, sweep_config=None):
         if classifier_name == 'cnn_transformer':  # Time-CNN
-            from classifiers import cnn_transformer
-            return cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+            from classifiers import pre_post_cnn_transformer
+            return pre_post_cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
         if classifier_name == 'transformer':  # Time-CNN
             from classifiers import transformer
             return transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
