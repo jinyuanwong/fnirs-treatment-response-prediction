@@ -100,7 +100,7 @@ class TrainModel():
                         input_shape = [self.batch_size,
                                        X_train.shape[1],
                                        X_train.shape[2],
-                                       1]
+                                       X_train.shape[3]]
                     elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1],
@@ -153,6 +153,9 @@ class TrainModel():
         if classifier_name == 'cnn_transformer':  # Time-CNN
             from classifiers import cnn_transformer
             return cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+        if classifier_name == 'pre_post_cnn_transformer':  # Time-CNN
+            from classifiers import pre_post_cnn_transformer
+            return pre_post_cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
         if classifier_name == 'transformer':  # Time-CNN
             from classifiers import transformer
             return transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
