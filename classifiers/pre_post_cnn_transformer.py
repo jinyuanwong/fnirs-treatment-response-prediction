@@ -361,14 +361,13 @@ class Classifier_Transformer():
                                               epsilon=1e-9)
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
-        print(f'input_shape: {input_shape}'*100)
         # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
         inputs = tf.keras.Input(shape=input_shape[1:])
 
         output_1 = EmbeddingLayer(
-            d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs[...,0])
+            d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs[...,0:1])
         output_2 = EmbeddingLayer(
-            d_model, output_channel, kernel_size[1], stride_size[1], l2_rate, name='cnn_embedding_2')(inputs[...,1])
+            d_model, output_channel, kernel_size[1], stride_size[1], l2_rate, name='cnn_embedding_2')(inputs[...,1:2])
 
         output_1 = ClsPositionEncodingLayer(
             input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)

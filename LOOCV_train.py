@@ -96,7 +96,7 @@ class TrainModel():
                     if model_name in ['chao_cfnn', 'zhu_xgboost']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1]]
-                    elif model_name in ['comb_cnn', 'cnn_transformer']:
+                    elif model_name in ['comb_cnn', 'cnn_transformer', 'pre_post_cnn_transformer']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1],
                                        X_train.shape[2],
