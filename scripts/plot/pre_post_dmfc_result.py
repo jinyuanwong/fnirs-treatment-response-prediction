@@ -46,13 +46,14 @@ def find_best_acc_index(result):
     num_best_acc['HbT'] = 0
     for num_time, xres in result.items():
         res = xres['HB_TYPE_y_pred_and_y_test']
+        time_seed = xres['current_time_seed']
         for name, value in res.items():
             value = np.array(value)
             y_pred = value[:, 0, 0]
             y_test = value[:, 1, 0]
             accuracy, sensitivity, specificity, f1 = get_metrics(
                 y_test, y_pred)
-            print(f'cuurent {num_time}, name: {name}, accuracy: {accuracy:.4f}')
+            print(f'current {num_time}, name: {name}, accuracy: {accuracy:.4f} | time_seed: {time_seed}')
             if accuracy > num_best_indicator[name]:
                 num_best_indicator[name] = accuracy
                 num_best_acc[name] = num_time

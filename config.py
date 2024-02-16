@@ -13,7 +13,10 @@ import numpy as np
 #         ]
 
 # INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
-INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50'] # for prognosis
+INPUT_HB_TYPE = ['DMFC/pre_post_treatment_hamd_reduction_50'] # for prognosis
+# for example:
+# pre_post_treatment_hamd_reduction_50
+
 
 # INPUT_HB_TYPE = [
 #                 'HbO-left-STG-classification',
