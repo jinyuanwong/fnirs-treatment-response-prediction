@@ -28,6 +28,8 @@ def loop_iteration_find_best_performance_id(total_itr, model, verbose=True):
     best_acc = 0
     best_itr = 0
     final_wrong_index = []
+    print('| Iteration | Accuracy | Wrong Label Index |')
+    print('| ---- | ---- | ---- |')
     for index in range(total_itr):
         first_acc = []
         wrong_index = []
@@ -46,13 +48,13 @@ def loop_iteration_find_best_performance_id(total_itr, model, verbose=True):
             best_acc = mean_acc
             final_wrong_index = wrong_index.copy()
         print(
-            f'INDEX: {index} | mean: {mean_acc} | wrong subject: {wrong_index}')
+            f' {index} | {mean_acc:.4f} | {wrong_index}')
     return final_wrong_index
 
 
 # According to the result, find the wrong labeled index
 comb_cnn_total_itr = 10
-cnntr_total_itr = 1
+cnntr_total_itr = 5
 # wrong_index_mcnet = loop_iteration_find_best_performance_id(
 #     comb_cnn_total_itr, 'comb_cnn', verbose=False)
 wrong_index_cnntr = loop_iteration_find_best_performance_id(
@@ -152,6 +154,10 @@ plt.savefig(output_fold+f'/result.png')
 def generate_md_table():
     print('| Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
     print('|------------|----------|-------------|-------------|----------|')
+    
+    # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
+    # print('|------------|------------|----------|-------------|-------------|----------|')
+    
     for model_name in models:
         print(f'| {model_name}      |', end='')
         for i in range(4):
