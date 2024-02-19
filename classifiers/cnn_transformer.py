@@ -363,7 +363,10 @@ class Classifier_Transformer():
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
 
         # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-        inputs = tf.keras.Input(shape=input_shape[1:])
+        if input_shape=[-1]!=1:
+            inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
+        else:
+            inputs = tf.keras.Input(shape=input_shape[1:])
 
         output_1 = EmbeddingLayer(
             d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs)

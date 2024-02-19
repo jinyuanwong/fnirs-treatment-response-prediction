@@ -13,7 +13,8 @@ import numpy as np
 #         ]
 
 # INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
-INPUT_HB_TYPE = ['DMFC/hbo/pre_treatment_hamd_reduction_50'] # for prognosis
+INPUT_HB_TYPE = ['DMFC/hbo/pre_post_treatment_hamd_reduction_50',
+                 'DMFC/hbr/pre_post_treatment_hamd_reduction_50'] # for prognosis
 # for example:
 # pre_post_treatment_hamd_reduction_50
 
@@ -30,7 +31,7 @@ IS_USING_WANDB = False
 
 MAX_EPOCHS = 1000
 
-SPECIFY_FOLD = None#[i for i in range(13, 46)] # [i for i in range(55, 65)]
+SPECIFY_FOLD = None # [i for i in range(55, 65)]
 
 
 MODELS_NEED_ADJ_MATRIX = ['graphsage_transformer',

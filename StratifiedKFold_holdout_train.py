@@ -1,3 +1,5 @@
+
+
 # 使用当前时间作为随机种子
 from wandb.keras import WandbCallback
 import sys
@@ -95,7 +97,10 @@ class TrainModel():
                         input_shape = [self.batch_size,
                                        X_train.shape[1]]
                     elif model_name in ['comb_cnn', 'cnn_transformer', 'pre_post_cnn_transformer']:
-                        input_shape = [self.batch_size] + list(X_train.shape[1:])
+                        input_shape = [self.batch_size,
+                                       X_train.shape[1],
+                                       X_train.shape[2],
+                                       X_train.shape[3]]
                     elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1],

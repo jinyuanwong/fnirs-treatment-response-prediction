@@ -500,7 +500,61 @@ def LOOCV_CV(data, label, num, adj=None):
         adj_train = adj[[i for i in range(adj.shape[0]) if i != num]]   
         return X_train, Y_train, X_val, Y_val, adj_train, adj_val
 
+"""
+holdout_rate = 1/3 
+so for pretreatment dataset 
+    - train_val dataset is 10(1) + 34(0) * subject(label)
+        - 2 + 6 
+    - test dataset is 5(1) + 16(0)
+for negtive label 
+    - train_val dataset is 8(1) + 22(0) 
+    - test dataset is 4(1) + 11(0)
+"""
+def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None):
+    total_amount = data.shape[0] 
 
+    pos = data[label==1]
+    neg = data[label==0]
+    
+    holdout_pos_num = pos.shape[0] // 3
+    holdout_neg_num = neg.shape[0] // 3 
+    
+    X_test = np.concatenate((pos[:holdout_pos_num], neg[:holdout_neg_num]), axis=0)
+    Y_test = np.concatenate((np.ones(holdout_pos_num), np.zeros(holdout_neg_num)), axis=0)
+    
+    train_val_pos = pos[holdout_pos_num:]
+    train_val_neg = neg[holdout_neg_num:]
+
+    """
+    train_val_pos_num 
+    - should be 10 for pretreatment dataset 
+    - should be 8 for pre-post-treatment dataset 
+    
+    next, I will devide them by 2 to do 5 and 4 fold cross validation
+    so the num_of_k_fold should be calulated by 
+    (label==1).sum() * 2 / 3 / 2
+    """
+    train_val_pos_num = pos.shape[0]-holdout_pos_num 
+    train_val_neg_num = neg.shape[0]-holdout_neg_num
+    one_fold_number_pos = train_val_pos_num//num_of_k_fold
+    one_fold_number_neg = train_val_neg_num//num_of_k_fold
+    train_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
+    train_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
+    
+    X_train = np.concatenate((train_pos, train_neg), axis=0)
+    Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
+    
+    validation_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
+    validation_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
+    
+    X_val = np.concatenate((validation_pos, validation_neg), axis=0)
+    Y_val = np.concatenate((np.ones(validation_pos.shape[0]), np.zeros(validation_neg.shape[0])), axis=0)
+    
+    if adj is None:
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test
+    else:
+        raise NotImplementedError('adj is not implemented yet')
+    
 # def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
 #     connectivity = np.load(connect_file_path)
 #     return connectivity
