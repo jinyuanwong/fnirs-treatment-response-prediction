@@ -363,7 +363,7 @@ class Classifier_Transformer():
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
 
         # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-        if input_shape=[-1]!=1:
+        if input_shape[-1]!=1:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
             inputs = tf.keras.Input(shape=input_shape[1:])
