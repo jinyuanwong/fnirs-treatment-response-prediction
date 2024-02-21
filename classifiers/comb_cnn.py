@@ -92,6 +92,12 @@ class Classifier_CNN():
         self.info = info
         self.callbacks.append(early_stopping)
         self.useCombinationModel = useCombinationModel
+        
+        # make sure this model can handle situations like (52, 125), (52,125,2) and (52,125,1)
+        # input_shape[-1]>10 is to avoid situation of (52, 125, 2)
+        if input_shape[-1]!=1 and input_shape[-1]>10:
+            input_shape = input_shape + [1]
+
         if build == True:
             self.model = self.build_model(input_shape, nb_classes=2)
             if (verbose == True):
@@ -137,7 +143,7 @@ class Classifier_CNN():
 
         if self.useCombinationModel == True:
             all_m = list()
-            channelInput = (input_shape[2], 1)
+            channelInput = input_shape[2:]
             print(channelInput)
             for i in range(input_shape[1]):
                 all_m.append(self.CNN(kl.Input(channelInput)))
