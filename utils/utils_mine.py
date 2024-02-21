@@ -74,6 +74,7 @@ def z_norm(data, normalization_method):
 
 
 def onehotEncode(x):
+    x = x.astype(int)
     t = np.zeros((x.size, x.max()+1))
     t[np.arange(x.size), x] = 1
     return t.astype(int)
