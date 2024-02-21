@@ -21,7 +21,7 @@ cd ~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning
 # $1 -> model_name 
 # $2 -> message for training
 while true; do
-    python ./LOOCV_train.py "$1" "$2" "$3"
+    python ./StratifiedKFold_holdout_train.py "$1" "$2" "$3"
     sleep 1  # Adjust the sleep duration as needed
 done
 
