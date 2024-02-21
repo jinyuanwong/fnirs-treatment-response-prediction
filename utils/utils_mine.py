@@ -551,7 +551,7 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     X_val = np.concatenate((validation_pos, validation_neg), axis=0)
     Y_val = np.concatenate((np.ones(validation_pos.shape[0]), np.zeros(validation_neg.shape[0])), axis=0)
     
-    X_train, X_val, X_test = onehotEncode(X_train), onehotEncode(X_val), onehotEncode(X_test)
+    Y_train, Y_val, Y_test = onehotEncode(Y_train), onehotEncode(Y_val), onehotEncode(Y_test)
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:
