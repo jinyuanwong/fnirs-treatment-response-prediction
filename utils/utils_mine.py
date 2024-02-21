@@ -512,9 +512,9 @@ for negtive label
 """
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None):
     total_amount = data.shape[0] 
-
-    pos = data[label==1]
-    neg = data[label==0]
+    label_not_onehot = np.argmax(label, axis=1)
+    pos = data[label_not_onehot==1]
+    neg = data[label_not_onehot==0]
     
     holdout_pos_num = pos.shape[0] // 3
     holdout_neg_num = neg.shape[0] // 3 

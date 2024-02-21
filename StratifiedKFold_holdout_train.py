@@ -71,14 +71,14 @@ class TrainModel():
                     num_of_k_fold = SPECIFY_FOLD
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
-                    num_of_k_fold = (label_not_one_hot==1).sum() * 2 / 3 / 2
+                    num_of_k_fold = int((label_not_one_hot==1).sum() * 2 / 3 / 2)
                 for k in range(num_of_k_fold):
                     if using_adj:
                         X_train, Y_train, X_val, Y_val, adj_train, adj_val = stratified_k_fold_cross_validation_with_holdout(
-                            data, label_not_one_hot, k, adj)
+                            data, label, k, num_of_k_fold, adj)
                     else:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
-                            data, label_not_one_hot, k)
+                            data, label, k, num_of_k_fold)
 
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
@@ -97,10 +97,8 @@ class TrainModel():
                         input_shape = [self.batch_size,
                                        X_train.shape[1]]
                     elif model_name in ['comb_cnn', 'cnn_transformer', 'pre_post_cnn_transformer']:
-                        input_shape = [self.batch_size,
-                                       X_train.shape[1],
-                                       X_train.shape[2],
-                                       X_train.shape[3]]
+                        input_shape = [self.batch_size] + list(X_train.shape[1:])
+
                     elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1],
