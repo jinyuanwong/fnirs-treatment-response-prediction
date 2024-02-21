@@ -70,19 +70,19 @@ class TrainModel():
                 if SPECIFY_FOLD: 
                     num_of_k_fold = SPECIFY_FOLD
                 else:
-                    num_of_k_fold = range(data.shape[0])
+                    label_not_one_hot = np.argmax(label, axis=1)
+                    num_of_k_fold = (label_not_one_hot==1).sum() * 2 / 3 / 2
                 for k in num_of_k_fold:
-
                     if using_adj:
-                        X_train, Y_train, X_val, Y_val, adj_train, adj_val = LOOCV_CV(
-                            data, label, k, adj)
+                        X_train, Y_train, X_val, Y_val, adj_train, adj_val = stratified_k_fold_cross_validation_with_holdout(
+                            data, label_not_one_hot, k, adj)
                     else:
-                        X_train, Y_train, X_val, Y_val = LOOCV_CV(
-                            data, label, k)
+                        X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
+                            data, label_not_one_hot, k)
 
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
-                        '/' + 'LOOCV-' + str(k) + '/'
+                        '/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
                     create_directory(output_directory)
 
                     checkpoint_path = output_directory + '/checkpoint'
@@ -133,13 +133,13 @@ class TrainModel():
 
                         if using_adj:
                             model.fit(X_train, Y_train, X_val, Y_val,
-                                      X_val, Y_val, adj_train, adj_val, adj_val)
+                                      X_test, Y_test, adj_train, adj_val, adj_val)
                         else:
                             model.fit(X_train, Y_train, X_val,
-                                      Y_val, X_val, Y_val)
+                                      Y_val, X_test, Y_test)
 
                         del model
-                        del X_train, Y_train, X_val, Y_val
+                        del X_train, Y_train, X_val, Y_val, X_test, Y_test
                         # clear the memory
                         gc.collect()
 
