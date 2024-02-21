@@ -72,7 +72,7 @@ class TrainModel():
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
                     num_of_k_fold = (label_not_one_hot==1).sum() * 2 / 3 / 2
-                for k in num_of_k_fold:
+                for k in range(num_of_k_fold):
                     if using_adj:
                         X_train, Y_train, X_val, Y_val, adj_train, adj_val = stratified_k_fold_cross_validation_with_holdout(
                             data, label_not_one_hot, k, adj)
