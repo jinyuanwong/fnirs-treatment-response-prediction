@@ -415,7 +415,7 @@ class Classifier_Transformer():
         model.summary()
         model.compile(optimizer=optimizer,
                       loss='categorical_crossentropy',
-                      metrics=['accuracy'])
+                      metrics=['accuracy', tf.keras.metrics.Recall(name='sensitivity')])
         self.model = model
 
         self.hyperparameters = {
@@ -444,6 +444,13 @@ class Classifier_Transformer():
         print(f'hyperparameters: {self.hyperparameters}')
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
+        print(f'X_train: {X_train.shape}')
+        print(f'Y_train: {Y_train.shape}')
+        print(f'X_val: {X_val.shape}')
+        print(f'Y_val: {Y_val.shape}')
+        print(f'X_test: {X_test.shape}')
+        print(f'Y_test: {Y_test.shape}')
+
         start_time = time.time()
         hist = self.model.fit(
             x=X_train,
@@ -458,6 +465,12 @@ class Classifier_Transformer():
 
         self.model.load_weights(
             self.output_directory + 'checkpoint')
+        
+        Y_train_pred_argmax = np.argmax(self.model.predict(X_train), axis=1)
+        Y_train_true_argmax = np.argmax(Y_train, axis=1)
+        
+        print(f'Y_train_pred_argmax: {Y_train_pred_argmax}'*10)
+        print(f'Y_train_true_argmax: {Y_train_true_argmax}'*10)
         Y_pred = self.model.predict(X_test)
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)

@@ -12,8 +12,17 @@ import numpy as np
 #         'HbO-right-PSFC-classification'
 #         ]
 
-# INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
-INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50'] # for prognosis
+# INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50'] # for prognosis
+# INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
+INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
+                 'pre_post_treatment_hamd_reduction_50',
+                 'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
+                 'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
+                 'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
+
 # for example:
 # pre_post_treatment_hamd_reduction_50
 
@@ -53,7 +62,7 @@ PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD
 DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
 
 
-MONITOR_METRIC = 'accuracy'  # 'val_accuracy'
+MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' 
 
 PARAMETER = {
     'graphsage_transformer': {
@@ -101,7 +110,7 @@ PARAMETER = {
     },
     'gnn_transformer': {
         'hb_path': 'data.npy',
-        'adj_path': 'euclidean_matrix.npy',
+        'adj_path': 'adj_matrix.npy',
     },
     'rggcnn_transformer': {
         'hb_path': 'data.npy',

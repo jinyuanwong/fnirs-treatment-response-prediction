@@ -20,7 +20,6 @@ import pandas as pd
 import math
 
 from tensorflow.keras.callbacks import EarlyStopping
-
 # Transformer was based on
 #   Zenghui Wang' Pytorch implementation. https://github.com/wzhlearning/fNIRS-Transformer/blob/main/model.py
 # Adapted to Tensorflow by Jinyuan Wang
@@ -32,7 +31,6 @@ from tensorflow.keras.callbacks import EarlyStopping
 put this function into the utils as well: 
 but remember that do not modify utils so much.
 """
-
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
@@ -363,49 +361,73 @@ class Classifier_Transformer():
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
 
         # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-        if input_shape[-1]!=1:
+        #
+        if input_shape[-1]!=1 and input_shape[-1] > 10:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
             inputs = tf.keras.Input(shape=input_shape[1:])
+        num_branches = inputs.shape[-1]
+        outputs = []  #
+        for i in range(num_branches):
+            output = EmbeddingLayer(
+                d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name=f'cnn_embedding_{i+1}')(inputs[...,i:i+1])
+            
+            output = ClsPositionEncodingLayer(
+                input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i+1}')(output)
+            # Append the output to the 'outputs' list.
+            output = Transformer(input_shape,
+                        num_class,
+                        dropout_rate,
+                        d_model,
+                        output_channel,
+                        kernel_size,
+                        stride_size,
+                        n_layers,
+                        FFN_units,
+                        n_heads,
+                        activation,
+                        num_of_last_dense,
+                        l2_rate)(output)
+            outputs.append(output)
+            
+        # output_1 = EmbeddingLayer(
+        #     d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs)
+        # output_2 = EmbeddingLayer(
+        #     d_model, output_channel, kernel_size[1], stride_size[1], l2_rate, name='cnn_embedding_2')(inputs)
 
-        output_1 = EmbeddingLayer(
-            d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs)
-        output_2 = EmbeddingLayer(
-            d_model, output_channel, kernel_size[1], stride_size[1], l2_rate, name='cnn_embedding_2')(inputs)
+        # output_1 = ClsPositionEncodingLayer(
+        #     input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)
+        # output_2 = ClsPositionEncodingLayer(
+        #     input_channel=input_shape[1], kenerl_size=kernel_size[1], strides=stride_size[1], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(output_2)
 
-        output_1 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)
-        output_2 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[1], strides=stride_size[1], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(output_2)
+        # output_1 = Transformer(input_shape,
+        #                        num_class,
+        #                        dropout_rate,
+        #                        d_model,
+        #                        output_channel,
+        #                        kernel_size,
+        #                        stride_size,
+        #                        n_layers,
+        #                        FFN_units,
+        #                        n_heads,
+        #                        activation,
+        #                        num_of_last_dense,
+        #                        l2_rate)(output_1)
+        # output_2 = Transformer(input_shape,
+        #                        num_class,
+        #                        dropout_rate,
+        #                        d_model,
+        #                        output_channel,
+        #                        kernel_size,
+        #                        stride_size,
+        #                        n_layers,
+        #                        FFN_units,
+        #                        n_heads,
+        #                        activation,
+        #                        num_of_last_dense,
+        #                        l2_rate)(output_2)
 
-        output_1 = Transformer(input_shape,
-                               num_class,
-                               dropout_rate,
-                               d_model,
-                               output_channel,
-                               kernel_size,
-                               stride_size,
-                               n_layers,
-                               FFN_units,
-                               n_heads,
-                               activation,
-                               num_of_last_dense,
-                               l2_rate)(output_1)
-        output_2 = Transformer(input_shape,
-                               num_class,
-                               dropout_rate,
-                               d_model,
-                               output_channel,
-                               kernel_size,
-                               stride_size,
-                               n_layers,
-                               FFN_units,
-                               n_heads,
-                               activation,
-                               num_of_last_dense,
-                               l2_rate)(output_2)
-
-        outputs = tf.concat([output_1, output_2], axis=1)  #
+        outputs = tf.concat(outputs, axis=1)  #
 
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
 
@@ -419,7 +441,7 @@ class Classifier_Transformer():
         model.summary()
         model.compile(optimizer=optimizer,
                       loss='categorical_crossentropy',
-                      metrics=['accuracy'])
+                      metrics=['accuracy', tf.keras.metrics.Recall(name='sensitivity')])
         self.model = model
 
         self.hyperparameters = {

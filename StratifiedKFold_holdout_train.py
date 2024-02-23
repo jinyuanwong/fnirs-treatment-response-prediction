@@ -74,7 +74,7 @@ class TrainModel():
                     num_of_k_fold = int((label_not_one_hot==1).sum() * 2 / 3 / 2)
                 for k in range(num_of_k_fold):
                     if using_adj:
-                        X_train, Y_train, X_val, Y_val, adj_train, adj_val = stratified_k_fold_cross_validation_with_holdout(
+                        X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
                             data, label, k, num_of_k_fold, adj)
                     else:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
@@ -85,7 +85,7 @@ class TrainModel():
                         '/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
                     create_directory(output_directory)
 
-                    checkpoint_path = output_directory + '/checkpoint'
+                    checkpoint_path = output_directory + 'checkpoint'
 
                     def learning_rate_schedule(epoch, learning_rate):
                         return learning_rate
@@ -130,14 +130,15 @@ class TrainModel():
                             classifier_name, output_directory, callbacks, input_shape, epochs, self.sweep_config)
 
                         if using_adj:
-                            model.fit(X_train, Y_train, X_val, Y_val,
-                                      X_test, Y_test, adj_train, adj_val, adj_val)
+                            model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
                         else:
                             model.fit(X_train, Y_train, X_val,
                                       Y_val, X_test, Y_test)
 
                         del model
                         del X_train, Y_train, X_val, Y_val, X_test, Y_test
+                        if using_adj:
+                            del adj_train, adj_val, adj_test
                         # clear the memory
                         gc.collect()
 

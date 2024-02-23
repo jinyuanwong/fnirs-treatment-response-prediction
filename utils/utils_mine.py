@@ -291,9 +291,10 @@ def read_past_value(directory, check_metrice):
     hist_loc = directory + 'history.csv'
     if os.path.exists(hist_loc):
         history = pd.read_csv(hist_loc)
-        return np.max(history['val_' + check_metrice])
-    else:
-        return 0
+        if history.get(f'val_{check_metrice}') is not None:
+            return np.max(history['val_' + check_metrice])
+
+    return 0
 
 
 def read_current_value(Y_pred, Y_true, check_metrice):
@@ -320,6 +321,8 @@ def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
 
 
 def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info):
+    print(f'Y_pred: {Y_pred}')
+    print(f'Y_true: {Y_true}')
     past_metrice = read_past_value(output_directory, check_metrice)
     current_metrice = read_current_value(Y_pred, Y_true, check_metrice)
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
@@ -539,23 +542,27 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     train_val_neg_num = neg.shape[0]-holdout_neg_num
     one_fold_number_pos = train_val_pos_num//num_of_k_fold
     one_fold_number_neg = train_val_neg_num//num_of_k_fold
-    train_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
-    train_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
+    val_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
+    val_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
+    
+    X_val = np.concatenate((val_pos, val_neg), axis=0)
+    Y_val = np.concatenate((np.ones(val_pos.shape[0]), np.zeros(val_neg.shape[0])), axis=0)
+    
+    train_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
+    train_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
     
     X_train = np.concatenate((train_pos, train_neg), axis=0)
     Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
-    
-    validation_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
-    validation_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
-    
-    X_val = np.concatenate((validation_pos, validation_neg), axis=0)
-    Y_val = np.concatenate((np.ones(validation_pos.shape[0]), np.zeros(validation_neg.shape[0])), axis=0)
     
     Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:
-        raise NotImplementedError('adj is not implemented yet')
+        adj_train = adj[:X_train.shape[0]]
+        adj_val = adj[:X_val.shape[0]]
+        adj_test = adj[:X_test.shape[0]]
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
+        # raise NotImplementedError('adj is not implemented yet')
     
 # def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
 #     connectivity = np.load(connect_file_path)

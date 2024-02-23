@@ -6,12 +6,24 @@ import os
 import re
 
 
-model = 'pre_post_cnn_transformer'  # comb_cnn or cnn_transformer
+model = 'pre_post_cnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
 
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 time = 'pre_post_treatment_hamd_reduction_50'
 
-validation_method = 'Stratified_4_fold_CV/fold'  # 'LOOCV' or 'k_fold'
+condition_time = 'pre_post_treatment_hamd_reduction_50'
+
+if time[-len(condition_time):] == 'pre_post_treatment_hamd_reduction_50':
+    validation_method = 'Stratified_4_fold_CV/fold'  # 'LOOCV' or 'k_fold'
+    total_fold = 4 # '65' or '45
+
+else:
+    validation_method = 'Stratified_5_fold_CV/fold'  # 'LOOCV' or 'k_fold'
+    total_fold = 5
+
+# According to the result, find the wrong labeled index
+comb_cnn_total_itr = 10
+cnntr_total_itr = 10
 
 output_fold = f'FigureTable/DL/TimeFeature/{time}'
 
@@ -19,9 +31,6 @@ if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 
 y_test_path = f'allData/prognosis/{time}'
-
-total_fold = 4 # '65' or '45
-
 
 def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose=True):
     read_path = 'results/' + model + '/' + time + '/' + validation_method + '-'
@@ -52,27 +61,24 @@ def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose
         folds_sen = [float(i) for i in folds_sen]
         folds_spe = [float(i) for i in folds_spe]
         folds_f1 = [float(i) for i in folds_f1]
-        
-        mean_acc = np.mean(folds_acc)
+        mean_acc = np.mean(folds_f1)
         if mean_acc > best_acc:
             best_itr = index
             best_acc = mean_acc
             best_metric = [np.mean(folds_acc), np.mean(folds_sen), np.mean(folds_spe), np.mean(folds_f1)]
         print(
-            f' {index} | {mean_acc:.4f} | ')
+            f' {index} | {folds_acc} | ')
     return best_metric
 
 
-# According to the result, find the wrong labeled index
-comb_cnn_total_itr = 10
-cnntr_total_itr = 3
+
 # wrong_index_mcnet = loop_iteration_find_best_performance_id(
 #     comb_cnn_total_itr, 'comb_cnn', verbose=False)
 test_best_metric = loop_iteration_find_best_performance_id(
-    cnntr_total_itr, 'pre_post_cnn_transformer', 'test_acc.txt',verbose=False)
+    cnntr_total_itr, model, 'test_acc.txt',verbose=False)
 print('-'*100)
 val_best_metric = loop_iteration_find_best_performance_id(
-    cnntr_total_itr, 'pre_post_cnn_transformer', 'val_acc.txt',verbose=False)
+    cnntr_total_itr, model, 'val_acc.txt',verbose=False)
 
 
 
@@ -128,7 +134,9 @@ metrics_name = ['Accuracy', 'Sensitivity', 'Specificity', 'F1 Score']
 # plt.show()
 
 print(f'dataset: {time}')
-print(f'validaton method: stratified k-fold cross-validation with hold out')
+print(f'model: {model}')
+print(f'validation method: stratified k-fold cross-validation with holdout')
+print(f'number of iterations: {cnntr_total_itr}')
 print()
 
 def generate_md_table():
