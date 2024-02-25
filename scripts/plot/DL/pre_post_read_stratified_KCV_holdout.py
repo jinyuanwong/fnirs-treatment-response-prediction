@@ -9,7 +9,7 @@ import re
 model = 'gnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
 
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-time = 'pre_treatment_hamd_reduction_50'
+time = 'pre_post_treatment_hamd_reduction_50'
 
 condition_time = 'pre_post_treatment_hamd_reduction_50'
 
@@ -23,7 +23,7 @@ else:
 
 # According to the result, find the wrong labeled index
 comb_cnn_total_itr = 10
-cnntr_total_itr = 100
+cnntr_total_itr = 10
 
 output_fold = f'FigureTable/DL/TimeFeature/{time}'
 
