@@ -14,7 +14,7 @@ import tensorflow_addons as tfa
 
 from sklearn.metrics import recall_score
 from tensorflow.keras.metrics import Recall
-
+from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 
 from sklearn.metrics import accuracy_score
@@ -300,8 +300,10 @@ def read_past_value(directory, check_metrice):
 def read_current_value(Y_pred, Y_true, check_metrice):
     if check_metrice == 'accuracy':
         return accuracy_score(Y_true, Y_pred)
-    if check_metrice == 'sensitivity':
+    if check_metrice == 'sensitivity' or check_metrice == 'recall':
         return recall_score(Y_true, Y_pred)
+    if check_metrice == 'f1_score':
+        return f1_score(Y_true, Y_pred, average='binary')
     else:
         raise ('You have not create a calculation for: ' + check_metrice)
 

@@ -79,7 +79,9 @@ class TrainModel():
                     else:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                             data, label, k, num_of_k_fold)
-
+                    print(f'X_train: {X_train.shape}')
+                    print(f'X_val: {X_val.shape}')
+                    print(f'X_test: {X_test.shape}')
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
                         '/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
@@ -122,7 +124,6 @@ class TrainModel():
                         if using_wandb:
                             callbacks.append(WandbCallback(save_model=False))
 
-                        tf.keras.backend.clear_session()
                         print(
                             f'Current / Total repeat count: {repeat_count} / {self.repeat_count_all}')
 
@@ -140,6 +141,7 @@ class TrainModel():
                         if using_adj:
                             del adj_train, adj_val, adj_test
                         # clear the memory
+                        tf.keras.backend.clear_session()
                         gc.collect()
 
                         # if wandb is activated, then we only calculate the k=0 fold cross validation for 25 times

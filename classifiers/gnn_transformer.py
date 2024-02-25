@@ -34,6 +34,39 @@ but remember that do not modify utils so much.
 """
 
 
+@keras.saving.register_keras_serializable()
+class F1ScoreCalculation(keras.metrics.Metric):
+    def __init__(self, name="f1_score", **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.f1_score = self.add_weight(name="ctp", initializer="zeros")
+
+    def update_state(self, Y_true, Y_pred, sample_weight=None):
+        # Cast to float to make sure division will be floating-point operation
+        Y_true = tf.cast(Y_true, tf.float32)
+        Y_pred = tf.cast(Y_pred, tf.float32)
+        
+        # Calculate Precision and Recall for binary classification
+        epsilon = 1e-7  # to avoid division by zero
+        
+        TP = tf.reduce_sum(Y_true * Y_pred)
+        FP = tf.reduce_sum((1 - Y_true) * Y_pred)
+        FN = tf.reduce_sum(Y_true * (1 - Y_pred))
+        
+        precision = TP / (TP + FP + epsilon)
+        recall = TP / (TP + FN + epsilon)
+        
+        # Calculate F1 score
+        f1 = 2 * precision * recall / (precision + recall + epsilon)
+        
+        self.f1_score.assign_add(f1)
+    def result(self):
+        return self.f1_score
+
+    def reset_state(self):
+        # The state of the metric will be reset at the start of each epoch.
+        self.f1_score.assign(0.0)
+
+
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
@@ -233,10 +266,9 @@ class Encoder(layers.Layer):
 
 
 class ClsPositionEncodingLayer(layers.Layer):
-    def __init__(self, input_channel, kenerl_size, strides, d_model, dropout_rate, name="ClsPositionEncodingLayer"):
+    def __init__(self, d_model, dropout_rate, name="ClsPositionEncodingLayer"):
         super(ClsPositionEncodingLayer, self).__init__(name=name)
 
-        patch = (input_channel - kenerl_size[0]) // strides[0] + 1
         self.cls_token_patch = tf.Variable(tf.random.normal((1, 1, d_model)))
         self.pos_embedding = PositionalEncoding()
         self.dropout_patch = layers.Dropout(dropout_rate)
@@ -365,7 +397,7 @@ class Classifier_GNN_Transformer():
         num_of_last_dense = 2  # random.randint(0, 3)
         l2_rate = 0.001
         num_class = 2  # 2
-        lr_factor = sweep_config['lr_factor'] if sweep_config else 1
+        lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers * lr_factor, warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,
@@ -374,48 +406,74 @@ class Classifier_GNN_Transformer():
                                               epsilon=1e-9)
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
-        inputs = tf.keras.Input(shape=input_shape[1:])
         input_adj = tf.keras.Input(shape=(input_shape[1], input_shape[1]))
-        output_1 = GCN(d_model=d_model)(inputs, input_adj)
-        output_2 = GCN(d_model=d_model)(inputs, input_adj)
+        inputs = tf.keras.Input(shape=input_shape[1:])
+        if input_shape[-1] != 1 and input_shape[-1] > 10:
+            inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
+        else:
+            inputs = tf.keras.Input(shape=input_shape[1:])
         
-        for i in range(1,gnn_layers):
-            output_1 = GCN(d_model=d_model)(output_1, input_adj)
-            output_2 = GCN(d_model=d_model)(output_2, input_adj)
+        num_branches = inputs.shape[-1]
+        outputs = []
+        for i in range(num_branches*2):
+            output = GCN(d_model=d_model)(inputs[...,i//2], input_adj)
+            for i in range(1,gnn_layers):
+                output = GCN(d_model=d_model)(output, input_adj)
+            output = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i}')(output)
+            output = Transformer(input_shape,
+                                num_class,
+                                dropout_rate,
+                                d_model,
+                                output_channel,
+                                kernel_size,
+                                stride_size,
+                                n_layers,
+                                FFN_units,
+                                n_heads,
+                                activation,
+                                num_of_last_dense,
+                                l2_rate)(output)
+            outputs.append(output)
+        outputs = tf.concat(outputs, axis=1)  #
 
-        output_1 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)
-        output_2 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[1], strides=stride_size[1], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(output_2)
+        # output_1 = GCN(d_model=d_model)(inputs, input_adj)
+        # output_2 = GCN(d_model=d_model)(inputs, input_adj)
+        
+        # for i in range(1,gnn_layers):
+        #     output_1 = GCN(d_model=d_model)(output_1, input_adj)
+        #     output_2 = GCN(d_model=d_model)(output_2, input_adj)
 
-        output_1 = Transformer(input_shape,
-                               num_class,
-                               dropout_rate,
-                               d_model,
-                               output_channel,
-                               kernel_size,
-                               stride_size,
-                               n_layers,
-                               FFN_units,
-                               n_heads,
-                               activation,
-                               num_of_last_dense,
-                               l2_rate)(output_1)
-        output_2 = Transformer(input_shape,
-                               num_class,
-                               dropout_rate,
-                               d_model,
-                               output_channel,
-                               kernel_size,
-                               stride_size,
-                               n_layers,
-                               FFN_units,
-                               n_heads,
-                               activation,
-                               num_of_last_dense,
-                               l2_rate)(output_2)
+        # output_1 = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)
+        # output_2 = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(output_2)
 
-        outputs = tf.concat([output_1, output_2], axis=1)  #
+        # output_1 = Transformer(input_shape,
+        #                        num_class,
+        #                        dropout_rate,
+        #                        d_model,
+        #                        output_channel,
+        #                        kernel_size,
+        #                        stride_size,
+        #                        n_layers,
+        #                        FFN_units,
+        #                        n_heads,
+        #                        activation,
+        #                        num_of_last_dense,
+        #                        l2_rate)(output_1)
+        # output_2 = Transformer(input_shape,
+        #                        num_class,
+        #                        dropout_rate,
+        #                        d_model,
+        #                        output_channel,
+        #                        kernel_size,
+        #                        stride_size,
+        #                        n_layers,
+        #                        FFN_units,
+        #                        n_heads,
+        #                        activation,
+        #                        num_of_last_dense,
+        #                        l2_rate)(output_2)
+
+        # outputs = tf.concat([output_1, output_2], axis=1)  #
 
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
 
@@ -427,9 +485,13 @@ class Classifier_GNN_Transformer():
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
         model = tf.keras.Model(inputs=[inputs, input_adj], outputs=outputs)
         model.summary()
+
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',
+                      loss='categorical_crossentropy',#categorical_crossentropy
                       metrics=['accuracy']) # , Recall(name='sensitivity')
+        
+
+
         self.model = model
 
         self.hyperparameters = {
@@ -459,6 +521,11 @@ class Classifier_GNN_Transformer():
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
         start_time = time.time()
+
+        class_weights = {0: 1,  # weight for class 0
+                 1: 5}  # weight for class 1, assuming this is the minority class
+
+        self.class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
         hist = self.model.fit(
             x=[X_train, adj_train],
             y=Y_train,
@@ -467,7 +534,8 @@ class Classifier_GNN_Transformer():
             epochs=self.epochs,
             callbacks=self.callbacks,
             verbose=True,
-            shuffle=True  # Set shuffle to True
+            shuffle=True,  # Set shuffle to True
+            class_weight=self.class_weights_dict 
         )
 
         self.model.load_weights(

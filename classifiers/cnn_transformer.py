@@ -32,6 +32,7 @@ put this function into the utils as well:
 but remember that do not modify utils so much.
 """
 
+
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
         super(CustomSchedule, self).__init__()
@@ -362,7 +363,7 @@ class Classifier_Transformer():
 
         # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
         #
-        if input_shape[-1]!=1 and input_shape[-1] > 10:
+        if input_shape[-1] != 1 and input_shape[-1] > 10:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
             inputs = tf.keras.Input(shape=input_shape[1:])
@@ -370,26 +371,26 @@ class Classifier_Transformer():
         outputs = []  #
         for i in range(num_branches):
             output = EmbeddingLayer(
-                d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name=f'cnn_embedding_{i+1}')(inputs[...,i:i+1])
-            
+                d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name=f'cnn_embedding_{i+1}')(inputs[..., i:i+1])
+
             output = ClsPositionEncodingLayer(
                 input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i+1}')(output)
             # Append the output to the 'outputs' list.
             output = Transformer(input_shape,
-                        num_class,
-                        dropout_rate,
-                        d_model,
-                        output_channel,
-                        kernel_size,
-                        stride_size,
-                        n_layers,
-                        FFN_units,
-                        n_heads,
-                        activation,
-                        num_of_last_dense,
-                        l2_rate)(output)
+                                 num_class,
+                                 dropout_rate,
+                                 d_model,
+                                 output_channel,
+                                 kernel_size,
+                                 stride_size,
+                                 n_layers,
+                                 FFN_units,
+                                 n_heads,
+                                 activation,
+                                 num_of_last_dense,
+                                 l2_rate)(output)
             outputs.append(output)
-            
+
         # output_1 = EmbeddingLayer(
         #     d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name='cnn_embedding_1')(inputs)
         # output_2 = EmbeddingLayer(
@@ -441,7 +442,8 @@ class Classifier_Transformer():
         model.summary()
         model.compile(optimizer=optimizer,
                       loss='categorical_crossentropy',
-                      metrics=['accuracy', tf.keras.metrics.Recall(name='sensitivity')])
+                      metrics=['accuracy', tf.keras.metrics.F1Score(
+                          name='f1_score', average='weighted')])
         self.model = model
 
         self.hyperparameters = {
@@ -489,7 +491,8 @@ class Classifier_Transformer():
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
-        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(
+            X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None

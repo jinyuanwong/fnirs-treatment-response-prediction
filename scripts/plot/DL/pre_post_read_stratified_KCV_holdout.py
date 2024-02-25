@@ -6,16 +6,16 @@ import os
 import re
 
 
-model = 'pre_post_cnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
+model = 'gnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
 
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-time = 'pre_post_treatment_hamd_reduction_50'
+time = 'pre_treatment_hamd_reduction_50'
 
 condition_time = 'pre_post_treatment_hamd_reduction_50'
 
 if time[-len(condition_time):] == 'pre_post_treatment_hamd_reduction_50':
     validation_method = 'Stratified_4_fold_CV/fold'  # 'LOOCV' or 'k_fold'
-    total_fold = 4 # '65' or '45
+    total_fold = 4 # '65' or '46
 
 else:
     validation_method = 'Stratified_5_fold_CV/fold'  # 'LOOCV' or 'k_fold'
@@ -23,7 +23,7 @@ else:
 
 # According to the result, find the wrong labeled index
 comb_cnn_total_itr = 10
-cnntr_total_itr = 10
+cnntr_total_itr = 100
 
 output_fold = f'FigureTable/DL/TimeFeature/{time}'
 
@@ -32,6 +32,7 @@ if not os.path.exists(output_fold):
 
 y_test_path = f'allData/prognosis/{time}'
 
+# This is based on each iteration and find the best 
 def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose=True):
     read_path = 'results/' + model + '/' + time + '/' + validation_method + '-'
     best_acc = 0
@@ -39,7 +40,7 @@ def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose
     final_wrong_index = []
     print('| Iteration | Accuracy | Wrong Label Index |')
     print('| ---- | ---- | ---- |')
-    for index in range(total_itr):
+    for index in range(1,total_itr+1):
         folds_acc, folds_sen, folds_spe, folds_f1 = [], [], [], []
         
         wrong_index = []
@@ -52,16 +53,16 @@ def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose
                 spe = re.findall(r'specificity: (\d+\.\d+)', content)
                 f1 = re.findall(r'F1-score: (\d+\.\d+)', content)
                 
-                folds_acc.append(acc[index])
-                folds_sen.append(sen[index])
-                folds_spe.append(spe[index])
-                folds_f1.append(f1[index])
+                folds_acc.append(acc[-index])
+                folds_sen.append(sen[-index])
+                folds_spe.append(spe[-index])
+                folds_f1.append(f1[-index])
                 
         folds_acc = [float(i) for i in folds_acc]
         folds_sen = [float(i) for i in folds_sen]
         folds_spe = [float(i) for i in folds_spe]
         folds_f1 = [float(i) for i in folds_f1]
-        mean_acc = np.mean(folds_f1)
+        mean_acc = np.mean(folds_acc)
         if mean_acc > best_acc:
             best_itr = index
             best_acc = mean_acc
@@ -70,16 +71,53 @@ def loop_iteration_find_best_performance_id(total_itr, model, file_name, verbose
             f' {index} | {folds_acc} | ')
     return best_metric
 
+# Next - this is based on all the itertion and find the best 
+
+def loop_all_iteration_find_best_performance_id(total_itr, model, file_name, verbose=True):
+    read_path = 'results/' + model + '/' + time + '/' + validation_method + '-'
+
+    folds_acc, folds_sen, folds_spe, folds_f1 = [], [], [], []
+    for fold in range(total_fold):
+        acc_itr, sen_itr, spe_itr, f1_itr = [],[],[],[]
+        for index in range(1,total_itr+1):
+            path = read_path + str(fold) + '/' + file_name
+            with open(path, 'r') as f:
+                content = f.read()
+                acc = re.findall(r'accuracy: (\d+\.\d+)', content)
+                sen = re.findall(r'sensitivity: (\d+\.\d+)', content)
+                spe = re.findall(r'specificity: (\d+\.\d+)', content)
+                f1 = re.findall(r'F1-score: (\d+\.\d+)', content)
+
+                
+                acc_itr.append(acc[-index])
+                sen_itr.append(sen[-index])
+                spe_itr.append(spe[-index])
+                f1_itr.append(f1[-index])
+                
+        acc_itr = [float(i) for i in acc_itr]
+        sen_itr = [float(i) for i in sen_itr]
+        spe_itr = [float(i) for i in spe_itr]
+        f1_itr = [float(i) for i in f1_itr]
+        based_on_best_metric_location = f1_itr
+        best_index = np.argmax(based_on_best_metric_location)
+        folds_acc.append(acc_itr[best_index])
+        folds_sen.append(sen_itr[best_index])
+        folds_spe.append(spe_itr[best_index])
+        folds_f1.append(f1_itr[best_index])
+        
+    return np.mean(folds_acc), np.mean(folds_sen), np.mean(folds_spe), np.mean(folds_f1)
 
 
 # wrong_index_mcnet = loop_iteration_find_best_performance_id(
 #     comb_cnn_total_itr, 'comb_cnn', verbose=False)
-test_best_metric = loop_iteration_find_best_performance_id(
+test_best_metric = loop_all_iteration_find_best_performance_id(
     cnntr_total_itr, model, 'test_acc.txt',verbose=False)
+print(f'test_best-metric: {test_best_metric}')
 print('-'*100)
-val_best_metric = loop_iteration_find_best_performance_id(
+val_best_metric = loop_all_iteration_find_best_performance_id(
     cnntr_total_itr, model, 'val_acc.txt',verbose=False)
-
+# val_best_metric = loop_iteration_find_best_performance_id(
+#     cnntr_total_itr, model, 'val_acc.txt',verbose=False)
 
 
 metric_dic = {

@@ -17,11 +17,7 @@ import numpy as np
                 #  'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
-INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
-                 'pre_post_treatment_hamd_reduction_50',
-                 'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
-                 'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
-                 'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
+INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50'] # for prognosis
 
 # for example:
 # pre_post_treatment_hamd_reduction_50
@@ -62,7 +58,7 @@ PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD
 DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
 
 
-MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' 
+MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' or 'f1_score'
 
 PARAMETER = {
     'graphsage_transformer': {
@@ -111,6 +107,7 @@ PARAMETER = {
     'gnn_transformer': {
         'hb_path': 'data.npy',
         'adj_path': 'adj_matrix.npy',
+        # 'lr_factor': 0.001 # this is for pre_post_treatment dataset 
     },
     'rggcnn_transformer': {
         'hb_path': 'data.npy',
