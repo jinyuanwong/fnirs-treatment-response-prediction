@@ -27,8 +27,16 @@ from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.stats.multitest import multipletests
 import matplotlib.ticker as ticker
 
-data = np.load('/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData/prognosis/pre_treatment_hamd_reduction_50/data.npy')
-label = np.load('/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData/prognosis/pre_treatment_hamd_reduction_50/label.npy')
+data = np.load('allData/prognosis/pre_treatment_hamd_reduction_50/data.npy')
+data = np.transpose(data, (0, 2, 1))
+length_of_time =data.shape[1]
+data = data[:, :length_of_time//2, :]
+print(f'data.shape -> {data.shape}')
+label = np.load('allData/prognosis/pre_treatment_hamd_reduction_50/label.npy')
+
+task_start_index = 100 
+task_end_index = 700
+
 responders = data[label==1]
 nonresponders = data[label==0]
 
@@ -38,23 +46,20 @@ colors = ['red','white']
 
 cmap = LinearSegmentedColormap.from_list('RedToWhite', colors, N=256)
 title = ['Task activation of HbO', 'Mean of HbO', 'Task change of HbO']
-plt.figure(figsize=(20,10))
-
+plt.figure(figsize=(25,15))
+plt.title('Responders vs Non-responders (P-value)', fontsize=20, fontweight='bold')
 for channel in range(52):
     channel_p = []
     channel_effect_size = []
-    responders_sum_hbo = np.sum(responders[..., channel], axis=1)
-    nonresponders_sum_hbo = np.sum(nonresponders[..., channel], axis=1)
 
-    responders_task_change = np.mean(responders[:,70:, channel], axis=1) - np.mean(responders[:,0:10, channel], axis=1)
-    nonresponders_task_change = np.mean(nonresponders[:,70:, channel], axis=1) - np.mean(nonresponders[:,0:10, channel], axis=1)
+    responders_task_change = np.mean(responders[:,task_end_index:, channel], axis=1) - np.mean(responders[:,0:task_start_index, channel], axis=1)
+    nonresponders_task_change = np.mean(nonresponders[:,task_end_index:, channel], axis=1) - np.mean(nonresponders[:,0:task_start_index, channel], axis=1)
 
     responders_mean_hbo = np.mean(responders[..., channel], axis=1)
     nonresponders_mean_hbo = np.mean(nonresponders[..., channel], axis=1)
-
-    responders_task_rest_hbo = np.sum(responders[:, 10:70, channel], axis=1) - np.sum(responders[:,0:10 + 70:-1, channel], axis=1)
-    nonresponders_task_rest_hbo = np.sum(nonresponders[:,10:70, channel], axis=1) - np.sum(nonresponders[:,0:10 + 70:-1, channel], axis=1)
-
+    responders_task_rest_hbo = np.mean(responders[:, task_start_index:task_end_index, channel], axis=1) - np.mean(responders[:,0:task_start_index, channel], axis=1) - np.sum(responders[:,task_end_index:-1, channel], axis=1)
+    nonresponders_task_rest_hbo = np.mean(nonresponders[:,task_start_index:task_end_index, channel], axis=1) - np.mean(nonresponders[:,0:task_start_index, channel], axis=1) - np.sum(nonresponders[:, task_end_index:-1, channel], axis=1)
+    # print(f'test: {np.mean(nonresponders[:,0:task_start_index, channel], axis=1) - np.mean(nonresponders[:, task_end_index:-1, channel], axis=1)}')
     # print(nonresponders_task_rest_hbo.shape)
     
     # Create a figure and axis
@@ -108,7 +113,7 @@ VPC_indices = location_to_index(VPC_location)
 MPC_indices = location_to_index(MPC_location)
 
 # Create the figure and axes
-# plt.figure(figsize=(20,10))
+# plt.figure(figsize=(25,15))
 
 # Define the height at which the markers will be placed (above the heatmap)
 marker_height = all_p.shape[0]  # You can adjust this as needed
@@ -124,7 +129,7 @@ for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, 
 
 # plt.axvspan(1, 2, ymin=0.85, ymax=1, color='red', zorder=1)
 
-print(marker_height/(marker_height+1))
+# print(marker_height/(marker_height+1))
 # # Draw the color markers first
 # plt.fill_between(x=np.arange(25, 53), y1=marker_height+0.25, y2=marker_height+1, color='purple', label='Rear Brain')
 
@@ -145,12 +150,15 @@ for i in range(all_p.shape[0]):
     fdr_p[i] = adjusted_all_p
 all_p = fdr_p
 # Now, plot the heatmap on top of the color markers
-im = plt.imshow(all_p, norm=LogNorm(vmin=0.00001, vmax=0.05), cmap=cmap, extent=[1,53, 0, marker_height])
+im = plt.imshow(all_p, norm=LogNorm(vmin=0.00001, vmax=0.1), cmap=cmap, extent=[1,53, 0, marker_height])
 
 ax = plt.gca()
+# print(f'all_p: {all_p}')
+cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02)
+# cbar.ax.set_yticklabels(['0.00001', '0.0001', '0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
 
-cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.00001, 0.0001, 0.001, 0.01, 0.05])
-cbar.ax.set_yticklabels(['0.00001', '0.0001', '0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
+# cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.00001, 0.0001, 0.001, 0.01, 0.05])
+# cbar.ax.set_yticklabels(['0.00001', '0.0001', '0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
 # 获取颜色条的位置信息
 cbar_pos = cbar.ax.get_position()
 
@@ -204,7 +212,8 @@ plt.xlim([1, 53.01])
 # Show the plot
 plt.show()
   
-plt.figure(figsize=(20,10))
+plt.figure(figsize=(25,15))
+plt.title('Responders vs Non-responders (Effect size)', fontsize=20, fontweight='bold')
 
 for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, MPC_indices], [PSFC_color, DPC_color, STG_color, VPC_color, MPC_color]):
     for index in indices:
@@ -280,3 +289,4 @@ for spine_position, spine in plt.gca().spines.items():
 plt.xlim([1, 53.01])
 # Show the plot
 plt.show()
+
