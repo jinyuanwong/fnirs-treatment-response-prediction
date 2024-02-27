@@ -30,7 +30,7 @@ else:
 comb_cnn_total_itr = 10
 cnntr_total_itr = 4
 
-output_fold = f'FigureTable/DL/TimeFeature/{time}'
+output_fold = f'FigureTable/DL/timedomain/{time}'
 
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)

@@ -13,7 +13,7 @@ time = 'pre_post_treatment_hamd_reduction_50'
 
 validation_method = 'LOOCV'  # 'LOOCV' or 'k_fold'
 
-output_fold = f'FigureTable/DL/TimeFeature/{time}'
+output_fold = f'FigureTable/DL/timedomain/{time}'
 
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
