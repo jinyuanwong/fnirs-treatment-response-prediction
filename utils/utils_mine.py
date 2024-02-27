@@ -523,7 +523,7 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     neg = data[label_not_onehot==0]
     
     holdout_pos_num = pos.shape[0] // 3
-    holdout_neg_num = neg.shape[0] // 3 
+    holdout_neg_num = neg.shape[0] // 3
     
     X_test = np.concatenate((pos[:holdout_pos_num], neg[:holdout_neg_num]), axis=0)
     Y_test = np.concatenate((np.ones(holdout_pos_num), np.zeros(holdout_neg_num)), axis=0)

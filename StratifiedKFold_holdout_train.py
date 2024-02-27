@@ -82,9 +82,15 @@ class TrainModel():
                     print(f'X_train: {X_train.shape}')
                     print(f'X_val: {X_val.shape}')
                     print(f'X_test: {X_test.shape}')
-                    output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
+                    msg = info['message']
+                    if len(msg)<=1:
+                        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
-                        '/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                        f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                    else:
+                        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
+                            archive + \
+                            f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
                     create_directory(output_directory)
 
                     checkpoint_path = output_directory + 'checkpoint'

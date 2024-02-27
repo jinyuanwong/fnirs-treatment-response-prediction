@@ -395,7 +395,9 @@ class Classifier_GNN_Transformer():
         # random.choice([0.98, 0.99, 0.999])
         adam_beta_1, adam_beta_2 = 0.9, 0.999
         num_of_last_dense = 2  # random.randint(0, 3)
-        l2_rate = 0.001
+        parameter = self.info['parameter']
+        l1_rate = parameter['l1_rate']
+        l2_rate = parameter['l2_rate']
         num_class = 2  # 2
         lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
@@ -436,44 +438,6 @@ class Classifier_GNN_Transformer():
             outputs.append(output)
         outputs = tf.concat(outputs, axis=1)  #
 
-        # output_1 = GCN(d_model=d_model)(inputs, input_adj)
-        # output_2 = GCN(d_model=d_model)(inputs, input_adj)
-        
-        # for i in range(1,gnn_layers):
-        #     output_1 = GCN(d_model=d_model)(output_1, input_adj)
-        #     output_2 = GCN(d_model=d_model)(output_2, input_adj)
-
-        # output_1 = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(output_1)
-        # output_2 = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(output_2)
-
-        # output_1 = Transformer(input_shape,
-        #                        num_class,
-        #                        dropout_rate,
-        #                        d_model,
-        #                        output_channel,
-        #                        kernel_size,
-        #                        stride_size,
-        #                        n_layers,
-        #                        FFN_units,
-        #                        n_heads,
-        #                        activation,
-        #                        num_of_last_dense,
-        #                        l2_rate)(output_1)
-        # output_2 = Transformer(input_shape,
-        #                        num_class,
-        #                        dropout_rate,
-        #                        d_model,
-        #                        output_channel,
-        #                        kernel_size,
-        #                        stride_size,
-        #                        n_layers,
-        #                        FFN_units,
-        #                        n_heads,
-        #                        activation,
-        #                        num_of_last_dense,
-        #                        l2_rate)(output_2)
-
-        # outputs = tf.concat([output_1, output_2], axis=1)  #
 
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
 
@@ -481,7 +445,7 @@ class Classifier_GNN_Transformer():
         for i in range(num_of_last_dense):
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
-                                   kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
+                                   kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
         model = tf.keras.Model(inputs=[inputs, input_adj], outputs=outputs)
         model.summary()
