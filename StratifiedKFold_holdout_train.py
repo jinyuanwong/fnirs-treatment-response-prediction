@@ -104,18 +104,14 @@ class TrainModel():
                     if model_name in ['chao_cfnn', 'zhu_xgboost']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1]]
-                    elif model_name in ['comb_cnn', 'cnn_transformer', 'pre_post_cnn_transformer']:
-                        input_shape = [self.batch_size] + list(X_train.shape[1:])
-
                     elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1],
                                        X_train.shape[2],
                                        adj_train.shape[-1]]
                     else:
-                        input_shape = [self.batch_size,
-                                       X_train.shape[1],
-                                       X_train.shape[2]]
+                        input_shape = [self.batch_size] + list(X_train.shape[1:])
+
 
                     for repeat_count in range(self.repeat_count_all):
 
@@ -175,6 +171,9 @@ class TrainModel():
         if classifier_name == 'gin_transformer':  # Time-CNN
             from classifiers import gin_transformer
             return gin_transformer.Classifier_GIN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+        if classifier_name == 'graphformer':  # Time-CNN
+            from classifiers import graphformer
+            return graphformer.Classifier_Graph_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
         if classifier_name == 'rggcnn_transformer':  # Time-CNN
             from classifiers import rggcnn_transformer
             return rggcnn_transformer.Classifier_RGGCNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)

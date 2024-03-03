@@ -17,8 +17,8 @@ import numpy as np
                 #  'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
-INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50'
-    ,'pre_post_treatment_hamd_reduction_50'] # for prognosis
+INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50',
+                 'pre_treatment_hamd_reduction_50'] # for prognosis
 
 # for example:
 # pre_post_treatment_hamd_reduction_50
@@ -111,6 +111,10 @@ PARAMETER = {
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.01,# should be 0.001
         # 'lr_factor': 0.001 # this is for pre_post_treatment dataset 
+    },
+    'graphformer': {
+        'hb_path': 'data.npy',
+        'adj_path': 'adj_matrix.npy',
     },
     'rggcnn_transformer': {
         'hb_path': 'data.npy',

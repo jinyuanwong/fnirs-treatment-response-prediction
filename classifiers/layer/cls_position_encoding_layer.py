@@ -60,3 +60,18 @@ class ClsPositionEncodingLayer(layers.Layer):
         outputs = self.pos_embedding(outputs)
         outputs = self.dropout_patch(outputs)
         return outputs
+    
+class PositionEncodingLayer(layers.Layer):
+    def __init__(self, d_model, dropout_rate, name="ClsPositionEncodingLayer"):
+        super(PositionEncodingLayer, self).__init__(name=name)
+
+        self.pos_embedding = PositionalEncoding()
+        self.dropout_patch = layers.Dropout(dropout_rate)
+
+    def call(self, inputs):
+
+        outputs = inputs
+        outputs = self.pos_embedding(outputs)
+        outputs = self.dropout_patch(outputs)
+        return outputs
+
