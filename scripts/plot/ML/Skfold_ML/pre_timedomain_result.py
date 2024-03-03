@@ -75,7 +75,7 @@ for machine_learning_name in ['Decision Tree', 'Random Forest', 'KNN', 'SVM']:
     # print('metrics: ', metrics)
 
 # Separate the data based on biomarkers
-biomarkers = ['HbO', 'HbR', 'HbO+HbR']
+biomarkers = ['HbO', 'HbR', 'HbO+H']
 # Define the data
 models = ['Decision Tree', 'Random Forest', 'KNN', 'SVM']
 metrics = ['Accuracy', 'Sensitivity', 'Specificity', 'F1 Score']
