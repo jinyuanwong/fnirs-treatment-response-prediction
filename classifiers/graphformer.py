@@ -46,11 +46,12 @@ class Classifier_Graph_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
+        params = info['parameter']
         self.callbacks.append(early_stopping)
-        self.batch_size = 128
-        d_model = 64  # 125# # random.choice([64, 128, 256])
+        self.batch_size = params['batch_size'] if params.get('batch_size') else 128
+        d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
-        n_layers = sweep_config['n_layers'] if sweep_config else 12
+        n_layers = params['n_layers'] if params.get('n_layers') else 12
         gnn_layers = sweep_config['gnn_layers'] if sweep_config else 1
         FFN_units = sweep_config['FFN_units'] if sweep_config else 256
         n_heads = 1 # specific for graph_transformer for doing graph operation 

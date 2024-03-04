@@ -148,7 +148,7 @@ def refer_val_get_test(total_itr, model):
             val_spe_itr.append(float(spe[-index]))
             val_f1_itr.append(float(f1[-index]))
         
-        based_on_best_metric_location = val_f1_itr # val_f1_itr
+        based_on_best_metric_location = val_sen_itr # val_f1_itr
         # sum_metrics = val_acc_itr + val_sen_itr + val_spe_itr + val_f1_itr
         # sum_metrics = [sum(values) for values in zip(val_acc_itr, val_sen_itr, val_spe_itr, val_f1_itr)]
         # based_on_best_metric_location = sum_metrics
@@ -215,7 +215,7 @@ model = 'gnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transfo
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 # DMFC/pre_treatment_hamd_reduction_50
 time = 'pre_treatment_hamd_reduction_50'
-
+# model = 'graphformer' # 'gnn_transformer'
 
 condition_time = 'pre_post_treatment_hamd_reduction_50'
 
@@ -241,7 +241,7 @@ if not os.path.exists(output_fold):
 
 y_test_path = f'allData/prognosis/{time}'
 
-folder_path = f'results/gnn_transformer/{time}'
+folder_path = f'results/{model}/{time}'
 all_filename = os.listdir(folder_path)
 # all_filename = ['d_model_64_BatchSize_4_n_layers_4']
 for filename in all_filename:
@@ -274,7 +274,7 @@ for filename in all_filename:
     metrics_name = ['Accuracy', 'Sensitivity', 'Specificity', 'F1 Score']
 
 
-    if test_best_metric[1] > 0.5:
+    if test_best_metric[1] > 0.4:
         print(f'dataset: {time}')
         print(f'model: {model}')
         print(f'validation method: stratified k-fold cross-validation with holdout')

@@ -38,16 +38,6 @@ MAX_EPOCHS = 1000
 
 SPECIFY_FOLD = None#[i for i in range(13, 46)] # [i for i in range(55, 65)]
 
-
-MODELS_NEED_ADJ_MATRIX = ['graphsage_transformer',
-                          'mvg_transformer',
-                          'gnn_transformer',
-                          'gin_transformer',
-                          'yu_gnn',
-                          'gnn',
-                          'mgn_transformer',
-                          'mgm_transformer']
-
 # left_to_do SVM_ZHIFEI, RSFC_DUAN, NMF_ZHONG
 MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
                                'wang_alex', 'zhu_xgboost', 'yu_gnn']
@@ -115,6 +105,9 @@ PARAMETER = {
     'graphformer': {
         'hb_path': 'data.npy',
         'adj_path': 'adj_matrix.npy',
+        'd_model': np.random.choice([16, 32, 64]),
+        'batch_size': np.random.choice([4, 8, 16, 64]),
+        'n_layers': np.random.choice([4, 8, 12]),
     },
     'rggcnn_transformer': {
         'hb_path': 'data.npy',

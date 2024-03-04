@@ -82,7 +82,8 @@ class TrainModel():
                     print(f'X_train: {X_train.shape}')
                     print(f'X_val: {X_val.shape}')
                     print(f'X_test: {X_test.shape}')
-                    msg = info['message']
+                    params = info['parameter']
+                    msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                     if len(msg)<=1:
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
