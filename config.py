@@ -100,7 +100,9 @@ PARAMETER = {
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.01,# should be 0.001
-        # 'lr_factor': 0.001 # this is for pre_post_treatment dataset 
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6#np.random.choice([4, 8, 12]),
     },
     'graphformer': {
         'hb_path': 'data.npy',

@@ -367,9 +367,10 @@ class Classifier_GNN_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
+        params = info['parameter']
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
-        self.batch_size = 128
+        self.batch_size = params['batch_size'] if params.get('batch_size') else 128
         kernel_size_1 = (4, 5)  # 2, 3, 4
         stride_size_1 = (1, 2)
         kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
@@ -380,10 +381,10 @@ class Classifier_GNN_Transformer():
         # random.choice([4, 24])  # random.choice([12, 24, 36])
         output_channel = 4  # random.choice([3, 8, 24]) # 24
         # random.choice([64, 256])# 64 #
-        d_model = 64  # 125# # random.choice([64, 128, 256])
+        d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
         # random.choice([4, 12])  # random.randint(10, 12)
-        n_layers = sweep_config['n_layers'] if sweep_config else 12  # random.choice([12, 8, 16])
+        n_layers = params['n_layers'] if params.get('n_layers') else 12  # random.choice([12, 8, 16])
         gnn_layers = sweep_config['gnn_layers'] if sweep_config else 1  # random.choice([12, 8, 16])
         
         FFN_units = sweep_config['FFN_units'] if sweep_config else 256 # random.choice([64, 128, 256, 512])  # 512, 64, 128,

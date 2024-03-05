@@ -88,14 +88,11 @@ class TrainModel():
                         print(f"total sample size is {X_train.shape[0] + X_val.shape[0] + X_test.shape[0]}")
                         params = info['parameter']
                         msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
-                        if len(msg)<=1:
-                            output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
-                            archive + \
-                            f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
-                        else:
-                            output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
-                                archive + \
-                                f'/{msg}/' + f"Stratified_LOO_nested_CV_{current_loo}/stratified_nested_CV_fold-{str(k)}" + '/'
+
+                        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
+                        archive + \
+                        f'/{msg}/' + f"LOO_nested_CV/LOO_{current_loo}/stratified_nested_CV_fold-{str(k)}" + '/'
+
                         print(f'output_directory -> {output_directory}')
                         create_directory(output_directory)
 
