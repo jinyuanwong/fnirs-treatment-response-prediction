@@ -25,12 +25,15 @@ import pingouin as pg
 import subprocess
 import os 
 
+from scipy.stats import ranksums
+
 output_fold = 'FigureTable/statics/DMFC'
 
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
     
 
+stats_method = 'ranksums' # 'ranksums' or 'mannwhitneyu'
 def zero_diagnonal(arr):
     # Loop over the first and last dimension
     for i in range(arr.shape[0]):  # Loop over subjects
@@ -48,19 +51,38 @@ def show(adj, labels, name):
     num_view = adj.shape[-1]
     p_view = np.zeros((52,52,num_view))
     effect_size = np.zeros((52,52,num_view))
+    stats = np.zeros((52,52,num_view))
     for view in range(num_view):
         for seed in range(52):
             for target in range(52):
                 hc_val = hc_adj[:, seed, target, view]
                 md_val = md_adj[:, seed, target, view]
-
-                stat, p1 = mannwhitneyu(hc_val,md_val)
+                if stats_method == 'mannwhitneyu':
+                    stat, p1 = mannwhitneyu(hc_val,md_val)
+                elif stats_method == 'ranksums':
+                    stat, p1 = ranksums(hc_val,md_val)
+                else:
+                    raise ValueError('stats_method should be mannwhitneyu or ranksums')
                 p_view[seed, target, view] = p1
+                stats[seed, target, view] = stat
                 
                 # Calculate Hedges' g
                 effect_size[seed, target, view] = pg.compute_effsize(hc_val,md_val, eftype='Hedges')
                 
+    # plt.figure()
+    # plt.subplot(1, 3, 1)
+    # plt.imshow(stats[:,:,0])
+    # plt.colorbar()
+    # plt.subplot(1, 3, 2)
+    # plt.imshow(stats[:,:,1])
+    # plt.colorbar()
 
+    # plt.subplot(1,3,3)
+    # plt.imshow(stats[:,:,2])
+    # plt.colorbar()
+
+    # plt.show()
+    
     from matplotlib.colors import LinearSegmentedColormap
     from matplotlib.colors import LogNorm
 
@@ -133,7 +155,7 @@ def show(adj, labels, name):
                 spine.set_linewidth(0.5)  # 设置边框的厚度为0.5
 
     # plt.savefig('/figures/connectivity.png')
-    plt.savefig(output_fold+f'/statistics_responders_nonresponders_{name}.png')
+    plt.savefig(output_fold+f'/stats_{stats_method}_responders_nonresponders_{name}.png')
 
     plt.show()            
 
