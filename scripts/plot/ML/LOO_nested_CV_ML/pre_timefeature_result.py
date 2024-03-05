@@ -100,7 +100,7 @@ def get_metrics_from_validation_set(ML_MODEL_RES, num_best_acc, machine_learning
 data = {}
 timeline = 'pre' # or pre
 save_path = f'/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/FigureTable/timedomain/LOO_nested_CV/{timeline}treatment_respond'
-for machine_learning_name in ['Random Forest', 'KNN', 'SVM']:#, 'Decision Tree', 'KNN', 'SVM']:
+for machine_learning_name in ['Decision Tree', 'Random Forest', 'KNN', 'SVM']:#, 'Decision Tree', 'KNN', 'SVM']:
     data_path = f'results/ML_results/timedomain/LOO_nested_CV_timedomain/{timeline}_treatment_hamd_reduction_50/{machine_learning_name}_result.npy'
     result = np.load(data_path, allow_pickle=True).item()
 

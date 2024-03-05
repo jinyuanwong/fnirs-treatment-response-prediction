@@ -18,7 +18,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer, accuracy_score, recall_score
 
-
+import xgboost as xgb
 """
 this file name: Skfold_CV_DMFC.py
 
@@ -42,11 +42,13 @@ res = {}
 
 # 初始化模型，同时设置随机种子
 models = {
+    "XGBoost": xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'),
     # "Logistic Regression": LogisticRegression(max_iter=150),
-    "Random Forest": RandomForestClassifier(),
-    "SVM": SVC(),
-    "KNN": KNeighborsClassifier(),  # 注意：KNN通常没有random_state参数
-    "Decision Tree": DecisionTreeClassifier()
+    
+    # "Random Forest": RandomForestClassifier(),
+    # "SVM": SVC(),
+    # "KNN": KNeighborsClassifier(),  # 注意：KNN通常没有random_state参数
+    # "Decision Tree": DecisionTreeClassifier()
 }
 for name, model in models.items():
     # run multiple time, using different time stamp as random seed
@@ -91,55 +93,47 @@ for name, model in models.items():
                 num_of_k_fold = int((label==1).sum() * 2 / 3 / 2)
             
             
-                #----------------This is for accuracy + recall matrics----------------------
-                scoring = {
-                    'accuracy': make_scorer(accuracy_score),
-                    'recall': make_scorer(recall_score),
-                    'f1_score': make_scorer(f1_score),
-                    'specificity': make_scorer(lambda y_true, y_pred: confusion_matrix(y_true, y_pred).ravel()[0] / 
-                                            (confusion_matrix(y_true, y_pred).ravel()[0] + confusion_matrix(y_true, y_pred).ravel()[1]))
-                }
-                # Perform cross-validation
-                cv_results = cross_validate(model, X_train, y_train, cv=num_of_k_fold, scoring=scoring)
+                # ----------------This is for accuracy + recall matrics----------------------
+                # scoring = {
+                #     'accuracy': make_scorer(accuracy_score),
+                #     'recall': make_scorer(recall_score),
+                #     'f1_score': make_scorer(f1_score),
+                #     'specificity': make_scorer(lambda y_true, y_pred: confusion_matrix(y_true, y_pred).ravel()[0] / 
+                #                             (confusion_matrix(y_true, y_pred).ravel()[0] + confusion_matrix(y_true, y_pred).ravel()[1]))
+                # }
+                # # Perform cross-validation
+                # cv_results = cross_validate(model, X_train, y_train, cv=num_of_k_fold, scoring=scoring)
 
-                # Print the accuracy and recall for each fold
-                print("Accuracy for each fold: ", cv_results['test_accuracy'])
-                print("Recall (Sensitivity) for each fold: ", cv_results['test_recall'])
+                # # Print the accuracy and recall for each fold
+                # print("Accuracy for each fold: ", cv_results['test_accuracy'])
+                # print("Recall (Sensitivity) for each fold: ", cv_results['test_recall'])
 
-                # Calculate mean and standard deviation for accuracy and recall
-                mean_accuracy = cv_results['test_accuracy'].mean()
-                std_accuracy = cv_results['test_accuracy'].std() * 2  # 95% confidence interval
+                # # Calculate mean and standard deviation for accuracy and recall
+                # mean_accuracy = cv_results['test_accuracy'].mean()
+                # std_accuracy = cv_results['test_accuracy'].std() * 2  # 95% confidence interval
 
-                mean_recall = cv_results['test_recall'].mean()
-                std_recall = cv_results['test_recall'].std() * 2  # 95% confidence interval
+                # mean_recall = cv_results['test_recall'].mean()
+                # std_recall = cv_results['test_recall'].std() * 2  # 95% confidence interval
                 
-                mean_specificity = cv_results['test_specificity'].mean()
-                std_specificity = cv_results['test_specificity'].std() * 2  # 95% confidence interval
+                # mean_specificity = cv_results['test_specificity'].mean()
+                # std_specificity = cv_results['test_specificity'].std() * 2  # 95% confidence interval
                 
-                mean_f1_score = cv_results['test_f1_score'].mean()
-                std_f1_score = cv_results['test_f1_score'].std() * 2  # 95% confidence interval            
-                #--------------------------------------
-                # Print the mean accuracy and recall with 95% confidence intervals
-                print("Mean accuracy: %0.2f (± %0.2f)" % (mean_accuracy, std_accuracy))
-                print("Mean recall (Sensitivity): %0.2f (± %0.2f)" % (mean_recall, std_recall))
+                # mean_f1_score = cv_results['test_f1_score'].mean()
+                # std_f1_score = cv_results['test_f1_score'].std() * 2  # 95% confidence interval            
+                # #--------------------------------------
+                # # Print the mean accuracy and recall with 95% confidence intervals
+                # print("Mean accuracy: %0.2f (± %0.2f)" % (mean_accuracy, std_accuracy))
+                # print("Mean recall (Sensitivity): %0.2f (± %0.2f)" % (mean_recall, std_recall))
                 #----------------This is for simple accuracy matrics----------------------
-
-                # # Perform 5-fold cross validation
-                # scores = cross_val_score(model, X_train, y_train, cv=num_of_k_fold)
-
-                # # Print the accuracy for each fold
-                # print("Accuracy for each fold: ", scores)
-
-                # # Print the mean accuracy and the 95% confidence interval of the score estimate
-                # print("Mean accuracy: %0.2f (± %0.2f)" % (scores.mean(), scores.std() * 2))
+                
                 #--------------------------------------
                 model.fit(X_train, y_train)
                 # Predict the labels for the test set
                 y_pred = model.predict(X_test)
 
 
-                VAL_metrics_mean[HB_TYPE].append([mean_accuracy, mean_recall, mean_specificity, mean_f1_score])
-                VAL_metrics_std[HB_TYPE].append([std_accuracy, std_recall, std_specificity, std_f1_score])
+                # VAL_metrics_mean[HB_TYPE].append([mean_accuracy, mean_recall, mean_specificity, mean_f1_score])
+                # VAL_metrics_std[HB_TYPE].append([std_accuracy, std_recall, std_specificity, std_f1_score])
                 HB_TYPE_y_pred_and_y_test[HB_TYPE].append([y_pred, y_test])
         
         save_result={}

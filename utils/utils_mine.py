@@ -566,10 +566,48 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
         return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
         # raise NotImplementedError('adj is not implemented yet')
     
-# def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
-#     connectivity = np.load(connect_file_path)
-#     return connectivity
+def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=None):
+    total_amount = data.shape[0] 
+    
+    X_test = data[current_loo:current_loo+1]
+    Y_test = label[current_loo:current_loo+1]
+    
+    data = np.concatenate((data[0:current_loo], data[current_loo+1:]), axis=0)
+    label = np.concatenate((label[0:current_loo], label[current_loo+1:]), axis=0)
 
+    pos = data[label_not_onehot==1]
+    neg = data[label_not_onehot==0]
+        
+    label_not_onehot = np.argmax(label, axis=1)
+    
+    train_val_pos_num = pos.shape[0]
+    train_val_neg_num = neg.shape[0]
+    one_fold_number_pos = train_val_pos_num//num_of_k_fold
+    one_fold_number_neg = train_val_neg_num//num_of_k_fold
+
+    train_val_pos = pos
+    train_val_neg = neg
+
+    val_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
+    val_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
+    
+    X_val = np.concatenate((val_pos, val_neg), axis=0)
+    Y_val = np.concatenate((np.ones(val_pos.shape[0]), np.zeros(val_neg.shape[0])), axis=0)
+    
+    train_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
+    train_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
+    
+    X_train = np.concatenate((train_pos, train_neg), axis=0)
+    Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
+    
+    Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
+    if adj is None:
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test
+    else:
+        adj_train = adj[:X_train.shape[0]]
+        adj_val = adj[:X_val.shape[0]]
+        adj_test = adj[:X_test.shape[0]]
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
 
 def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_onehot=None):
 

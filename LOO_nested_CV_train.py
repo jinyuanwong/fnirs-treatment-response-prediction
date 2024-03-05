@@ -16,8 +16,7 @@ import tensorflow_addons as tfa
 import wandb
 import config
 import gc
-from classifiers import classifier_factory
-from classifier_factory import create_classifier
+from classifiers.classifier_factory import create_classifier
 
 current_time = int(time.time())
 
@@ -74,87 +73,89 @@ class TrainModel():
                     num_of_k_fold = SPECIFY_FOLD
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
-                    num_of_k_fold = int((label_not_one_hot==1).sum() * 2 / 3 / 2)
-                for k in range(num_of_k_fold):
-                    if using_adj:
-                        X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
-                            data, label, k, num_of_k_fold, adj)
-                    else:
-                        X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
-                            data, label, k, num_of_k_fold)
-                    print(f'X_train: {X_train.shape}')
-                    print(f'X_val: {X_val.shape}')
-                    print(f'X_test: {X_test.shape}')
-                    params = info['parameter']
-                    msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
-                    if len(msg)<=1:
-                        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
-                        archive + \
-                        f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
-                    else:
-                        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
+                    num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
+                for current_loo in range(data.shape[0]):
+                    for k in range(num_of_k_fold):
+                        if using_adj:
+                            X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
+                                data, label, k, num_of_k_fold, current_loo, adj)
+                        else:
+                            X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_LOO_nested_CV(
+                                data, label, k, num_of_k_fold, current_loo)
+                        print(f'X_train: {X_train.shape}')
+                        print(f'X_val: {X_val.shape}')
+                        print(f'X_test: {X_test.shape}')
+                        print(f"total sample size is {X_train.shape[0] + X_val.shape[0] + X_test.shape[0]}")
+                        params = info['parameter']
+                        msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
+                        if len(msg)<=1:
+                            output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                             archive + \
                             f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
-                    create_directory(output_directory)
-
-                    checkpoint_path = output_directory + 'checkpoint'
-
-                    def learning_rate_schedule(epoch, learning_rate):
-                        return learning_rate
-
-                    lr_monitor = tf.keras.callbacks.LearningRateScheduler(
-                        learning_rate_schedule)
-
-                    if model_name in ['chao_cfnn', 'zhu_xgboost']:
-                        input_shape = [self.batch_size,
-                                       X_train.shape[1]]
-                    elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
-                        input_shape = [self.batch_size,
-                                       X_train.shape[1],
-                                       X_train.shape[2],
-                                       adj_train.shape[-1]]
-                    else:
-                        input_shape = [self.batch_size] + list(X_train.shape[1:])
-
-
-                    for repeat_count in range(self.repeat_count_all):
-
-                        model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
-                                                           monitor='val_' + config.MONITOR_METRIC,
-                                                           mode='max',
-                                                           save_weights_only=True,
-                                                           save_best_only=True)
-
-                        callbacks = [model_checkpoint,
-                                     lr_monitor]
-                        if using_wandb:
-                            callbacks.append(WandbCallback(save_model=False))
-
-                        print(
-                            f'Current / Total repeat count: {repeat_count} / {self.repeat_count_all}')
-
-                        model = create_classifier(
-                            classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
-
-                        if using_adj:
-                            model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
                         else:
-                            model.fit(X_train, Y_train, X_val,
-                                      Y_val, X_test, Y_test)
+                            output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
+                                archive + \
+                                f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                        create_directory(output_directory)
 
-                        del model
-                        del X_train, Y_train, X_val, Y_val, X_test, Y_test
-                        if using_adj:
-                            del adj_train, adj_val, adj_test
-                        # clear the memory
-                        tf.keras.backend.clear_session()
-                        gc.collect()
+                        checkpoint_path = output_directory + 'checkpoint'
 
-                        # if wandb is activated, then we only calculate the k=0 fold cross validation for 25 times
-                    if using_wandb:
-                        break
-                    # for obj in gc.get_objects():
-                    #     print(type(obj), repr(obj))
+                        def learning_rate_schedule(epoch, learning_rate):
+                            return learning_rate
+
+                        lr_monitor = tf.keras.callbacks.LearningRateScheduler(
+                            learning_rate_schedule)
+
+                        if model_name in ['chao_cfnn', 'zhu_xgboost']:
+                            input_shape = [self.batch_size,
+                                        X_train.shape[1]]
+                        elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
+                            input_shape = [self.batch_size,
+                                        X_train.shape[1],
+                                        X_train.shape[2],
+                                        adj_train.shape[-1]]
+                        else:
+                            input_shape = [self.batch_size] + list(X_train.shape[1:])
+
+
+                        for repeat_count in range(self.repeat_count_all):
+
+                            model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
+                                                            monitor='val_' + config.MONITOR_METRIC,
+                                                            mode='max',
+                                                            save_weights_only=True,
+                                                            save_best_only=True)
+
+                            callbacks = [model_checkpoint,
+                                        lr_monitor]
+                            if using_wandb:
+                                callbacks.append(WandbCallback(save_model=False))
+
+                            print(
+                                f'Current / Total repeat count: {repeat_count} / {self.repeat_count_all}')
+
+                            model = create_classifier(
+                                classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
+
+                            if using_adj:
+                                model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+                            else:
+                                model.fit(X_train, Y_train, X_val,
+                                        Y_val, X_test, Y_test)
+
+                            del model
+                            del X_train, Y_train, X_val, Y_val, X_test, Y_test
+                            if using_adj:
+                                del adj_train, adj_val, adj_test
+                            # clear the memory
+                            tf.keras.backend.clear_session()
+                            gc.collect()
+
+                            # if wandb is activated, then we only calculate the k=0 fold cross validation for 25 times
+                        if using_wandb:
+                            break
+                        # for obj in gc.get_objects():
+                        #     print(type(obj), repr(obj))
 
 
 
