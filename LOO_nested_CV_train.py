@@ -95,7 +95,8 @@ class TrainModel():
                         else:
                             output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                                 archive + \
-                                f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                                f'/{msg}/' + f"Stratified_LOO_nested_CV_{current_loo}/stratified_nested_CV_fold-{str(k)}" + '/'
+                        print(f'output_directory -> {output_directory}')
                         create_directory(output_directory)
 
                         checkpoint_path = output_directory + 'checkpoint'

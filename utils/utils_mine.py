@@ -574,11 +574,10 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
     
     data = np.concatenate((data[0:current_loo], data[current_loo+1:]), axis=0)
     label = np.concatenate((label[0:current_loo], label[current_loo+1:]), axis=0)
+    label_not_onehot = np.argmax(label, axis=1)
 
     pos = data[label_not_onehot==1]
     neg = data[label_not_onehot==0]
-        
-    label_not_onehot = np.argmax(label, axis=1)
     
     train_val_pos_num = pos.shape[0]
     train_val_neg_num = neg.shape[0]
@@ -600,7 +599,7 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
     X_train = np.concatenate((train_pos, train_neg), axis=0)
     Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
     
-    Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
+    Y_train, Y_val = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32')
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:
