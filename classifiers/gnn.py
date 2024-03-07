@@ -373,11 +373,20 @@ class Classifier_GNN():
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
         inputs = tf.keras.Input(shape=input_shape[1:])
         input_adj = tf.keras.Input(shape=(input_shape[1], input_shape[1]))
-        output_1 = GCN(d_model=d_model)(inputs, input_adj)
-        output_1 = GCN(d_model=32)(output_1, input_adj)
-        output_1 = GCN(d_model=1)(output_1, input_adj)
-        output_1 = layers.Flatten()(output_1)
-
+        
+        if input_shape[-1] != 1 and input_shape[-1] > 10:
+            inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
+        else:
+            inputs = tf.keras.Input(shape=input_shape[1:])
+        num_branches = inputs.shape[-1]
+        outputs = []
+        for i in range(num_branches):
+            output_1 = GCN(d_model=d_model)(inputs[..., i], input_adj)
+            output_1 = GCN(d_model=32)(output_1, input_adj)
+            output_1 = GCN(d_model=1)(output_1, input_adj)
+            output_1 = layers.Flatten()(output_1)
+            outputs.append(output_1)
+        outputs = tf.concat(outputs, axis=1)
         
         # outputs = tf.concat([output_1, output_2], axis=1)  #
 

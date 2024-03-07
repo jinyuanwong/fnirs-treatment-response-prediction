@@ -18,7 +18,7 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 62
+CURRENT_LOO = 2
 INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
                  'pre_post_treatment_hamd_reduction_50'
                  ] # for prognosis
@@ -93,7 +93,7 @@ PARAMETER = {
     },
     'gnn': {
         'hb_path': 'data.npy',
-        'adj_path': 'neighbour_matrix.npy',
+        'adj_path': 'adj_matrix.npy',
     },
     'comb_cnn': {
         'hb_path': 'data.npy',

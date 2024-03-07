@@ -6,12 +6,12 @@ import os
 import re
 
 
-model = 'gnn_transformer'  # comb_cnn or cnn_transformer gnn_transformer 
-model_params = 'd_model_16_batch_size_64_n_layers_6' # 'd_model_16_batch_size_64_n_layers_6'  # V1
+model = 'gnn'  # comb_cnn or cnn_transformer gnn_transformer gnn
+model_params = 'V1' # 'd_model_16_batch_size_64_n_layers_6'  # V1
 
 
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-time = 'pre_post_treatment_hamd_reduction_50'
+time = 'pre_treatment_hamd_reduction_50'
 
 validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
 
