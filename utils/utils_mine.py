@@ -25,7 +25,33 @@ import random
 from sklearn.metrics import confusion_matrix
 from sklearn import preprocessing
 
+def get_params_info(params):
+    return_string = ''
+    for key, value in params.items():
+        if key not in ['hb_path', 'adj_path']:
+            if return_string != '':
+                return_string += '_'
+            return_string += f"{key}_{value}"
+    return return_string
 
+def update_config_file(key, new_value):
+    # Path to your config.py file
+    config_file_path = 'config.py'
+
+    # Read the current contents of the file
+    with open(config_file_path, 'r') as file:
+        lines = file.readlines()
+
+    # Modify the desired value
+    for i, line in enumerate(lines):
+        if line.startswith(key):
+            lines[i] = f"{key} = {repr(new_value)}\n"
+
+    # Write the changes back to the file
+    with open(config_file_path, 'w') as file:
+        file.writelines(lines)
+        
+        
 def get_specificity(y_true, y_pred):
 
     # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()

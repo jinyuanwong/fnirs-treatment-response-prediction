@@ -36,7 +36,6 @@ SPECIFY_FOLD = config.SPECIFY_FOLD
 
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
 
-
 class TrainModel():
     def __init__(self, model_name, sweep_config=None):
         self.batch_size = 8
@@ -74,7 +73,8 @@ class TrainModel():
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
                     num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
-                for current_loo in range(data.shape[0]):
+                loo_start_from = config.CURRENT_LOO
+                for current_loo in range(loo_start_from, data.shape[0]):
                     for k in range(num_of_k_fold):
                         if using_adj:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
@@ -87,8 +87,8 @@ class TrainModel():
                         print(f'X_test: {X_test.shape}')
                         print(f"total sample size is {X_train.shape[0] + X_val.shape[0] + X_test.shape[0]}")
                         params = info['parameter']
-                        msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
-
+                        msg = info['message'] + get_params_info(params)
+                        # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
                         f'/{msg}/' + f"LOO_nested_CV/LOO_{current_loo}/stratified_nested_CV_fold-{str(k)}" + '/'
@@ -116,45 +116,40 @@ class TrainModel():
                             input_shape = [self.batch_size] + list(X_train.shape[1:])
 
 
-                        for repeat_count in range(self.repeat_count_all):
+                        model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
+                                                        monitor='val_' + config.MONITOR_METRIC,
+                                                        mode='max',
+                                                        save_weights_only=True,
+                                                        save_best_only=True)
 
-                            model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
-                                                            monitor='val_' + config.MONITOR_METRIC,
-                                                            mode='max',
-                                                            save_weights_only=True,
-                                                            save_best_only=True)
+                        callbacks = [model_checkpoint,
+                                    lr_monitor]
+                        if using_wandb:
+                            callbacks.append(WandbCallback(save_model=False))
 
-                            callbacks = [model_checkpoint,
-                                        lr_monitor]
-                            if using_wandb:
-                                callbacks.append(WandbCallback(save_model=False))
+                        model = create_classifier(
+                            classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
 
-                            print(
-                                f'Current / Total repeat count: {repeat_count} / {self.repeat_count_all}')
-
-                            model = create_classifier(
-                                classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
-
-                            if using_adj:
-                                model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
-                            else:
-                                model.fit(X_train, Y_train, X_val,
-                                        Y_val, X_test, Y_test)
-
-                            del model
-                            del X_train, Y_train, X_val, Y_val, X_test, Y_test
-                            if using_adj:
-                                del adj_train, adj_val, adj_test
-                            # clear the memory
-                            tf.keras.backend.clear_session()
-                            gc.collect()
+                        if using_adj:
+                            model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+                        else:
+                            model.fit(X_train, Y_train, X_val,
+                                    Y_val, X_test, Y_test)
+                        del model
+                        del X_train, Y_train, X_val, Y_val, X_test, Y_test
+                        if using_adj:
+                            del adj_train, adj_val, adj_test
+                        # clear the memory
+                        tf.keras.backend.clear_session()
+                        gc.collect()
 
                             # if wandb is activated, then we only calculate the k=0 fold cross validation for 25 times
                         if using_wandb:
                             break
                         # for obj in gc.get_objects():
                         #     print(type(obj), repr(obj))
-
+                    update_config_file('CURRENT_LOO', current_loo)
+                update_config_file('CURRENT_LOO', 0)
 
 
 def train_model():

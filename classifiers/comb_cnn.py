@@ -101,7 +101,8 @@ class Classifier_CNN():
         if build == True:
             self.model = self.build_model(input_shape, nb_classes=2)
             if (verbose == True):
-                self.model.summary()
+                pass
+                # self.model.summary()
             self.verbose = verbose
 
 
