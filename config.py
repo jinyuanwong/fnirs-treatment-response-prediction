@@ -18,11 +18,12 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 2
+CURRENT_LOO = 15
 INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
                  'pre_post_treatment_hamd_reduction_50'
                  ] # for prognosis
 
+INPUT_HB_TYPE = ['diagnosis'] # for prognosis
 # for example:
 # pre_post_treatment_hamd_reduction_50
 
@@ -49,7 +50,7 @@ MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
 PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD/'
 
 # DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
-DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
+DEFAULT_HB_FOLD_PATH = './allData/' # for ./allData/prognosis/ diagnosis
 
 
 MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' or 'f1_score'
@@ -86,7 +87,7 @@ PARAMETER = {
         'lstm_unit': np.random.choice([64, 128, 256])
     },
     'cnn_transformer': {
-        'hb_path': 'data.npy',
+        'hb_path': 'hb_data.npy',
     },
     'pre_post_cnn_transformer': {
         'hb_path': 'data.npy',
@@ -99,7 +100,7 @@ PARAMETER = {
         'hb_path': 'data.npy',
     },
     'gnn_transformer': {
-        'hb_path': 'data.npy',
+        'hb_path': 'hb_data.npy',
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.01,# should be 0.001

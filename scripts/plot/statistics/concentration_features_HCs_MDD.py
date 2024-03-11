@@ -71,7 +71,7 @@ def show_hb_type(data, label, hb_type_name, figname):
     title = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
     plt.figure(figsize=(25,15))
     plt.subplot(2, 1, 1)  # 1 row, 2 columns, select the 1st subplot
-    plt.title('Responders vs Non-responders (P-value)', fontsize=20, fontweight='bold')
+    plt.title('HCs vs MDDs (P-value)', fontsize=20, fontweight='bold')
     for channel in range(52):
         channel_p = []
         channel_effect_size = []
@@ -214,7 +214,7 @@ def show_hb_type(data, label, hb_type_name, figname):
     # plt.show()
     
     plt.subplot(2, 1, 2)  # 1 row, 2 columns, select the 1st subplot
-    plt.title('Responders vs Non-responders (Effect size)', fontsize=20, fontweight='bold')
+    plt.title('HCs vs MDDs (Effect size)', fontsize=20, fontweight='bold')
 
     for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, MPC_indices], [PSFC_color, DPC_color, STG_color, VPC_color, MPC_color]):
         for index in indices:
@@ -289,14 +289,11 @@ def show_hb_type(data, label, hb_type_name, figname):
 
     plt.xlim([1, 53.01])
     # Show the plot
-    plt.savefig(output_fold+f'/statistics_responders_nonresponders_{figname}.png')
+    # plt.savefig(output_fold+f'/statistics_responders_nonresponders_{figname}.png')
     plt.show()
 
-pre_data = np.load('allData/prognosis/base_data.npy')
-pre_label = np.load('allData/prognosis/pre_treatment_hamd_reduction_50/label.npy')
-
-pre_post_data  = np.load('allData/prognosis/base_t8_data.npy')
-pre_post_label = np.load('allData/prognosis/pre_post_treatment_hamd_reduction_50/label.npy')
+DATA = np.load('allData/diagnosis/hb_data.npy')
+LABEL = np.load('allData/diagnosis/label.npy')
 
 pre_post_data_combine_type = 'substract'
 
@@ -308,22 +305,15 @@ if not os.path.exists(output_fold):
 name_of_input = ['HCs vs MDDs']
 for fig_name in name_of_input:
     print(fig_name)
-    if fig_name =='pre_treatment':
+    if fig_name =='HCs vs MDDs':
         print('entering - 1')
-        data = pre_data
-        label = pre_label
-    elif fig_name == 'post_treatment':
-        print('entering - 2')
-        data = pre_post_data[..., 1] 
-        label = pre_post_label
-    else:
-        print('entering - 3')
-        data = pre_post_data[..., 1] - pre_post_data[..., 0]
-        label = pre_post_label
+        data = DATA
+        label = LABEL
+
     print('data.shape', data.shape)
-    HbO = data[...,0]
-    HbR = data[...,1]
-    HbT = HbO + HbR
+    HbO = np.transpose(data[...,0],(0,2,1))
+    HbR = np.transpose(data[...,1],(0,2,1))
+    HbT = np.transpose(data[...,2],(0,2,1))
     # For pre - treatment HAMD reduction 50 - HbO 
     show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]))
     # For pre - treatment HAMD reduction 50 - HbR

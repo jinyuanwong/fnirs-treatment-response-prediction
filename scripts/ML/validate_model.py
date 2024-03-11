@@ -14,6 +14,8 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
 from sklearn.preprocessing import label_binarize
 
 output_fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/results/ML_results'
+
+data_time = 'pre_treatment_hamd_reduction_50'
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 
@@ -59,7 +61,7 @@ for name, model in models.items():
             HB_TYPE_y_pred_and_y_test[HB_TYPE] = []
 
             # read data 
-            fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/pre_treatment_hamd_reduction_50'
+            fold = f'/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/{data_time}'
 
             hb = np.load(fold + '/data.npy')
             label = np.load(fold + '/label.npy')

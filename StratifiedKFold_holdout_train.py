@@ -71,7 +71,7 @@ class TrainModel():
                     num_of_k_fold = SPECIFY_FOLD
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
-                    num_of_k_fold = int((label_not_one_hot==1).sum() * 2 / 3 / 2)
+                    num_of_k_fold = 10 # int((label_not_one_hot==1).sum() * 2 / 3 / 2) for treatment predict, 10 is for HCsMDD classification
                 for k in range(num_of_k_fold):
                     if using_adj:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
@@ -83,7 +83,8 @@ class TrainModel():
                     print(f'X_val: {X_val.shape}')
                     print(f'X_test: {X_test.shape}')
                     params = info['parameter']
-                    msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
+                    params = info['parameter']
+                    msg = info['message'] + get_params_info(params)
                     if len(msg)<=1:
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \

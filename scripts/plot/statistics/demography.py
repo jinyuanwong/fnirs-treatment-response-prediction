@@ -140,12 +140,17 @@ print('responders', RESPOND)
 print('nonresponders', NONRESPOND)
 
 show_metrics(HC,'HC')
+print('-------------------')
 show_metrics(MDD,'MDD')
+print('-------------------')
 show_metrics(RESPOND,'RESPOND')
+print('-------------------')
 show_metrics(NONRESPOND,'NONRESPOND')
 
 
+print('-------------------')
 compare_two_groups(HC, MDD, 'HCs vs MDDs')
+print('-------------------')
 compare_two_groups(RESPOND, NONRESPOND, 'responders vs nonresponders')
 
 

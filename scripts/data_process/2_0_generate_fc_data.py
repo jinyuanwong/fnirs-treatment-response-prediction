@@ -67,6 +67,7 @@ def read_data(path):
     return data, label
 
 
+
 def save_data(path, data, label):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -141,8 +142,7 @@ def main(timeline):
         dmfc_baseline_and_T8_output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/DMFC/pre_post_treatment_hamd_reduction_50'
         compute_baseline_T8_dynamic_functional_connectivity(
             baseline_and_T8_input_path, dmfc_baseline_and_T8_output_path)
-
-
+        
 if __name__ == '__main__':
     arg = sys.argv
     main(arg[1])
