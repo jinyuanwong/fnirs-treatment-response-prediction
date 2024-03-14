@@ -56,9 +56,8 @@ MPC_indices = location_to_index(MPC_location)
 
 
 
-def show_hb_type(data, label, hb_type_name, figname):
-    task_start_index = 100 
-    task_end_index = 700
+def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end_index):
+
 
     responders = data[label==1]
     nonresponders = data[label==0]
@@ -81,8 +80,9 @@ def show_hb_type(data, label, hb_type_name, figname):
 
         responders_mean_hbo = np.mean(responders[..., channel], axis=1)
         nonresponders_mean_hbo = np.mean(nonresponders[..., channel], axis=1)
-        responders_task_rest_hbo = np.mean(responders[:, task_start_index:task_end_index, channel], axis=1) - np.mean(responders[:,0:task_start_index, channel], axis=1) - np.sum(responders[:,task_end_index:-1, channel], axis=1)
-        nonresponders_task_rest_hbo = np.mean(nonresponders[:,task_start_index:task_end_index, channel], axis=1) - np.mean(nonresponders[:,0:task_start_index, channel], axis=1) - np.sum(nonresponders[:, task_end_index:-1, channel], axis=1)
+        
+        responders_task_rest_hbo = np.mean(responders[:, task_start_index:task_end_index, channel], axis=1) - np.mean(responders[:,0:task_start_index, channel], axis=1) - np.mean(responders[:,task_end_index:-1, channel], axis=1)
+        nonresponders_task_rest_hbo = np.mean(nonresponders[:,task_start_index:task_end_index, channel], axis=1) - np.mean(nonresponders[:,0:task_start_index, channel], axis=1) - np.mean(nonresponders[:, task_end_index:-1, channel], axis=1)
         # print(f'test: {np.mean(nonresponders[:,0:task_start_index, channel], axis=1) - np.mean(nonresponders[:, task_end_index:-1, channel], axis=1)}')
         # print(nonresponders_task_rest_hbo.shape)
         
@@ -289,15 +289,17 @@ def show_hb_type(data, label, hb_type_name, figname):
 
     plt.xlim([1, 53.01])
     # Show the plot
-    # plt.savefig(output_fold+f'/statistics_responders_nonresponders_{figname}.png')
+    plt.savefig(output_fold+f'/{fig_name}.png')
     plt.show()
 
-DATA = np.load('allData/diagnosis/hb_data.npy')
-LABEL = np.load('allData/diagnosis/label.npy')
+DATA =  np.load('/Users/shanxiafeng/Documents/Code/python/fnirs_DL/JinyuanWang_pythonCode/allData/Output_npy/twoDoctor/HbO-All-HC-MDD/correct_channel_data.npy') # np.load('allData/diagnosis/hb_data.npy')
+LABEL = np.load('/Users/shanxiafeng/Documents/Code/python/fnirs_DL/JinyuanWang_pythonCode/allData/Output_npy/twoDoctor/HbO-All-HC-MDD/label.npy') #  np.load('allData/diagnosis/label.npy')
 
 pre_post_data_combine_type = 'substract'
 
-output_fold = 'FigureTable/statics/timedomain'
+output_fold = 'FigureTable/statics/timedomain/numOfSubject_514'
+# output_fold = 'FigureTable/statics/timedomain/numOfSubject_140_zhifei_process'
+
 import os
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
@@ -311,15 +313,26 @@ for fig_name in name_of_input:
         label = LABEL
 
     print('data.shape', data.shape)
-    HbO = np.transpose(data[...,0],(0,2,1))
-    HbR = np.transpose(data[...,1],(0,2,1))
-    HbT = np.transpose(data[...,2],(0,2,1))
-    # For pre - treatment HAMD reduction 50 - HbO 
-    show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]))
-    # For pre - treatment HAMD reduction 50 - HbR
-    show_hb_type(HbR, label, 'HbR', fig_name + '_HbR' + '_subject' + str(data.shape[0]))
-    # For pre - treatment HAMD reduction 50 - HbT 
-    show_hb_type(HbT, label, 'HbT', fig_name + '_HbT' + '_subject' + str(data.shape[0]))
+    
+    # for shape 514, 52, 125 
+    HbO = data# np.transpose(data, (0,2,1))
+    
+    print(HbO.shape)
+    plt.figure() 
+    plt.plot(np.mean(HbO, axis=(0,2)))
+    plt.savefig(output_fold+'/HbO_mean.png')
+
+    show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 10, 70)
+    
+    # HbO = np.transpose(data[...,0],(0,2,1))
+    # HbR = np.transpose(data[...,1],(0,2,1))
+    # HbT = np.transpose(data[...,2],(0,2,1))
+    # # For pre - treatment HAMD reduction 50 - HbO 
+    # show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 100, 700)
+    # # For pre - treatment HAMD reduction 50 - HbR
+    # show_hb_type(HbR, label, 'HbR', fig_name + '_HbR' + '_subject' + str(data.shape[0]), 100, 700)
+    # # For pre - treatment HAMD reduction 50 - HbT 
+    # show_hb_type(HbT, label, 'HbT', fig_name + '_HbT' + '_subject' + str(data.shape[0]), 100, 700)
 
     
 # for data, label in zip([pre_data, pre_post_data], [pre_label, pre_post_label]):
