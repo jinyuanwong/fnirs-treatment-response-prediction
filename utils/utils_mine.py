@@ -24,6 +24,7 @@ import logging
 import random
 from sklearn.metrics import confusion_matrix
 from sklearn import preprocessing
+from sklearn.model_selection import LeaveOneOut
 
 def get_params_info(params):
     return_string = ''
@@ -710,3 +711,53 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def get_config(self):
         return {"d_model": self.d_model, "warmup_steps": self.warmup_steps}
+
+
+
+def train_model_using_loocv(data, label, model):
+    loo = LeaveOneOut()
+    result = []
+
+    # Loop over each train/test split
+    for train_index, test_index in loo.split(data):
+        # Split the data into training and testing sets
+        X_train, X_test = data[train_index], data[test_index]
+        y_train, y_test = label[train_index], label[test_index]
+        
+        # Train the classifier
+        model.fit(X_train, y_train)
+
+        # Predict the label for the test set
+        y_pred = model.predict(X_test)
+
+        # Append the accuracy to the list
+        result.append([y_pred, y_test])
+
+    return np.array(result), model
+
+def print_md_table(model_name, set, metrics):
+    print()
+    print('| Model Name | Val/Test Set | Accuracy | Sensitivity | Specificity | F1 Score |')
+    print('|------------|--------------|----------|-------------|-------------|----------|')
+    print(f'| {model_name} | {set} |', end = '')
+    for i in range(4):
+        print(f" {metrics[i]:.4f} |", end = '')
+    print()
+    print(''*10)
+    
+
+def get_metrics(y_true, y_pred):
+    # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+
+    # 明确指定labels参数
+    cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
+
+    # 现在cm是一个2x2矩阵，即使数据只包含一个类别
+    tn, fp, fn, tp = cm.ravel()
+
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+    f1 = f1_score(y_true, y_pred)
+
+    return accuracy, sensitivity, specificity, f1

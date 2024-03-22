@@ -317,6 +317,12 @@ for fig_name in name_of_input:
 
     print('data.shape', data.shape)
     
+    # def individual_normalization(data):
+    #     for i in range(data.shape[0]):
+    #         data[i] = (data[i] - np.mean(data[i])) / np.std(data[i])
+    #     return data
+    # data = individual_normalization(data)
+    
     # for shape 514, 52, 125 
     HbO = data# np.transpose(data, (0,2,1))
         

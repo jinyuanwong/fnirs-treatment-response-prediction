@@ -111,6 +111,7 @@ def read_demographic_data(demographic_filepath, loop_list):
         return_demographic_data.append(demographic_selected.values[0])
     return_demographic_data = np.array(return_demographic_data)
     return return_demographic_data
+
 def read_hb_data(file_path, loop_list):
     all_subject_hb = np.empty((len(loop_list), 52, 1251, 3))
     for index, sub_id in enumerate(loop_list):

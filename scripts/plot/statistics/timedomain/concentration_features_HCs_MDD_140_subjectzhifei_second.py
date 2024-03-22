@@ -313,7 +313,13 @@ for fig_name in name_of_input:
         label = LABEL
 
     print('data.shape', data.shape)
-    
+
+    # def individual_normalization(data):
+    #     for i in range(data.shape[0]):
+    #         data[i] = (data[i] - np.mean(data[i])) / np.std(data[i])
+    #     return data
+    # data = individual_normalization(data)
+            
     # for shape 514, 52, 125 
     HbO = data# np.transpose(data, (0,2,1))
     
@@ -327,6 +333,17 @@ for fig_name in name_of_input:
     print(f'HbO: {HbO.shape}')
     HbR = np.transpose(data[...,1],(0,2,1))
     HbT = np.transpose(data[...,2],(0,2,1))
+    
+    HC = HbO[label==0]
+    MDD = HbO[label==1]
+    plt.figure() 
+    plt.plot(np.mean(HC, axis=(0,2)), label=f"HCs {HC.shape[0]}")
+    plt.plot(np.mean(MDD, axis=(0,2)), label=f"MDDs {MDD.shape[0]}")
+    plt.legend()
+    plt.title('Zhifei Process 1')
+    plt.savefig(output_fold+'/HbO_mean_HCvsMDD.png')
+    
+    
     # For pre - treatment HAMD reduction 50 - HbO 
     show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 10, 70)
     # For pre - treatment HAMD reduction 50 - HbR
