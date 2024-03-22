@@ -566,21 +566,8 @@ def avg_every_ten_point_in_last_dimension(data):
     data = np.mean(data, axis=-1)
     return data 
 import random
-def generate_random_params():
-    params = {
-        'learning_rate': round(random.uniform(0.01, 0.3), 2),  # 生成0.01到0.3之间的浮点数，保留两位小数
-        'n_estimators': random.randint(50, 150),  # 生成50到150之间的整数
-        'max_depth': random.randint(3, 10),  # 生成3到10之间的整数
-        'min_child_weight': random.randint(1, 10),  # 生成1到10之间的整数
-        'gamma': round(random.uniform(0, 0.5), 2),  # 生成0到0.5之间的浮点数，保留两位小数
-        'subsample': round(random.uniform(0.5, 1.0), 2),  # 生成0.5到1.0之间的浮点数，保留两位小数
-        'colsample_bytree': round(random.uniform(0.5, 1.0), 2),  # 生成0.5到1.0之间的浮点数，保留两位小数
-        'objective': 'binary:logistic',  # 固定值
-        'nthread': 4,  # 固定值
-        'scale_pos_weight': 1,  # 固定值
-        'seed': int(time.time()) # 生成1到100之间的整数
-    }
-    return params
+
+from utils.fnirs_utils import generate_random_params
 
 def specify_model_and_train(data, label, model_name, seed):
     
@@ -590,7 +577,7 @@ def specify_model_and_train(data, label, model_name, seed):
     if model_name == 'Decision Tree':
         model = DecisionTreeClassifier()
     if model_name == 'XGBoost':
-        para = generate_random_params()
+        para = generate_random_params(seed)
         model = XGBClassifier(**para)
         
     model.random_state = seed
@@ -598,7 +585,7 @@ def specify_model_and_train(data, label, model_name, seed):
     result,model = train_model_using_loocv(data, label, model)
     res_metrics = get_metrics(result[:, 1], result[:, 0])
     print_md_table(model_name, 'test', res_metrics)
-    return res_metrics, para
+    return res_metrics, para, model
 
 def AutoML_data_dict_for_DMFC(model_name, best_res_metrics, best_seed, iteration_time, para, hb_type):
     data = {
@@ -625,6 +612,37 @@ def save_autodl(data, save_path):
         df.to_csv(save_path, index=False, mode='a', header=False)
     print(f"Model: is save to {save_path}!")
 
+def get_pretreatment_dmfc(hb_type):
+    hb_type_dict = {
+    'hbo': 0,
+    'hbr': 1,
+    'hbt': 2}
+    hb_n = hb_type_dict[hb_type]
+
+    pretreatment_path = 'allData/prognosis/DMFC/pre_treatment_hamd_reduction_50/data.npy'
+    label_path = 'allData/prognosis/DMFC/pre_treatment_hamd_reduction_50/label.npy'
+    demo_path = 'allData/prognosis/pre_treatment_hamd_reduction_50/demographic_data.npy'
+    pretreatment_data = np.load(pretreatment_path)
+    pretreatment_label = np.load(label_path)
+    pretreatment_demo = np.load(demo_path, allow_pickle=True)
+    avg_pretreatment_data = pretreatment_data[..., hb_n]
+    avg_pretreatment_data = np.reshape(avg_pretreatment_data, (avg_pretreatment_data.shape[0], -1))
+    return avg_pretreatment_data, pretreatment_label
+
+
+def get_best_seed_from_automl(file_path, ref_para):
+    data = pd.read_csv(file_path)
+    max_sen = np.max(data[ref_para])
+    loc_data = data[data[ref_para] == max_sen]
+    return loc_data['model'].values[0], loc_data['hb_type'].values[0], loc_data['seed'].values[0]
+
+
+def predict_based_on_automl(csv_file='results/ML_results/AutoML/DMFC_prognosis.csv', ref_param='F1_score'):
+    model_name, hb_type, seed = get_best_seed_from_automl(csv_file, ref_para=ref_param)
+    avg_pretreatment_data, pretreatment_label = get_pretreatment_dmfc(hb_type)
+    res_metrics, para, model = specify_model_and_train(avg_pretreatment_data, pretreatment_label, model_name, seed)
+    return res_metrics, para, model
+    
 
 def start():
     pretreatment_path = 'allData/prognosis/DMFC/pre_treatment_hamd_reduction_50/data.npy'
