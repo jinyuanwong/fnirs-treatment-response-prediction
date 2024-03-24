@@ -18,12 +18,16 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 15
-INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
-                 'pre_post_treatment_hamd_reduction_50'
-                 ] # for prognosis
+CURRENT_LOO = 0
+# INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
+#                  'pre_post_treatment_hamd_reduction_50'
+#                  ] # for prognosis
+# fnirs-depression-deeplearning/allData/
+INPUT_HB_TYPE=['prognosis/pretreatment_benchmarks']
+SPECIFY_FOLD=3
 
-INPUT_HB_TYPE = ['diagnosis'] # for prognosis
+# INPUT_HB_TYPE = ['prognosis/pretreatment_benchmarks'] or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
+
 # for example:
 # pre_post_treatment_hamd_reduction_50
 
@@ -40,14 +44,16 @@ IS_USING_WANDB = False
 
 MAX_EPOCHS = 1000
 
-SPECIFY_FOLD = None#[i for i in range(13, 46)] # [i for i in range(55, 65)]
 
 # left_to_do SVM_ZHIFEI, RSFC_DUAN, NMF_ZHONG
 MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
-                               'wang_alex', 'zhu_xgboost', 'yu_gnn']
+                               'wang_alex', 
+                               'zhu_xgboost', 
+                               'yu_gnn',
+                               'li_svm']
 
 # PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-Lowmid-High/'
-PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD/'
+PREPROCESSED_HB_FOLD_PATH = './allData/prognosis/pretreatment_benchmarks/'
 
 # DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
 DEFAULT_HB_FOLD_PATH = './allData/' # for ./allData/prognosis/ diagnosis
@@ -141,7 +147,7 @@ PARAMETER = {
         'hb_path': 'dgi_data.npy',
     },
     'zhu_xgboost': {
-        'hb_path': 'raw_data.npy',
+        'hb_path': 'data.npy',
     },
     'chao_cfnn': {
         'hb_path': 'data.npy',
@@ -149,12 +155,15 @@ PARAMETER = {
         'lr': 0.1,
     },
     'wang_alex': {
-        'hb_path': 'nor_allsubject_data.npy',
+        'hb_path': 'data.npy',
         'lr': 0.001,
         'activation': 'relu'
     },
     'yu_gnn': {
         'hb_path': 'data.npy',
-        'adj_path': 'A_1.npy',
+        'adj_path': 'adj_1.npy',
     },
+    'li_svm':{
+        'hb_path': 'data.npy',
+    }
 }

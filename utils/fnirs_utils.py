@@ -22,6 +22,7 @@ from scipy.stats import kurtosis
 from scipy.stats import skew
 from xgboost import XGBClassifier
 import pandas as pd 
+from scipy import stats
 
 def get_activity_start_time(data, index_start):
     gradient = np.gradient(data)
@@ -445,7 +446,7 @@ def wang_alex_feature_selection(input, index_task_start,index_task_end,fs):
     for i in range(input.shape[0]):
         for j in range(input.shape[1]):
             feature_10[i, j] = calculte_entropy(input[i, j])
-    print(f'feature 10 shape -> {feature_10.shape}')
+    # print(f'feature 10 shape -> {feature_10.shape}')
 
     nor_all_feature = np.concatenate(
         (normalize(feature_1),
@@ -485,7 +486,6 @@ def extract_hb_core_temporal_features(Hb):
 
     # 6.Kurtosis
     n = Hb.shape[-1]
-
     # Standard deviation of the data
     std_dev = np.std(Hb, axis=2)
 
@@ -504,6 +504,29 @@ def extract_hb_core_temporal_features(Hb):
                                   normalize(feature_skewness[:, :, np.newaxis]),
                                   normalize(feature_kurtosis[:, :, np.newaxis])), axis=2)
     return all_feature
+
+
+def temporal_feature_extract_yu_gnn_full(input, index_start, index_end, hbo_type, hbr_type):
+
+    feature_silent_1_hbo = extract_hb_core_temporal_features(
+        input[:, :, :index_start, hbo_type])#, hbo_type
+    feature_silent_1_hbr = extract_hb_core_temporal_features(
+        input[:, :, :index_start, hbr_type])
+
+    feature_task_hbo = extract_hb_core_temporal_features(
+        input[:, :, index_start:index_end, hbo_type])#, hbo_type
+    feature_task_hbr = extract_hb_core_temporal_features(
+        input[:, :, index_start:index_end, hbr_type])
+
+    feature_silent_2_hbo = extract_hb_core_temporal_features(
+        input[:, :, index_end:, hbo_type])#, hbo_type
+    feature_silent_2_hbr = extract_hb_core_temporal_features(
+        input[:, :, index_end:, hbr_type])
+    # output = np.concatenate(
+    #         (feature_silent_1_hbo, feature_task_hbo, feature_silent_2_hbo), axis=2)
+    output = np.concatenate(
+        (feature_silent_1_hbo, feature_task_hbo, feature_silent_2_hbo, feature_silent_1_hbr, feature_task_hbr, feature_silent_2_hbr), axis=2)
+    return output
 
 
 def temporal_feature_extract_yu_gnn(input, index_start, index_end, hbo_type, hbr_type):
@@ -667,3 +690,61 @@ def plot_model_importance(model):
     feature_importances = model.feature_importances_
     feature_importances = feature_importances.reshape(52, -1)
     plt.imshow(feature_importances)
+    
+def reshape_to_matrix(data):
+    reshape_data = np.reshape(data, (data.shape[0], -1))
+    return reshape_data
+
+"""
+input shape: (sub, 52, 125, 2) last dimensio is hbo and hbr 
+output shape: (sub, 26000)
+"""
+def get_chao_cfnn_novel_feature(hbo, hbr):
+    CBV = (hbo + hbr) / np.sqrt(2)
+    print(CBV.shape)
+
+    # COE 
+    COE = (hbo - hbr) / np.sqrt(2)
+    print(COE.shape)
+    # L 
+    Mag_L = np.sqrt((np.square(hbo) + np.square(hbr))) / np.sqrt(2)
+    print(Mag_L.shape)
+
+    # Angle K 
+    Ang_K = np.arctan(COE/CBV)
+    print(Ang_K.shape)
+
+
+    r_CBV = reshape_to_matrix(CBV) # (458, 6500)
+    r_COE = reshape_to_matrix(COE) # (458, 6500)
+    r_Mag_L = reshape_to_matrix(Mag_L) # (458, 6500)
+    r_Ang_K = reshape_to_matrix(Ang_K) # (458, 6500)
+    novel_features = np.concatenate((r_CBV, r_COE, r_Mag_L, r_Ang_K), axis=1)
+    return novel_features
+
+
+def get_duan_rsfc_data(hbo, index_start=10, index_end=70):
+    feature_shape = hbo.shape
+    def compute_resting_state_period(data, index_start, index_end):
+        first_resting_data = data[:,:,:index_start] # (458, 52, 10)
+        end_resting_data = data[:,:,index_end+10:] # (458, 52, 45)
+        resting_data = np.concatenate((first_resting_data, end_resting_data), axis=2) # (458, 52, 55)
+        return resting_data
+    data = compute_resting_state_period(hbo, index_start, index_end)
+
+
+    RSFC = np.zeros((data.shape[0], data.shape[1], data.shape[1]))
+
+    def compute_correlation(x, y):
+        corr, _ = stats.pearsonr(x, y)
+        return corr
+
+    for sub in range(feature_shape[0]):
+        for ch_1 in range(feature_shape[1]):
+            for ch_2 in range(feature_shape[1]):
+                if ch_2 < ch_1: continue
+                corr = compute_correlation(
+                    data[sub, ch_1],data[sub, ch_2])
+                RSFC[sub, ch_1, ch_2] = corr
+                RSFC[sub, ch_2, ch_1] = corr
+    return RSFC

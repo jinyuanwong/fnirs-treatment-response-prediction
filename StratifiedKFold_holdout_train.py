@@ -103,7 +103,7 @@ class TrainModel():
                     lr_monitor = tf.keras.callbacks.LearningRateScheduler(
                         learning_rate_schedule)
 
-                    if model_name in ['chao_cfnn', 'zhu_xgboost']:
+                    if model_name in ['chao_cfnn', 'zhu_xgboost', 'li_svm']:
                         input_shape = [self.batch_size,
                                        X_train.shape[1]]
                     elif model_name in ['mvg_transformer', 'mgn_transformer', 'mgm_transformer']:
@@ -209,6 +209,10 @@ class TrainModel():
         if classifier_name == 'zhu_xgboost':  # Time-CNN
             from classifiers import zhu_xgboost
             return zhu_xgboost.Classifier_XGBoost(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+        if classifier_name == 'li_svm':  
+            from classifiers import li_svm
+            return li_svm.Classifier_LI_SVM(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+                
         else:
             raise Exception('Your error message here')
 
