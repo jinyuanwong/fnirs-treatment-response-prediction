@@ -24,7 +24,7 @@ CURRENT_LOO = 0
 #                  ] # for prognosis
 # fnirs-depression-deeplearning/allData/
 INPUT_HB_TYPE=['prognosis/pretreatment_benchmarks']
-SPECIFY_FOLD=8
+SPECIFY_FOLD=10
 
 # INPUT_HB_TYPE = ['prognosis/pretreatment_benchmarks'] or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
 

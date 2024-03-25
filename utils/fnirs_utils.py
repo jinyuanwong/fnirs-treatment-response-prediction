@@ -24,6 +24,9 @@ from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import cross_validate, StratifiedKFold
 
+
+def test_hello_world():
+    print("Hello world")
 def train_model_using_loocv(data, label, model):
     loo = LeaveOneOut()
     result = []
@@ -812,10 +815,11 @@ def retrieve_model(model_name, seed):
     return model, para
 
 
-def print_md_table_val_test(model_name, test_result, val_result):
-    print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
-    print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
-    print('|            | Balanced Accuracy | Sensitivity | Specificity | F1 Score | Balanced Accuracy | Sensitivity | Specificity | F1 Score |')
+def print_md_table_val_test(model_name, test_result, val_result, print_table_header=True):
+    if print_table_header:
+        print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
+        print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
+        print('|            | Balanced Accuracy | Sensitivity | Specificity | F1 Score | Balanced Accuracy | Sensitivity | Specificity | F1 Score |')
 
 
     # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
@@ -830,7 +834,7 @@ def print_md_table_val_test(model_name, test_result, val_result):
     for val in val_result:
         print(f' {val*100:.4f}  |', end='')        
         
-    print()
+    # print()
 
 # Define custom scoring functions
 def specificity_score(y_true, y_pred):

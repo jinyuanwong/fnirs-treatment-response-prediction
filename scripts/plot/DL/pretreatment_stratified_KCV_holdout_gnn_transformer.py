@@ -2,7 +2,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
+import sys
 import os
+
+sys.path.append(os.getcwd())
+from utils.fnirs_utils import print_md_table_val_test
+
 import re
 
 
@@ -245,6 +250,8 @@ all_filename = sorted(os.listdir(folder_path))
 # make the 10-fold to the last element
 all_filename = all_filename[1:] + [all_filename[0]]
 # all_filename = ['d_model_64_BatchSize_4_n_layers_4']
+print_once_table_header = True
+
 
 def extract_num_k_from_name(name):
     elements = name.split('_')
@@ -291,5 +298,7 @@ for filename in all_filename:
     # print(f'number of iterations: {TOTAL_ITR}')
     # print(f'specify_msg: {specify_msg}')
     # print()
-    
-    generate_md_table(TOTAL_FOLD)
+    print_md_table_val_test(model + f'(k={TOTAL_FOLD})', test_best_metric, val_best_metric, print_once_table_header)
+    if print_once_table_header: print_once_table_header = False
+    # generate_md_table(TOTAL_FOLD)
+print()
