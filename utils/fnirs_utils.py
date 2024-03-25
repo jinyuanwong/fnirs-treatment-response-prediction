@@ -815,17 +815,20 @@ def retrieve_model(model_name, seed):
 def print_md_table_val_test(model_name, test_result, val_result):
     print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
     print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
-    print('|            | Accuracy | Sensitivity | Specificity | F1 Score | Accuracy | Sensitivity | Specificity | F1 Score |')
+    print('|            | Balanced Accuracy | Sensitivity | Specificity | F1 Score | Balanced Accuracy | Sensitivity | Specificity | F1 Score |')
 
 
     # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
     # print('|------------|------------|----------|-------------|-------------|----------|')
     print(f'| {model_name}   |', end='')
-    
+    test_result = np.array(test_result)
+    val_result = np.array(val_result)
+    test_result[0] = (test_result[1] + test_result[2]) / 2
+    val_result[0] = (val_result[1] + val_result[2]) / 2
     for val in test_result:
-        print(f' {val:.4f}  |', end='')
+        print(f' {val*100:.4f}  |', end='')
     for val in val_result:
-        print(f' {val:.4f}  |', end='')        
+        print(f' {val*100:.4f}  |', end='')        
         
     print()
 

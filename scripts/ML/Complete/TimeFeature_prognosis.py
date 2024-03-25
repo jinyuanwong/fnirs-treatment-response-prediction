@@ -694,7 +694,9 @@ def predict_based_on_automl(csv_file='results/ML_results/AutoML/TimeFeature_prog
     # for num_fold in range(5,11):
     #     print(f'num_fold: {num_fold}')
     if using_CV:
-        res_metrics, val_metrics, para, model = specify_model_and_train_with_CV_and_LOOCV(avg_pretreatment_data, pretreatment_label, model_name, seed)
+        test_metrics, val_metrics, para, model = specify_model_and_train_with_CV_and_LOOCV(avg_pretreatment_data, pretreatment_label, model_name, seed)
+        return test_metrics, val_metrics, para, model
+
     else:
         res_metrics, para, model = specify_model_and_train(avg_pretreatment_data, pretreatment_label, model_name, seed)
 
