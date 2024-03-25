@@ -12,9 +12,9 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import time
 import os
-from utils.utils_mine import train_model_using_loocv
-from utils.utils_mine import get_metrics
-from utils.utils_mine import print_md_table
+from utils.fnirs_utils import train_model_using_loocv
+from utils.fnirs_utils import get_metrics
+from utils.fnirs_utils import print_md_table
 from scipy.signal import welch
 import pywt
 from scipy.stats import kurtosis
@@ -22,6 +22,9 @@ from scipy.stats import skew
 from xgboost import XGBClassifier
 import pandas as pd 
 import matplotlib.pyplot as plt
+from utils.fnirs_utils import retrieve_model
+from utils.fnirs_utils import print_md_table_val_test
+from utils.fnirs_utils import train_model_with_CV_and_LOOCV
 
 def get_activity_start_time(data, index_start):
     gradient = np.gradient(data)
@@ -584,9 +587,7 @@ def generate_random_params():
     return params
 
 def specify_model_and_train(data, label, model_name, seed):
-    
-    print(f'Define model {model_name} with default setting and seed {seed}')
-    print(f'current seed: {seed}')
+
     para = ''
     if model_name == 'Decision Tree':
         model = DecisionTreeClassifier()
@@ -601,6 +602,20 @@ def specify_model_and_train(data, label, model_name, seed):
     res_metrics = get_metrics(result[:, 1], result[:, 0])
     print_md_table(model_name, 'test', res_metrics)
     return res_metrics, para, model
+
+
+
+def specify_model_and_train_with_CV_and_LOOCV(data, label, model_name, seed, num_fold=5):
+    model, para = retrieve_model(model_name, seed)
+    test_result, val_result, model = train_model_with_CV_and_LOOCV(data, label, model, seed, num_fold)
+    test_metrics = get_metrics(test_result[:, 1], test_result[:, 0])
+    val_metrics = val_result
+    print(f'test_metrics -> {test_metrics}')
+    print(f'val_metrics -> {val_metrics}')
+    
+    print_md_table_val_test(model_name, test_metrics, val_metrics)
+    return test_metrics, val_metrics, para, model
+
 
 def save_autodl(model_name, feature_selection_method, best_res_metrics, best_seed, iteration_time, para, save_fold, dataset='hb_data'):
     save_path = os.path.join(save_fold, f'TimeFeature_prognosis.csv')
@@ -662,22 +677,27 @@ def get_pretreatment_data_label_demo(dataset='hb_data'):
 
     return pretreatment_data,pretreatment_label,pretreatment_demo
 
-def predict_based_on_automl(csv_file='results/ML_results/AutoML/TimeFeature_prognosis.csv', ref_param='F1_score'):
-    
-    pretreatment_data,pretreatment_label,pretreatment_demo = get_pretreatment_data_label_demo()
+def predict_based_on_automl(csv_file='results/ML_results/AutoML/TimeFeature_prognosis.csv', hb_data_name='hb_data',ref_param='F1_score', using_CV=False):
+
+    pretreatment_data,pretreatment_label,pretreatment_demo = get_pretreatment_data_label_demo(hb_data_name)
 
     avg_pretreatment_data = avg_every_ten_point_in_last_dimension(pretreatment_data)
     # print(f'Take average of every 10 timepoints to see the result or same performance can be reproduced | Take only the HbO data -> shape: {avg_pretreatment_data.shape}')
 
     # print(f'Average every 10 timepoints -> shape: {avg_pretreatment_data.shape}')
     model_name, feature_method, seed = get_best_seed_from_automl(csv_file, ref_param)
-
+    print(f'Best model: {model_name}, Best feature method: {feature_method}, Best seed: {seed}')
     avg_pretreatment_data = specify_feature_extraction(avg_pretreatment_data, feature_method)
 
     avg_pretreatment_data = np.reshape(avg_pretreatment_data, (avg_pretreatment_data.shape[0], -1))
     # print(f'make it 2D -> shape: {avg_pretreatment_data.shape}')
+    # for num_fold in range(5,11):
+    #     print(f'num_fold: {num_fold}')
+    if using_CV:
+        res_metrics, val_metrics, para, model = specify_model_and_train_with_CV_and_LOOCV(avg_pretreatment_data, pretreatment_label, model_name, seed)
+    else:
+        res_metrics, para, model = specify_model_and_train(avg_pretreatment_data, pretreatment_label, model_name, seed)
 
-    res_metrics, para, model = specify_model_and_train(avg_pretreatment_data, pretreatment_label, model_name, seed)
     return res_metrics, para, model
 
 def automl(model_name, feature_selection_method, save_fold, iteration_time, dataset):

@@ -13,9 +13,6 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import time
 import os
-from utils.utils_mine import train_model_using_loocv
-from utils.utils_mine import get_metrics
-from utils.utils_mine import print_md_table
 from scipy.signal import welch
 import pywt
 from scipy.stats import kurtosis
@@ -23,6 +20,58 @@ from scipy.stats import skew
 from xgboost import XGBClassifier
 import pandas as pd 
 from scipy import stats
+from sklearn.model_selection import LeaveOneOut
+from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score, confusion_matrix
+from sklearn.model_selection import cross_validate, StratifiedKFold
+
+def train_model_using_loocv(data, label, model):
+    loo = LeaveOneOut()
+    result = []
+
+    # Loop over each train/test split
+    for train_index, test_index in loo.split(data):
+        # Split the data into training and testing sets
+        X_train, X_test = data[train_index], data[test_index]
+        y_train, y_test = label[train_index], label[test_index]
+        
+        # Train the classifier
+        model.fit(X_train, y_train)
+
+        # Predict the label for the test set
+        y_pred = model.predict(X_test)
+
+        # Append the accuracy to the list
+        result.append([y_pred, y_test])
+
+    return np.array(result), model
+
+def print_md_table(model_name, set, metrics):
+    print()
+    print('| Model Name | Val/Test Set | Accuracy | Sensitivity | Specificity | F1 Score |')
+    print('|------------|--------------|----------|-------------|-------------|----------|')
+    print(f'| {model_name} | {set} |', end = '')
+    for i in range(4):
+        print(f" {metrics[i]:.4f} |", end = '')
+    print()
+    print(''*10)
+    
+
+def get_metrics(y_true, y_pred):
+    # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+
+    # 明确指定labels参数
+    cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
+
+    # 现在cm是一个2x2矩阵，即使数据只包含一个类别
+    tn, fp, fn, tp = cm.ravel()
+
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+    f1 = f1_score(y_true, y_pred)
+
+    return accuracy, sensitivity, specificity, f1
+
 
 def get_activity_start_time(data, index_start):
     gradient = np.gradient(data)
@@ -748,3 +797,86 @@ def get_duan_rsfc_data(hbo, index_start=10, index_end=70):
                 RSFC[sub, ch_1, ch_2] = corr
                 RSFC[sub, ch_2, ch_1] = corr
     return RSFC
+
+def retrieve_model(model_name, seed):
+    para = ''
+    if model_name == 'Decision Tree':
+        model = DecisionTreeClassifier()
+    if model_name == 'XGBoost':
+        para = generate_random_params()
+        model = XGBClassifier(**para)
+        
+
+    model.random_state = seed
+    
+    return model, para
+
+
+def print_md_table_val_test(model_name, test_result, val_result):
+    print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
+    print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
+    print('|            | Accuracy | Sensitivity | Specificity | F1 Score | Accuracy | Sensitivity | Specificity | F1 Score |')
+
+
+    # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
+    # print('|------------|------------|----------|-------------|-------------|----------|')
+    print(f'| {model_name}   |', end='')
+    
+    for val in test_result:
+        print(f' {val:.4f}  |', end='')
+    for val in val_result:
+        print(f' {val:.4f}  |', end='')        
+        
+    print()
+
+# Define custom scoring functions
+def specificity_score(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    specificity = tn / (tn + fp)
+    return specificity
+    
+def train_model_with_stratified_kfold(data, label, model, seed, num_folds=5):
+    # Create scorers dictionary
+    scorers = {
+        'accuracy': make_scorer(accuracy_score),
+        'sensitivity': make_scorer(recall_score),  # Sensitivity is the same as recall
+        'specificity': make_scorer(specificity_score),
+        'f1_score': make_scorer(f1_score)
+    }
+    cv = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=seed)
+    results = cross_validate(model, data, label, cv=cv, scoring=scorers, return_train_score=False)
+    
+    # Calculate mean of each metric
+    mean_metrics = [
+        np.mean(results['test_accuracy']),
+        np.mean(results['test_sensitivity']),
+        np.mean(results['test_specificity']),
+        np.mean(results['test_f1_score'])
+    ]    
+    return mean_metrics
+
+
+def train_model_with_CV_and_LOOCV(data, label, model, seed, num_folds=5):
+    loo = LeaveOneOut()
+    result = []
+    all_val_result = []
+    # Loop over each train/test split
+    for train_index, test_index in loo.split(data):
+        # Split the data into training and testing sets
+        X_train, X_test = data[train_index], data[test_index]
+        y_train, y_test = label[train_index], label[test_index]
+        
+        val_result_fold = train_model_with_stratified_kfold(X_train, y_train, model, num_folds)
+        all_val_result.append(val_result_fold)
+        
+        # Train the classifier
+        model.fit(X_train, y_train)
+
+        # Predict the label for the test set
+        y_pred = model.predict(X_test)
+
+        # Append the accuracy to the list
+        result.append([y_pred, y_test])
+    all_val_result = np.array(all_val_result)
+    all_val_result = np.mean(all_val_result, axis=0)
+    return np.array(result), all_val_result, model
