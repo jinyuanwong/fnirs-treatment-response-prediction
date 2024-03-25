@@ -206,11 +206,11 @@ def count_lines_in_file(file_path):
         return str(e)
     
 all_benchmark_models = ['chao_cfnn', 'li_svm', 'yu_gnn', 'zhu_xgboost', 'wang_alex', 'gnn_transformer']
-model = 'wang_alex'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
+model = 'gnn_transformer'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
 
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 # DMFC/pre_treatment_hamd_reduction_50
-time = 'prognosis/pretreatment_benchmarks'
+time = 'allData/prognosis/pre_treatment_hamd_reduction_50'
 # model = 'graphformer' # 'gnn_transformer'
 
 condition_time = 'pre_post_treatment_hamd_reduction_50'
@@ -231,7 +231,7 @@ TOTAL_ITR = 10
 #     os.makedirs(output_fold)
 
 # folder_path = f'results/{model}/prognosis/pretreatment_benchmarks'
-benchmark_model_path = f'results/{model}/prognosis/pretreatment_benchmarks/'
+benchmark_model_path = f'results/{model}/prognosis/pre_treatment_hamd_reduction_50/'
 list_bm_path = os.listdir(benchmark_model_path)
 for i in list_bm_path:
     if i[:4] == 'auto':
