@@ -153,6 +153,7 @@ def refer_val_get_test(total_itr, model):
         # sum_metrics = [sum(values) for values in zip(val_acc_itr, val_sen_itr, val_spe_itr, val_f1_itr)]
         # based_on_best_metric_location = sum_metrics
         best_index = np.argmax(based_on_best_metric_location)
+        
         path = read_path + str(fold) + '/' + test_file_name
         with open(path, 'r') as f:
             content = f.read()

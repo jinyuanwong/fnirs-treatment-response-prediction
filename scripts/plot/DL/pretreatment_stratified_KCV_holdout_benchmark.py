@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
 import os
+import sys 
+sys.path.append(os.getcwd())
+from utils.fnirs_utils import print_md_table_val_test
 import re
 
 
@@ -205,91 +208,97 @@ def count_lines_in_file(file_path):
     except Exception as e:
         return str(e)
     
-all_benchmark_models = ['chao_cfnn', 'li_svm', 'yu_gnn', 'zhu_xgboost', 'wang_alex', 'gnn_transformer']
-model = 'wang_alex'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
+all_benchmark_models = ['chao_cfnn', 'li_svm', 'yu_gnn', 'zhu_xgboost', 'wang_alex'] #, 'gnn_transformer'
+for model in all_benchmark_models:
+# model = 'yu_gnn'  # comb_cnn or cnn_transformer or pre_post_cnn_transformer or gnn_transformer
 
-# 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-# DMFC/pre_treatment_hamd_reduction_50
-time = 'prognosis/pretreatment_benchmarks'
-# model = 'graphformer' # 'gnn_transformer'
+    # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
+    # DMFC/pre_treatment_hamd_reduction_50
+    time = 'prognosis/pretreatment_benchmarks'
+    # model = 'graphformer' # 'gnn_transformer'
 
-condition_time = 'pre_post_treatment_hamd_reduction_50'
+    condition_time = 'pre_post_treatment_hamd_reduction_50'
 
-val_file_name = 'val_acc.txt'
-test_file_name = 'test_acc.txt'
+    val_file_name = 'val_acc.txt'
+    test_file_name = 'test_acc.txt'
 
+    table_header = True
+    validation_method = 'Stratified_10_fold_CV/fold'  # 'LOOCV' or 'k_fold'
+    TOTAL_FOLD = 10
 
-validation_method = 'Stratified_10_fold_CV/fold'  # 'LOOCV' or 'k_fold'
-TOTAL_FOLD = 10
+    # According to the result, find the wrong labeled index
+    TOTAL_ITR = 10
 
-# According to the result, find the wrong labeled index
-TOTAL_ITR = 10
+    # output_fold = f'FigureTable/DL/timedomain/{time}'
 
-# output_fold = f'FigureTable/DL/timedomain/{time}'
+    # if not os.path.exists(output_fold):
+    #     os.makedirs(output_fold)
 
-# if not os.path.exists(output_fold):
-#     os.makedirs(output_fold)
+    # folder_path = f'results/{model}/prognosis/pretreatment_benchmarks'
+    benchmark_model_path = f'results/{model}/prognosis/pretreatment_benchmarks/'
+    list_bm_path = os.listdir(benchmark_model_path)
+    for i in list_bm_path:
+        if i[:4] == 'auto':
+            train_msg = i
+            break
+    folder_path = benchmark_model_path + train_msg
 
-# folder_path = f'results/{model}/prognosis/pretreatment_benchmarks'
-benchmark_model_path = f'results/{model}/prognosis/pretreatment_benchmarks/'
-list_bm_path = os.listdir(benchmark_model_path)
-for i in list_bm_path:
-    if i[:4] == 'auto':
-        train_msg = i
-        break
-folder_path = benchmark_model_path + train_msg
+    # folder_path = f'results/{model}/prognosis/pretreatment_benchmarks/automlactivation_relu_lr_0.1'
 
-# folder_path = f'results/{model}/prognosis/pretreatment_benchmarks/automlactivation_relu_lr_0.1'
+    all_filename = sorted(os.listdir(folder_path))
+    # make the 10-fold to the last element
+    all_filename = all_filename[1:] + [all_filename[0]]
+    # all_filename = ['d_model_64_BatchSize_4_n_layers_4']
 
-all_filename = sorted(os.listdir(folder_path))
-# make the 10-fold to the last element
-all_filename = all_filename[1:] + [all_filename[0]]
-# all_filename = ['d_model_64_BatchSize_4_n_layers_4']
-
-def extract_num_k_from_name(name):
-    elements = name.split('_')
-    return elements[1]
-for filename in all_filename:
-    # print()
-    # print('filename:', filename)
-    TOTAL_FOLD = int(extract_num_k_from_name(filename))
-    validation_method = f'Stratified_{TOTAL_FOLD}_fold_CV/fold'
-    TOTAL_ITR = count_lines_in_file(folder_path + '/' + filename + '/' + 'fold-' + str(TOTAL_FOLD-1) + '/test_acc.txt')
-    TOTAL_ITR = int(TOTAL_ITR)
-    print()
-    if TOTAL_ITR < 1:
-        print("Hello End!")
-        continue
-    specify_msg = filename # 'l1_testIsDivBy3' # 'use_testset_divide_3', 'use_testset_divide_5' or None or 'use_testset_divide_7'
-
-
-    val_best_metric, test_best_metric = refer_val_get_test(TOTAL_ITR, model)
+    def extract_num_k_from_name(name):
+        elements = name.split('_')
+        return elements[1]
+    for filename in all_filename:
+        # print()
+        # print('filename:', filename)
+        TOTAL_FOLD = int(extract_num_k_from_name(filename))
+        validation_method = f'Stratified_{TOTAL_FOLD}_fold_CV/fold'
+        TOTAL_ITR = count_lines_in_file(folder_path + '/' + filename + '/' + 'fold-' + str(TOTAL_FOLD-1) + '/test_acc.txt')
+        TOTAL_ITR = int(TOTAL_ITR)
+        print()
+        if TOTAL_ITR < 1:
+            print("Hello End!")
+            continue
+        specify_msg = filename # 'l1_testIsDivBy3' # 'use_testset_divide_3', 'use_testset_divide_5' or None or 'use_testset_divide_7'
 
 
-    metric_dic = {
-        # 'MCNet': mcnet_metric,
-        'test_best_metric': test_best_metric,
-        'val_best_metric': val_best_metric
-    }
+        val_best_metric, test_best_metric = refer_val_get_test(TOTAL_ITR, model)
 
-    # metrics = [mcnet_metric, cnntr_metric]
-    metrics = []
-    # for index, value in enumerate(mcnet_metric):
-    #     metrics.append([mcnet_metric[index], cnntr_metric[index]])
+
+        metric_dic = {
+            # 'MCNet': mcnet_metric,
+            'test_best_metric': test_best_metric,
+            'val_best_metric': val_best_metric
+        }
+
+        # metrics = [mcnet_metric, cnntr_metric]
+        metrics = []
+        # for index, value in enumerate(mcnet_metric):
+        #     metrics.append([mcnet_metric[index], cnntr_metric[index]])
+            
+        metrics = test_best_metric
+        # Separate the data based on biomarkers
+        # Define the data
+        models = ['test_best_metric', 'val_best_metric'] # ['MCNet', 'CNNTR']
+        metrics_name = ['Accuracy', 'Sensitivity', 'Specificity', 'F1 Score']
+
+
+        # if test_best_metric[1] > 0.4:
+        # print(f'dataset: {time}')
+        # print(f'model: {model}')
+        # print(f'validation method: stratified k-fold cross-validation with holdout')
+        # print(f'number of iterations: {TOTAL_ITR}')
+        # print(f'specify_msg: {specify_msg}')
+        # print()
         
-    metrics = test_best_metric
-    # Separate the data based on biomarkers
-    # Define the data
-    models = ['test_best_metric', 'val_best_metric'] # ['MCNet', 'CNNTR']
-    metrics_name = ['Accuracy', 'Sensitivity', 'Specificity', 'F1 Score']
-
-
-    # if test_best_metric[1] > 0.4:
-    # print(f'dataset: {time}')
-    # print(f'model: {model}')
-    # print(f'validation method: stratified k-fold cross-validation with holdout')
-    # print(f'number of iterations: {TOTAL_ITR}')
-    # print(f'specify_msg: {specify_msg}')
-    # print()
-    
-    generate_md_table(TOTAL_FOLD)
+        # generate_md_table(TOTAL_FOLD, )
+        print_md_table_val_test(model + f'(k={TOTAL_FOLD})', test_best_metric, val_best_metric, table_header)
+        if table_header: table_header = False
+        
+        
+    print()

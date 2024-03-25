@@ -18,15 +18,16 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 0
+CURRENT_LOO = 15
 # INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
 # fnirs-depression-deeplearning/allData/
 INPUT_HB_TYPE=['prognosis/pretreatment_benchmarks']
-SPECIFY_FOLD=10
+INPUT_HB_TYPE = ['prognosis/pre_treatment_hamd_reduction_50'] 
+SPECIFY_FOLD=5
 
-# INPUT_HB_TYPE = ['prognosis/pretreatment_benchmarks'] or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
+# INPUT_HB_TYPE = ['prognosis/pre_treatment_hamd_reduction_50'] # or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
 
 # for example:
 # pre_post_treatment_hamd_reduction_50

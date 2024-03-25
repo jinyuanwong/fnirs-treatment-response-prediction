@@ -6,12 +6,12 @@ import os
 import re
 
 
-model = 'gnn'  # comb_cnn or cnn_transformer gnn_transformer gnn
-model_params = 'V1' # 'd_model_16_batch_size_64_n_layers_6'  # V1
+model = 'yu_gnn'  # comb_cnn or cnn_transformer gnn_transformer gnn yu_gnn
+model_params = 'v1' # 'd_model_16_batch_size_64_n_layers_6'  # V1
 
 
+time = 'prognosis/pretreatment_benchmarks'
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-time = 'pre_treatment_hamd_reduction_50'
 
 validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
 
@@ -20,7 +20,8 @@ output_fold = f'FigureTable/DL/timedomain/{time}'
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 
-y_test_path = f'allData/prognosis/{time}'
+# y_test_path = f'allData/prognosis/{time}'
+y_test_path = f'allData/{time}/{model}'
 
 total_subjects  = 46 if time[:8] == 'pre_post' else 65 # '65' or '45
 
@@ -63,6 +64,7 @@ def get_val_metrics(model):
     for loo in range(total_subjects):
         ind_loo_folds =[]
         for cv_fold in range(num_of_cv_folds):
+            # read_path = f"results/{model}/{model_params}/{validation_method}/LOO_{loo}/stratified_nested_CV_fold-{cv_fold}/val_acc.txt"
             read_path = f"results/{model}/{time}/{model_params}/{validation_method}/LOO_{loo}/stratified_nested_CV_fold-{cv_fold}/val_acc.txt"
             res_metrics = read_metrics_txt_specify_itr(read_path, taking_itr)
             ind_loo_folds.append(res_metrics)            
@@ -109,7 +111,7 @@ def convert_result_to_y_pred(result, y_test):
     return y_pred
 
 result = get_y_pred_test(model)
-
+print('y_pred', result)
 y_test = np.load(y_test_path + '/label.npy')
 y_pred = convert_result_to_y_pred(result, y_test)
 
@@ -133,6 +135,7 @@ def get_metrics(y_true, y_pred):
 # mcnet_metric = get_metrics(y_test, mcnet_pred)
 test_metrics = get_metrics(y_test, y_pred)
 print_md_table(model, 'test', test_metrics)
+
 # def loop_iteration_find_best_performance_id(total_itr, model, verbose=True):
 #     read_path = 'results/' + model + '/' + time + '/' + validation_method + '-'
 #     best_acc = 0

@@ -91,7 +91,7 @@ class TrainModel():
                         # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
-                        f'/{msg}/' + f"LOO_nested_CV/LOO_{current_loo}/stratified_nested_CV_fold-{str(k)}" + '/'
+                        f'/{msg}/' + f"LOO_nested_CV/LOO_{current_loo}/stratified_nested_{num_of_k_fold}_CV_fold-{str(k)}" + '/'
 
                         print(f'output_directory -> {output_directory}')
                         create_directory(output_directory)

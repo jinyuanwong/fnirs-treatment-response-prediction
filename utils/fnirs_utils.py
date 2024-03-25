@@ -737,6 +737,10 @@ def remove_nan_for_demographic_data(demographic_data):
     demographic_data = demographic_data.astype(int)
     return demographic_data
 
+def normalize_demographic(data):
+    return zscore(data, axis=0)
+
+
 
 def plot_model_importance(model):
     feature_importances = model.feature_importances_
@@ -887,3 +891,16 @@ def train_model_with_CV_and_LOOCV(data, label, model, seed, num_folds=5):
     all_val_result = np.array(all_val_result)
     all_val_result = np.mean(all_val_result, axis=0)
     return np.array(result), all_val_result, model
+
+
+def convert_result_to_y_pred(result, y_test):
+    y_pred = []
+    print('y_test', y_test)
+    for i, v in enumerate(result):
+        
+        if v >= 0.5:
+            y_pred.append(y_test[i])
+        else:
+            val = abs(y_test[i]-1)
+            y_pred.append(val)
+    return y_pred
