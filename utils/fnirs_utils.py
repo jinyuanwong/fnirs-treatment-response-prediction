@@ -21,7 +21,7 @@ from xgboost import XGBClassifier
 import pandas as pd 
 from scipy import stats
 from sklearn.model_selection import LeaveOneOut
-from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score, confusion_matrix, precision_score
 from sklearn.model_selection import cross_validate, StratifiedKFold
 
 
@@ -904,3 +904,10 @@ def convert_result_to_y_pred(result, y_test):
             val = abs(y_test[i]-1)
             y_pred.append(val)
     return y_pred
+
+def calculate_f1_precision(y_test, y_pred):
+
+    f1 = f1_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    print(f"Precision: {precision}")
+    print(f'f1: {f1}')

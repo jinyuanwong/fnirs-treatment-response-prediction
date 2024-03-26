@@ -73,7 +73,7 @@ def get_val_metrics_and_test_accuracies(model, val_fold_path, subject_fold_name=
         loo_acc = []
         for cv_fold in range(num_of_cv_folds):
             # read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
-            read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_CV_fold-{cv_fold}/"
+            read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
 
@@ -123,11 +123,10 @@ def get_y_pred_test(model, val_fold_path):
 # model = 'yu_gnn'  # comb_cnn or cnn_transformer gnn_transformer gnn yu_gnn
 # model_params = 'v1' # 'd_model_16_batch_size_64_n_layers_6'  # V1
 model = 'gnn_transformer'  # comb_cnn or cnn_transformer gnn_transformer gnn yu_gnn
-model_params = 'd_model_16_batch_size_64_n_layers_6' # 'd_model_16_batch_size_64_n_layers_6'  # V1
+model_params = 'v2l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6' # 'd_model_16_batch_size_64_n_layers_6'  # V1
 
 
-time = 'prognosis/pretreatment_benchmarks'
-time = 'pre_treatment_hamd_reduction_50'
+time = 'prognosis/pre_treatment_hamd_reduction_50'
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
 validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
@@ -152,9 +151,6 @@ val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model
 # test_accuracy = get_y_pred_test(model, val_fold_path)
 y_test = np.load(y_test_path + '/label.npy')
 y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-
-print('test_accuracy', test_accuracy)
-print('y_pred', y_pred)
 
 test_metrics = get_metrics(y_test, y_pred)
 
