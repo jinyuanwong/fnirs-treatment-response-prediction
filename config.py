@@ -18,7 +18,7 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 3
+CURRENT_LOO = 0
 # INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
@@ -107,13 +107,13 @@ PARAMETER = {
         'hb_path': 'data.npy',
     },
     'gnn_transformer': {
-        'hb_path': 'hb_data.npy',
+        'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.01,# should be 0.001
-        'd_model': 16,#np.random.choice([16, 32, 64]),
-        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
-        'n_layers': 6#np.random.choice([4, 8, 12]),
+        'd_model': 64,#np.random.choice([16, 32, 64]),
+        'batch_size': 8,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 12#np.random.choice([4, 8, 12]),
     },
     'graphformer': {
         'hb_path': 'data.npy',

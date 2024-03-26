@@ -131,7 +131,7 @@ def get_y_pred_test(model, val_fold_path):
 # model_params = 'v1' # 'd_model_16_batch_size_64_n_layers_6'  # V1
 model = 'gnn_transformer'  # comb_cnn or cnn_transformer gnn_transformer gnn yu_gnn
 model_params = 'v2l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6' # 'd_model_16_batch_size_64_n_layers_6'  # V1
-
+model_params = 'merge_one_branchl1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6'
 
 time = 'prognosis/pre_treatment_hamd_reduction_50'
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
