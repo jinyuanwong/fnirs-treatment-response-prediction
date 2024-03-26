@@ -43,11 +43,15 @@ def read_file_metric_acc_sen_spe_f1(path):
 def read_metrics_txt_best_itr(path, based_best_metric='sensitivity'): # 
     
     acc, sen, spe, f1 = read_file_metric_acc_sen_spe_f1(path)
-    
     # get the itr of the best sensitivity result 
     if based_best_metric == 'sensitivity':
         based_on_best_metric_location = sen # val_f1_itr
-        best_index = np.argmax(based_on_best_metric_location)
+    elif based_best_metric == 'f1_score':
+        based_on_best_metric_location = f1 # val_f1_itr
+    else:
+        raise ValueError('based_best_metric should be either sensitivity or f1_score')
+    best_index = np.argmax(based_on_best_metric_location)
+
     # print(f" all sen {sen} - best sen {sen[best_index]} - best index {best_index}")
     res = [acc[best_index],
            sen[best_index],
@@ -58,8 +62,7 @@ def read_metrics_txt_best_itr(path, based_best_metric='sensitivity'): #
 def get_test_acc_using_val_best_itr(path, itr):
     acc, _, _, _ = read_file_metric_acc_sen_spe_f1(path)
     return acc[itr]
-
-def get_val_metrics_and_test_accuracies(model, val_fold_path, subject_fold_name='LOO_'):
+def get_val_metrics_and_test_accuracies(model, val_fold_path, based_best_metric='sensitivity', subject_fold_name='LOO_'):
     # get the averay validation result 
     ## only consider 1 iteration 
     taking_itr = 0
@@ -71,16 +74,20 @@ def get_val_metrics_and_test_accuracies(model, val_fold_path, subject_fold_name=
     for loo in range(total_subjects):
         ind_loo_folds =[]
         loo_acc = []
+        # test_best_itr = []
         for cv_fold in range(num_of_cv_folds):
             # read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
 
-            res_metrics, val_best_itr = read_metrics_txt_best_itr(read_val_path)
+            res_metrics, val_best_itr = read_metrics_txt_best_itr(read_val_path, based_best_metric=based_best_metric)
+            all_best_itr_record.append(val_best_itr)
+            # test_best_itr.append(val_best_itr)
             cv_fold_acc = get_test_acc_using_val_best_itr(read_test_path, val_best_itr)
             loo_acc.append(cv_fold_acc)
-            ind_loo_folds.append(res_metrics)            
+            ind_loo_folds.append(res_metrics)    
+        # print('loo_acc', loo_acc, 'best_itr', test_best_itr)
         all_loo_acc.append(np.mean(loo_acc))
         # ind_loo_folds should be a shape like (3, 4) (folds, acc|sen|spe|f1)
         mean_ind_loo_folds = np.mean(ind_loo_folds, axis=0)
@@ -130,6 +137,8 @@ time = 'prognosis/pre_treatment_hamd_reduction_50'
 # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
 validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
+based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
+all_best_itr_record = []
 
 
 val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
@@ -145,16 +154,15 @@ y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
 
 total_subjects  = 46 if time[:8] == 'pre_post' else 65 # '65' or '45
 
-val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path)
+val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, based_best_metric=based_best_metric)
 
 
 # test_accuracy = get_y_pred_test(model, val_fold_path)
 y_test = np.load(y_test_path + '/label.npy')
 y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-
 test_metrics = get_metrics(y_test, y_pred)
 
+
 print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
-
-
 print()
+print(all_best_itr_record)
