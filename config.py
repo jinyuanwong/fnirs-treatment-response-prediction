@@ -187,5 +187,9 @@ PARAMETER = {
     },
     'li_svm':{
         'hb_path': 'data.npy',
+    },
+    'decisiontree': {
+        'hb_path': 'hb_data.npy',
+
     }
 }

@@ -53,5 +53,8 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
     if classifier_name == 'zhu_xgboost':  # Time-CNN
         from classifiers import zhu_xgboost
         return zhu_xgboost.Classifier_XGBoost(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+    if classifier_name == 'decisiontree':  # Time-CNN
+        from classifiers import decisiontree
+        return decisiontree.Classifier_DecisionTree(output_directory, callbacks, input_shape, epochs, sweep_config, info)
     else:
         raise Exception('Your error message here')
