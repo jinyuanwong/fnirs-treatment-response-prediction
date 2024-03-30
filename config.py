@@ -18,7 +18,8 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 0
+CURRENT_LOO = 46
+LOO_ARRAY = [32, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 33, 54, 55, 56, 57, 58, 59, 60, 61, 62, 31, 0, 29, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 30, 15, 17, 28, 27, 26, 25, 24, 16, 23, 19, 18, 22, 64, 53, 20, 42, 63, 21]
 # INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
@@ -111,9 +112,29 @@ PARAMETER = {
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.01,# should be 0.001
-        'd_model': 64,#np.random.choice([16, 32, 64]),
-        'batch_size': 8,#np.random.choice([4, 8, 16, 64]),
-        'n_layers': 12#np.random.choice([4, 8, 12]),
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6#np.random.choice([4, 8, 12]),
+    },
+    'gnn_transformer_tp_fc_fs': {
+        'hb_path': 'merge_feature.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'merge_sequence': [[0, 375],[375, 531],[531, 567],[567, 578]]
+    },
+    'gnn_transformer_tp_dp':{
+        'hb_path': 'merge_feature.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'merge_sequence': [[0, 375],[0,375],[567, 578]]
     },
     'graphformer': {
         'hb_path': 'data.npy',
