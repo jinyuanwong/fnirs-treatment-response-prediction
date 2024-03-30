@@ -108,7 +108,8 @@ dict_model_params = {
     'gnn_transformer': 'v2_repeat_1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
-    'decisiontree': 'v1'
+    'decisiontree': 'v1',
+    'zhu_xgboost': 'v1',
 }
 
 
