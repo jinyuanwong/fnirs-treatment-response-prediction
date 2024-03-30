@@ -102,11 +102,13 @@ def get_val_metrics_and_test_accuracies(model,
     # print_md_table(model, 'validation', mean_all_loo_metrics)
     # print('all_loo_acc', all_loo_acc)
     return mean_all_loo_metrics, all_loo_acc
-
+def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
+        return len(os.listdir(val_fold_path)) >= TOTAL_Subject
 dict_model_params = {
     'gnn_transformer': 'v2_repeat_1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
+    'decisiontree': 'v1'
 }
 
 
@@ -126,6 +128,10 @@ def get_sorted_loo_array(model, model_params, MAX_ITR=999):
 
     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
     TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+    
+    if not check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
+        return np.arange(65).tolist()
+    
     output_fold = f'FigureTable/DL/timedomain/{time}'
 
     if not os.path.exists(output_fold):

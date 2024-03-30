@@ -46,7 +46,9 @@ class Classifier_DecisionTree():
 
         duration = time.time() - start_time
         # Save logs, handle validations, etc., similarly as before but adjusted for Decision Tree specifics
-        duration = time.time() - start_time
+        Y_pred = np.argmax(Y_pred, axis=1)
+        Y_true = np.argmax(Y_test, axis=1)
+
         save_validation_acc(self.output_directory, np.argmax(
             self.model.predict(X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):

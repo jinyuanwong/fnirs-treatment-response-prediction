@@ -19,7 +19,7 @@ import numpy as np
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
 CURRENT_LOO = 35
-LOO_ARRAY = [51, 50, 49, 48, 33, 52, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 0, 31, 54, 55, 56, 57, 58, 59, 60, 61, 62, 47, 30, 64, 28, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29, 15, 17, 27, 26, 25, 24, 16, 22, 23, 19, 18, 53, 20, 35, 34, 42, 32, 63, 21]
+LOO_ARRAY = [64, 24, 25, 26, 27, 28, 29, 30, 31, 63, 62, 61, 60, 59, 58, 57, 56, 55, 22, 21, 23, 19, 1, 2, 3, 4, 5, 6, 20, 8, 9, 7, 11, 12, 13, 14, 15, 16, 17, 18, 10, 48, 49, 54, 53, 52, 51, 50, 0, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 47, 32]
 # INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
@@ -52,7 +52,8 @@ MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
                                'wang_alex', 
                                'zhu_xgboost', 
                                'yu_gnn',
-                               'li_svm']
+                               'li_svm',
+                               'decisiontree']
 
 # PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-Lowmid-High/'
 PREPROCESSED_HB_FOLD_PATH = './allData/prognosis/pretreatment_benchmarks/'

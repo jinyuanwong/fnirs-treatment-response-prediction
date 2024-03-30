@@ -649,7 +649,7 @@ def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_oneho
     # res = pd.DataFrame(data=np.zeros((1, len(save_metrices)), dtype=np.float), index=[0],
     #                    columns=save_metrices)
     res = pd.DataFrame(data=np.zeros((1, len(save_metrices)),
-                       dtype=np.float), index=[0], columns=save_metrices)
+                       dtype=np.float64), index=[0], columns=save_metrices)
     res['accuracy'] = round(accuracy_score(y_true, y_pred), 5)
 
     res['sensitivity'] = round(recall_score(y_true, y_pred), 5)
