@@ -34,7 +34,7 @@ def read_file_metric_acc_sen_spe_f1(path):
         spe = convert_to_float(re.findall(r'specificity: (\d+\.\d+)', content))
         f1 = convert_to_float(re.findall(r'F1-score: (\d+\.\d+)', content))
     return acc, sen, spe, f1
-def read_metrics_txt_best_itr(path, based_best_metric='sensitivity'): # 
+def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): # 
     
     acc, sen, spe, f1 = read_file_metric_acc_sen_spe_f1(path)
     # get the itr of the best sensitivity result 
@@ -57,7 +57,16 @@ def read_metrics_txt_best_itr(path, based_best_metric='sensitivity'): #
 def get_test_acc_using_val_best_itr(path, itr):
     acc, _, _, _ = read_file_metric_acc_sen_spe_f1(path)
     return acc[itr]
-def get_val_metrics_and_test_accuracies(model, val_fold_path, based_best_metric='sensitivity', subject_fold_name='LOO_'):
+def get_val_metrics_and_test_accuracies(model, 
+                                        val_fold_path, 
+                                        ALL_BEST_ITR,
+                                        ALL_TOTAL_ITERATION,
+                                        based_best_metric='sensitivity', 
+                                        subject_fold_name='LOO_', 
+                                        SUBJECTALL=None, 
+                                        total_subjects=65, 
+                                        MAX_ITR=999,
+                                        ):
     # get the averay validation result 
     ## only consider 1 iteration 
     num_of_cv_folds = len(os.listdir(val_fold_path + '/' + subject_fold_name + str(0)))#3 
@@ -76,7 +85,7 @@ def get_val_metrics_and_test_accuracies(model, val_fold_path, based_best_metric=
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
 
-            res_metrics, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, based_best_metric=based_best_metric)
+            res_metrics, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
             # test_best_itr.append(val_best_itr)
@@ -99,6 +108,62 @@ dict_model_params = {
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
 }
+
+
+def get_sorted_loo_array(model, model_params, MAX_ITR=999):
+
+
+    SUBJECTALL = None # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+
+    time = 'prognosis/pre_treatment_hamd_reduction_50'
+    # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
+
+    validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
+    based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
+    ALL_BEST_ITR = []
+    ALL_TOTAL_ITERATION = []
+
+
+    val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
+    TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+    output_fold = f'FigureTable/DL/timedomain/{time}'
+
+    if not os.path.exists(output_fold):
+        os.makedirs(output_fold)
+
+    # y_test_path = f'allData/prognosis/{time}'
+    y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
+
+    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
+
+    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
+
+
+    y_test = np.load(y_test_path + '/label.npy')
+    if SUBJECTALL: y_test = y_test[SUBJECTALL]
+    y_pred = convert_result_to_y_pred(test_accuracy, y_test)
+    predict_accuracy_flag = y_pred==y_test
+    test_metrics = get_metrics(y_test, y_pred)
+    
+    print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
+    print('Model name:', model)
+    print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
+    print()
+    
+
+    # print_result_detail_in_every_fold(ALL_BEST_ITR, ALL_TOTAL_ITERATION, predict_accuracy_flag, y_test)
+    # for i, v in enumerate(ALL_TOTAL_ITERATION):
+    #     loo = i // 5 
+    #     v = i % 5 
+    #     print(f"LOO_{loo} - fold_{v} - Best itr: {ALL_BEST_ITR[i]} - Total itr: {ALL_TOTAL_ITERATION[i]} - acc: {predict_accuracy_flag[loo]}, y_test: {y_test[loo]}")
+    loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
+    loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+    loo_toal_itr = np.mean(loo_toal_itr, axis=1)
+    sorted_indices = np.argsort(loo_toal_itr)
+    sorted_indices = sorted_indices.tolist()
+    print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
+    return sorted_indices
+
 
 if __name__ == '__main__':
     # Create the parser
@@ -142,7 +207,7 @@ if __name__ == '__main__':
 
     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
 
-    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, based_best_metric=based_best_metric)
+    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
 
 
     y_test = np.load(y_test_path + '/label.npy')
@@ -172,3 +237,5 @@ if __name__ == '__main__':
     # print(f"Best itr numnber for each LOO with 5 folds (ALL_BEST_ITR {len(ALL_BEST_ITR)}):", ALL_BEST_ITR)
     # print('Number of subjects:', y_test.shape)
     # python /home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/scripts/plot/DL/read_LOO_nestedCV_gnntr.py
+    
+    

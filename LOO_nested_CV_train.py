@@ -17,7 +17,7 @@ import wandb
 import config
 import gc
 from classifiers.classifier_factory import create_classifier
-
+from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 current_time = int(time.time())
 
 # set the random seed
@@ -149,8 +149,10 @@ class TrainModel():
                             break
                         # for obj in gc.get_objects():
                         #     print(type(obj), repr(obj))
-                    update_config_file('CURRENT_LOO', current_loo)
-                update_config_file('CURRENT_LOO', 0)
+                    loo_array = get_sorted_loo_array(model_name, msg)
+                    # update_config_file('CURRENT_LOO', current_loo)
+                    update_config_file('LOO_ARRAY', loo_array)
+                # update_config_file('CURRENT_LOO', 0)
 
 
 def train_model():
