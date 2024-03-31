@@ -487,6 +487,7 @@ class Classifier_Transformer():
         self.model.load_weights(
             self.output_directory + 'checkpoint')
         Y_pred = self.model.predict(X_test)
+        self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
 

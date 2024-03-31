@@ -472,6 +472,7 @@ class Classifier_Transformer():
         print(f'Y_train_pred_argmax: {Y_train_pred_argmax}'*10)
         print(f'Y_train_true_argmax: {Y_train_true_argmax}'*10)
         Y_pred = self.model.predict(X_test)
+        self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
 

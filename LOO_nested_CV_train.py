@@ -149,10 +149,10 @@ class TrainModel():
                             break
                         # for obj in gc.get_objects():
                         #     print(type(obj), repr(obj))
-                    loo_array = get_sorted_loo_array(model_name, msg)
-                    # update_config_file('CURRENT_LOO', current_loo)
-                    update_config_file('LOO_ARRAY', loo_array)
-                # update_config_file('CURRENT_LOO', 0)
+                    # loo_array = get_sorted_loo_array(model_name, msg)
+                    update_config_file('CURRENT_LOO', current_loo)
+                    # update_config_file('LOO_ARRAY', loo_array)
+                update_config_file('CURRENT_LOO', 0)
 
 
 def train_model():
