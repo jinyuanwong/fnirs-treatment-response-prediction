@@ -191,7 +191,7 @@ if __name__ == '__main__':
     model_params = dict_model_params.get(args.model)
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
-    SUBJECTALL = np.arange(20).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+    SUBJECTALL = None # np.arange(20).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
 
     time = 'prognosis/pre_treatment_hamd_reduction_50'
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
