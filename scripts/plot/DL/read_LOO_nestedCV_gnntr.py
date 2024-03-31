@@ -74,7 +74,7 @@ def get_val_metrics_and_test_accuracies(model,
     print('num_of_cv_folds', num_of_cv_folds)
     all_loo_metrics = []
     all_loo_acc = []
-    LOOP_SUBJECT = SUBJECTALL if SUBJECTALL else range(total_subjects)
+    LOOP_SUBJECT = SUBJECTALL if SUBJECTALL is not None else range(total_subjects)
     for loo in LOOP_SUBJECT: #range(total_subjects):
         ind_loo_folds =[]
         loo_acc = []
@@ -105,7 +105,7 @@ def get_val_metrics_and_test_accuracies(model,
 def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
         return len(os.listdir(val_fold_path)) >= TOTAL_Subject
 dict_model_params = {
-    'gnn_transformer': 'v2_repeat_1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
+    'gnn_transformer': 'v2_repeat_2l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#'v2l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -147,7 +147,7 @@ def get_sorted_loo_array(model, model_params, MAX_ITR=999):
 
 
     y_test = np.load(y_test_path + '/label.npy')
-    if SUBJECTALL: y_test = y_test[SUBJECTALL]
+    if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
     predict_accuracy_flag = y_pred==y_test
     test_metrics = get_metrics(y_test, y_pred)
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     model_params = dict_model_params.get(args.model)
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
-    SUBJECTALL = None # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+    SUBJECTALL = np.arange(20).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
 
     time = 'prognosis/pre_treatment_hamd_reduction_50'
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
@@ -218,7 +218,7 @@ if __name__ == '__main__':
 
 
     y_test = np.load(y_test_path + '/label.npy')
-    if SUBJECTALL: y_test = y_test[SUBJECTALL]
+    if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
     predict_accuracy_flag = y_pred==y_test
     test_metrics = get_metrics(y_test, y_pred)

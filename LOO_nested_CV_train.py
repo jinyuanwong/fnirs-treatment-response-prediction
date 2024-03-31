@@ -75,7 +75,7 @@ class TrainModel():
                     num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
                 loo_start_from = config.CURRENT_LOO
                 loo_array = config.LOO_ARRAY
-                for current_loo in loo_array:# range(loo_start_from, data.shape[0]): #loo_array:# 
+                for current_loo in range(loo_start_from, data.shape[0]): #loo_array:#  loo_array:# 
                     for k in range(num_of_k_fold):
                         if using_adj:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
@@ -149,10 +149,10 @@ class TrainModel():
                             break
                         # for obj in gc.get_objects():
                         #     print(type(obj), repr(obj))
-                    loo_array = get_sorted_loo_array(model_name, msg)
-                    # update_config_file('CURRENT_LOO', current_loo)
-                    update_config_file('LOO_ARRAY', loo_array)
-                # update_config_file('CURRENT_LOO', 0)
+                    # loo_array = get_sorted_loo_array(model_name, msg)
+                    update_config_file('CURRENT_LOO', current_loo)
+                    # update_config_file('LOO_ARRAY', loo_array)
+                update_config_file('CURRENT_LOO', 0)
 
 
 def train_model():

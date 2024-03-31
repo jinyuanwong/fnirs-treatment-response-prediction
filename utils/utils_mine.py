@@ -344,7 +344,7 @@ def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
     print(type(current_metrice))
     print(f"Current {check_metrice}: {current_metrice}")
 
-    if current_metrice > past_metrice:
+    if current_metrice >= past_metrice:
         return True
     return False
 
@@ -681,7 +681,7 @@ def save_logs(model, output_directory, result_name, hist, y_pred, y_true, durati
             for key, value in hyperparameters.items():
                 file.write(f"    {key} = {value} \n")
             file.write("}")
-
+    print(f"save_checkpoiont - output_directory: {is_saving_checkpoint} {output_directory}")
     if is_saving_checkpoint:
         model.save_weights(output_directory + 'fold-best-checkpoint')
     else:
