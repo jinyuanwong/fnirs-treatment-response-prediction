@@ -128,8 +128,10 @@ dict_model_params = {
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
     'zhu_xgboost': 'v1',
-    'wang_alex': 'v1lr_0.001_activation_relu'
+    'wang_alex': 'v1lr_0.001_activation_relu',
+    'yu_gnn': 'v1'
 }
+
 def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=0.5):
     
     ALL_Y_pred_in_test = np.array(ALL_Y_pred_in_test)
@@ -140,64 +142,44 @@ def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_se
     y_pred_in_test_argmax = [1 if i >= 0.5 else 0 for i in y_pred_in_test_argmax]
     return y_pred_in_test_argmax
 
-def get_sorted_loo_array(model, model_params, MAX_ITR=999):
+def avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION):
+        loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
+        loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+        loo_toal_itr = np.mean(loo_toal_itr, axis=1)
+        return loo_toal_itr
+def get_sorted_loo_array(model, model_params):
+
+    ALL_TOTAL_ITERATION = [] # store all the total iteration for each fold
+    TOTAL_Subject = 65 # number of subjects in the dataset for LOOCV in external testing set
+    K_FOLD = 5 # number of k folds in inner CV
+    validation_method_external = 'LOO_nested_CV' # external validation method
+    validation_method_inner = 'stratified_nested_5_CV_fold' # inner validation method
+    DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
+    RESULT_FILE_NAME = 'val_acc.txt' # result file name
+    val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
+    total_subjects  = 46 if DATASET[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
 
 
-    SUBJECTALL = None # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+    for subject in range(total_subjects):
+        for fold in range(K_FOLD):
+            fold_path = f'{val_fold_path}/LOO_{subject}/{validation_method_inner}-{fold}'
+            try:
+                with open(f'{fold_path}/{RESULT_FILE_NAME}', 'r') as f:
 
-    time = 'prognosis/pre_treatment_hamd_reduction_50'
-    # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-
-    validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
-    based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
-    ALL_BEST_ITR = []
-    ALL_TOTAL_ITERATION = []
-    ALL_Y_pred_in_test = []
-
-    val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-    TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
-    
-    if not check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
-        return np.arange(65).tolist()
-    
-    output_fold = f'FigureTable/DL/timedomain/{time}'
-
-    if not os.path.exists(output_fold):
-        os.makedirs(output_fold)
-
-    # y_test_path = f'allData/prognosis/{time}'
-    y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
-
-    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
-
-    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
-
-
-    y_test = np.load(y_test_path + '/label.npy')
-    if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-    y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-    predict_accuracy_flag = y_pred==y_test
-    test_metrics = get_metrics(y_test, y_pred)
-    
-    print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
-    print('Model name:', model)
-    print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
-    print()
-    
-
-    # print_result_detail_in_every_fold(ALL_BEST_ITR, ALL_TOTAL_ITERATION, predict_accuracy_flag, y_test)
-    # for i, v in enumerate(ALL_TOTAL_ITERATION):
-    #     loo = i // 5 
-    #     v = i % 5 
-    #     print(f"LOO_{loo} - fold_{v} - Best itr: {ALL_BEST_ITR[i]} - Total itr: {ALL_TOTAL_ITERATION[i]} - acc: {predict_accuracy_flag[loo]}, y_test: {y_test[loo]}")
-    loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-    loo_toal_itr = loo_toal_itr.reshape(-1, 5)
-    loo_toal_itr = np.mean(loo_toal_itr, axis=1)
+                    total_lines = len(f.readlines())
+                    ALL_TOTAL_ITERATION.append(total_lines)
+            except:
+                # if the fold has not been created yet, then the total iteration is 0
+                print('fold_path', fold_path)
+                ALL_TOTAL_ITERATION.append(0)
+                print(f'{fold_path}/{RESULT_FILE_NAME} will be set to 0 because it has not been trained yet')
+    # average the total iteration for each fold
+    loo_toal_itr = avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION)
     sorted_indices = np.argsort(loo_toal_itr)
     sorted_indices = sorted_indices.tolist()
-    print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
+    
+    # print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
     return sorted_indices
-
 
 # if __name__ == '__main__':
 #     # Create the parser

@@ -73,9 +73,12 @@ class TrainModel():
                 else:
                     label_not_one_hot = np.argmax(label, axis=1)
                     num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
-                loo_start_from = config.CURRENT_LOO
-                loo_array = config.LOO_ARRAY
-                for current_loo in range(loo_start_from, -1, -1):#  loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
+
+                params = info['parameter']
+                msg = info['message'] + get_params_info(params)
+                loo_array = get_sorted_loo_array(model_name, msg)
+                print('loo_array', loo_array)
+                for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
                     for k in range(num_of_k_fold):
                         if using_adj:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
@@ -87,8 +90,7 @@ class TrainModel():
                         print(f'X_val: {X_val.shape}')
                         print(f'X_test: {X_test.shape}')
                         print(f"total sample size is {X_train.shape[0] + X_val.shape[0] + X_test.shape[0]}")
-                        params = info['parameter']
-                        msg = info['message'] + get_params_info(params)
+                        
                         # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \
@@ -147,12 +149,7 @@ class TrainModel():
                             # if wandb is activated, then we only calculate the k=0 fold cross validation for 25 times
                         if using_wandb:
                             break
-                        # for obj in gc.get_objects():
-                        #     print(type(obj), repr(obj))
-                    # loo_array = get_sorted_loo_array(model_name, msg)
-                    update_config_file('CURRENT_LOO', current_loo)
-                    # update_config_file('LOO_ARRAY', loo_array)
-                update_config_file('CURRENT_LOO', 0)
+
 
 def train_model():
     wandb.init()  # mode='disabled'
