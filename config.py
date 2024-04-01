@@ -18,8 +18,6 @@ import numpy as np
                 #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
                 #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
 
-CURRENT_LOO = 0
-LOO_ARRAY = [32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 30, 64, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 29, 17, 5, 18, 20, 21, 22, 23, 24, 25, 26, 3, 2, 27, 28, 19, 4, 1, 31, 35, 34, 36, 0]
 # INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
