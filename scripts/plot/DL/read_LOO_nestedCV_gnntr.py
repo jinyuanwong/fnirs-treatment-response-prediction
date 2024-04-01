@@ -122,6 +122,7 @@ dict_model_params = {
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
     'zhu_xgboost': 'v1',
+    'wang_alex': 'v1lr_0.001_activation_relu'
 }
 def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=0.5):
     
@@ -207,7 +208,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     model = args.model
     MAX_ITR = args.max
-    for value_add_to_sensitivity_value in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+    for value_add_to_sensitivity_value in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
         model_params = dict_model_params.get(args.model)
         if not model_params:
             raise ValueError('Model name is not correct or there is no parameter for the model')

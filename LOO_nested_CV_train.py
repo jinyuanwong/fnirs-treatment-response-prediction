@@ -154,7 +154,7 @@ class TrainModel():
                     # update_config_file('LOO_ARRAY', loo_array)
                 update_config_file('CURRENT_LOO', 0)
 
-
+qq
 def train_model():
     wandb.init()  # mode='disabled'
     config = wandb.config
