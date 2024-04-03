@@ -91,7 +91,7 @@ def get_val_metrics_and_test_accuracies(model,
                                         based_best_metric='sensitivity', 
                                         subject_fold_name='LOO_', 
                                         SUBJECTALL=None, 
-                                        total_subjects=65, 
+                                        total_subjects=64, 
                                         MAX_ITR=999,
                                         ):
     # get the averay validation result 
@@ -153,14 +153,14 @@ def avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION):
 def get_sorted_loo_array(model, model_params):
 
     ALL_TOTAL_ITERATION = [] # store all the total iteration for each fold
-    TOTAL_Subject = 65 # number of subjects in the dataset for LOOCV in external testing set
+    TOTAL_Subject = 64 # number of subjects in the dataset for LOOCV in external testing set
     K_FOLD = 5 # number of k folds in inner CV
     validation_method_external = 'LOO_nested_CV' # external validation method
     validation_method_inner = 'stratified_nested_5_CV_fold' # inner validation method
     DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
     RESULT_FILE_NAME = 'val_acc.txt' # result file name
     val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
-    total_subjects  = 46 if DATASET[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
+    total_subjects  = 46 if DATASET[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
 
 
     for subject in range(total_subjects):
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     model_params = dict_model_params.get(args.model)
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
-    SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+    SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
 
     time = 'prognosis/pre_treatment_hamd_reduction_50'
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
@@ -218,7 +218,7 @@ if __name__ == '__main__':
 
 
     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-    TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+    TOTAL_Subject = 64 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 64 else len(os.listdir(val_fold_path)) - 1
     output_fold = f'FigureTable/DL/timedomain/{time}'
 
     if not os.path.exists(output_fold):
@@ -227,7 +227,7 @@ if __name__ == '__main__':
     # y_test_path = f'allData/prognosis/{time}'
     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
 
-    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
+    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
 
     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
     y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
@@ -275,7 +275,7 @@ if __name__ == '__main__':
 #     model_params = dict_model_params.get(args.model)
 #     if not model_params:
 #         raise ValueError('Model name is not correct or there is no parameter for the model')
-#     SUBJECTALL = None # np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+#     SUBJECTALL = None # np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
 
 #     time = 'prognosis/pre_treatment_hamd_reduction_50'
 #     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
@@ -288,7 +288,7 @@ if __name__ == '__main__':
 
 
 #     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-#     TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+#     TOTAL_Subject = 64 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 64 else len(os.listdir(val_fold_path)) - 1
 #     output_fold = f'FigureTable/DL/timedomain/{time}'
 
 #     if not os.path.exists(output_fold):
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 #     # y_test_path = f'allData/prognosis/{time}'
 #     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
 
-#     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
+#     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
 
 #     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, None, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
 
