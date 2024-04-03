@@ -291,7 +291,7 @@ if __name__ == '__main__':
 #     output_fold = f'FigureTable/DL/timedomain/{time}'
 
 #     if not os.path.exists(output_fold):
-#         os.makedirs(output_fold)
+2#         os.makedirs(output_fold)
 
 #     # y_test_path = f'allData/prognosis/{time}'
 #     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'

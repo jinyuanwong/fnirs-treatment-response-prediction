@@ -175,8 +175,8 @@ pre_post_data, label = balance_label_0and1(
     hbo_hbr_base_t8, treatment_response_label)
 
 check_and_create_folder(output_pre_and_post_treatment_path)
-np.save(output_pre_and_post_treatment_path + 'data.npy', pre_post_data)
-np.save(output_pre_and_post_treatment_path + 'label.npy', label)
+# np.save(output_pre_and_post_treatment_path + 'data.npy', pre_post_data)
+# np.save(output_pre_and_post_treatment_path + 'label.npy', label)
 
 
 pre_and_post_datapath = mainfold + '/base_t8_data.npy'
@@ -210,5 +210,6 @@ pre_data, label = balance_label_0and1(hbo_hbr_base, treatment_response_label)
 
 # save file
 check_and_create_folder(output_pre_treatment_path)
-np.save(output_pre_treatment_path + 'data.npy', pre_data)
-np.save(output_pre_treatment_path + 'label.npy', label)
+
+# np.save(output_pre_treatment_path + 'data.npy', pre_data)
+# np.save(output_pre_treatment_path + 'label.npy', label)

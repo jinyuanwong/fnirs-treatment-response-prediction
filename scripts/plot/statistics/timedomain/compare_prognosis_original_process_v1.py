@@ -54,7 +54,15 @@ MPC_indices = location_to_index(MPC_location)
 
 
 
+def modify_char_position(cbar):
+    
+    cbar_pos = cbar.ax.get_position()
 
+    # 修改位置信息以将高度减少一半
+    new_height = cbar_pos.height  / 7 * 5
+    new_y = cbar_pos.y0 + cbar_pos.height/7 #+ new_height  # 更新y位置以使颜色条保持居中
+
+    cbar.ax.set_position([cbar_pos.x0, new_y, cbar_pos.width, new_height])
 
 def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end_index):
 
@@ -68,7 +76,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
 
     cmap = LinearSegmentedColormap.from_list('RedToWhite', colors, N=256)
     title = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
-    plt.figure(figsize=(25,15))
+    plt.figure(figsize=(21,6))
     plt.subplot(2, 1, 1)  # 1 row, 2 columns, select the 1st subplot
     plt.title('HCs vs MDDs (P-value)', fontsize=20, fontweight='bold')
     for channel in range(52):
@@ -161,13 +169,9 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.00001, 0.0001, 0.001, 0.01, 0.05])
     # cbar.ax.set_yticklabels(['0.00001', '0.0001', '0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
     # 获取颜色条的位置信息
-    cbar_pos = cbar.ax.get_position()
+    
 
-    # 修改位置信息以将高度减少一半
-    new_height = cbar_pos.height / 4
-    new_y = cbar_pos.y0 + new_height*1.5  # 更新y位置以使颜色条保持居中
-
-    cbar.ax.set_position([cbar_pos.x0, new_y, cbar_pos.width, new_height])
+    modify_char_position(cbar)
     # cbar.ax.set_yticklabels(['0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
     #  设置颜色条的刻度标签为科学计数法格式
     # cbar.ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1e'))
@@ -251,14 +255,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
 
     cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[-0.5, -0.25, 0, 0.25, 0.5])
     cbar.ax.set_yticklabels(['-0.5', '-0.25', '0', '0.25', '0.5'], fontsize=12, fontweight='bold')
-    # 获取颜色条的位置信息
-    cbar_pos = cbar.ax.get_position()
-
-    # 修改位置信息以将高度减少一半
-    new_height = cbar_pos.height / 4
-    new_y = cbar_pos.y0 + new_height*1.5  # 更新y位置以使颜色条保持居中
-
-    cbar.ax.set_position([cbar_pos.x0, new_y, cbar_pos.width, new_height])
+    modify_char_position(cbar)
 
 
     # Set the ticks and labels as required
@@ -284,9 +281,6 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # Add colorbar and other plot settings as required
     # plt.colorbar(shrink=0.2)
 
-
-
-
     plt.xlim([1, 53.01])
     # Show the plot
     plt.savefig(output_fold+f'/{fig_name}.png')
@@ -297,7 +291,7 @@ LABEL =  np.load('allData/prognosis/pre_treatment_hamd_reduction_50/label.npy')
 
 pre_post_data_combine_type = 'substract'
 
-output_fold = 'FigureTable/statics/timedomain/numOfSubject_140_processed_Original_Processedby_6_mannully_delete_data'
+output_fold = 'FigureTable/statics/timedomain/prognosis/hitachi_process'
 # output_fold = 'FigureTable/statics/timedomain/numOfSubject_140_zhifei_process'
 
 import os
@@ -315,14 +309,11 @@ for fig_name in name_of_input:
     print('data.shape', data.shape)
 
 # data[subject1] - mean(data[subject1])
-    def individual_normalization(data):
-        for i in range(data.shape[0]):
-            data[i] = (data[i] - np.mean(data[i])) #/ np.std(data[i])
-        return data
-    data = individual_normalization(data)
-            
-
-
+    # def individual_normalization(data):
+    #     for i in range(data.shape[0]):
+    #         data[i] = (data[i] - np.mean(data[i])) #/ np.std(data[i])
+    #     return data
+    # data = individual_normalization(data)
     
     HbO = np.transpose(data[...,0],(0,2,1))
     print(f'HbO: {HbO.shape}')
@@ -333,11 +324,11 @@ for fig_name in name_of_input:
     HC = HbO[label==0]
     MDD = HbO[label==1]
     plt.figure() 
-    plt.plot(np.mean(HC, axis=(0,2)), label=f"HCs {HC.shape[0]}")
-    plt.plot(np.mean(MDD, axis=(0,2)), label=f"MDDs {MDD.shape[0]}")
+    plt.plot(np.mean(HC, axis=(0,2)), label=f"Nonresponders {HC.shape[0]}")
+    plt.plot(np.mean(MDD, axis=(0,2)), label=f"Responders {MDD.shape[0]}")
     plt.legend()
     plt.title('Jinyuan Process 1')
-    plt.savefig(output_fold+'/HbO_mean_HCvsMDD.png')
+    plt.savefig(output_fold+'/Responders vs. Nonresponders.png')
     
     # For pre - treatment HAMD reduction 50 - HbO 
     show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 100, 700)
