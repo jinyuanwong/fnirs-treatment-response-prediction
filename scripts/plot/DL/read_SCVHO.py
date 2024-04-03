@@ -1,6 +1,6 @@
 
 dict_model_params = {
-    'gnn_transformer': 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'hold_out_v1_l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -81,56 +81,58 @@ def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): #
     return res, return_y_pred, best_index, len(acc)
 
 def get_test_acc_using_val_best_itr(path, itr):
-    acc, _, _, _ = read_file_metric_acc_sen_spe_f1(path)
-    return acc[itr]
-def get_val_metrics_and_test_accuracies(model, 
+    acc, sen, spe, f1 = read_file_metric_acc_sen_spe_f1(path)
+    res = [acc, sen, spe, f1]
+    return [i[itr] for i in res]
+def get_val_metrics_and_test_accuracies_SCVHO(model, 
                                         val_fold_path, 
                                         ALL_BEST_ITR,
                                         ALL_TOTAL_ITERATION,
                                         ALL_Y_pred_in_test,
                                         based_best_metric='sensitivity', 
-                                        subject_fold_name='LOO_', 
+                                        subject_fold_name='SCVHO_', 
                                         SUBJECTALL=None, 
                                         total_subjects=65, 
                                         MAX_ITR=999,
+                                        NUMBER_OF_REPEATATION=20
                                         ):
     # get the averay validation result 
     ## only consider 1 iteration 
-    num_of_cv_folds = len(os.listdir(val_fold_path + '/' + subject_fold_name + str(0)))#3 
+    print('val_fold_path', val_fold_path)
+    print('val_fold_path', val_fold_path)
+    print('val_fold_path', val_fold_path)
+    print('val_fold_path', val_fold_path)
+    num_of_cv_folds = len(os.listdir(val_fold_path + '_0/'))#3 
     print('val_fold_path', val_fold_path + '/' + subject_fold_name + str(0))
     print('num_of_cv_folds', num_of_cv_folds)
-    all_loo_metrics = []
-    all_loo_acc = []
-    LOOP_SUBJECT = SUBJECTALL if SUBJECTALL is not None else range(total_subjects)
-    for loo in LOOP_SUBJECT: #range(total_subjects):
-        if loo == 34: continue
-        ind_loo_folds =[]
+    outer_folds_metrics = []
+    inner_folds_metrics =[]
+
+    for repeatation in range(NUMBER_OF_REPEATATION): #range(total_subjects):
+        
         loo_acc = []
         # test_best_itr = []
         for cv_fold in range(num_of_cv_folds):
             # read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
-            read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
+            read_fold = f"{val_fold_path}_{repeatation}/Stratified_{num_of_cv_folds}_fold_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
 
-            res_metrics, y_pred, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
+            val_metrics, y_pred, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
             ALL_Y_pred_in_test.append(y_pred)
             # test_best_itr.append(val_best_itr)
-            cv_fold_acc = get_test_acc_using_val_best_itr(read_test_path, val_best_itr)
-            loo_acc.append(cv_fold_acc)
-            ind_loo_folds.append(res_metrics)    
-        # print('loo_acc', loo_acc, 'best_itr', test_best_itr)
-        all_loo_acc.append(np.mean(loo_acc))
-        # ind_loo_folds should be a shape like (3, 4) (folds, acc|sen|spe|f1)
-        mean_ind_loo_folds = np.mean(ind_loo_folds, axis=0)
-        all_loo_metrics.append(mean_ind_loo_folds)
-    # all_loo_metrics is a shape like (all_loo, 4->acc\sen\spe\f1)
-    mean_all_loo_metrics = np.mean(all_loo_metrics, axis=0)
-    # print_md_table(model, 'validation', mean_all_loo_metrics)
-    # print('all_loo_acc', all_loo_acc)
-    return mean_all_loo_metrics, all_loo_acc
+            test_metrics = get_test_acc_using_val_best_itr(read_test_path, val_best_itr)
+            inner_folds_metrics.append(val_metrics)
+            outer_folds_metrics.append(test_metrics)
+    inner_folds_metrics = np.array(inner_folds_metrics)
+    outer_folds_metrics = np.array(outer_folds_metrics)
+    print('inner_folds_metrics', inner_folds_metrics.shape)
+    print('outer_folds_metrics', outer_folds_metrics.shape)
+
+    return inner_folds_metrics, outer_folds_metrics
+
 def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
         return len(os.listdir(val_fold_path)) >= TOTAL_Subject
 
@@ -156,7 +158,7 @@ def get_sorted_loo_array(model, model_params):
     TOTAL_Subject = 65 # number of subjects in the dataset for LOOCV in external testing set
     K_FOLD = 5 # number of k folds in inner CV
     validation_method_external = 'LOO_nested_CV' # external validation method
-    validation_method_inner = 'stratified_nested_5_CV_fold' # inner validation method
+    validation_method_inner = 'Stratified_5_fold_CV_fold' # inner validation method
     DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
     RESULT_FILE_NAME = 'val_acc.txt' # result file name
     val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
@@ -210,14 +212,15 @@ if __name__ == '__main__':
     time = 'prognosis/pre_treatment_hamd_reduction_50'
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
-    validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
+    validation_method = 'SCVHO'  # 'LOOCV' or 'k_fold' LOO_nested_CV
     based_best_metric = 'f1_score' # 'sensitivity' or 'f1_score'
     ALL_BEST_ITR = []
     ALL_TOTAL_ITERATION = []
     ALL_Y_pred_in_test = []
 
 
-    val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
+    val_fold_path = f'results/{model}/{time}/{model_params}/{validation_method}'
+    print('val_fold_path', val_fold_path)
     TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
     output_fold = f'FigureTable/DL/timedomain/{time}'
 
@@ -229,32 +232,42 @@ if __name__ == '__main__':
 
     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
 
-    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
-    y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
+    inner_metrics, outer_metrics = get_val_metrics_and_test_accuracies_SCVHO(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
 
-
-    y_test = np.load(y_test_path + '/label.npy')
-    if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-    y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-        
-    y_pred = y_pred_in_test_argmax
-    
-    predict_accuracy_flag = y_pred==y_test
-    test_metrics = get_metrics(y_test, y_pred)
+    inner_metrics = np.mean(inner_metrics, axis=0)  
+    outer_metrics = np.mean(outer_metrics, axis=0)
     
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
     print('Model name:', args.model)
     print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
-    print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
+    print_md_table_val_test(model, outer_metrics, inner_metrics)
     print()
+    
+    # y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
 
-    loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-    loo_toal_itr = loo_toal_itr.reshape(-1, 5)
-    loo_toal_itr = np.mean(loo_toal_itr, axis=1)
-    sorted_indices = np.argsort(loo_toal_itr)
-    sorted_indices = sorted_indices.tolist()
-    print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
-    print(loo_toal_itr)
+
+    # y_test = np.load(y_test_path + '/label.npy')
+    # if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
+    # y_pred = convert_result_to_y_pred(test_accuracy, y_test)
+        
+    # y_pred = y_pred_in_test_argmax
+    
+    # predict_accuracy_flag = y_pred==y_test
+    # test_metrics = get_metrics(y_test, y_pred)
+    
+    # print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
+    # print('Model name:', args.model)
+    # print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
+    # print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
+    # print()
+
+    # loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
+    # loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+    # loo_toal_itr = np.mean(loo_toal_itr, axis=1)
+    # sorted_indices = np.argsort(loo_toal_itr)
+    # sorted_indices = sorted_indices.tolist()
+    # print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
+    # print(loo_toal_itr)
 
     
 # if __name__ == '__main__':
@@ -292,7 +305,7 @@ if __name__ == '__main__':
 #     output_fold = f'FigureTable/DL/timedomain/{time}'
 
 #     if not os.path.exists(output_fold):
-#         os.makedirs(output_fold)
+2#         os.makedirs(output_fold)
 
 #     # y_test_path = f'allData/prognosis/{time}'
 #     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'

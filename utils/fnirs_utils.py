@@ -73,6 +73,18 @@ def get_metrics(y_true, y_pred):
     specificity = tn / (tn + fp)
     f1 = f1_score(y_true, y_pred)
 
+    import tensorflow_addons as tfa
+    import tensorflow as tf
+    metric = tfa.metrics.F1Score(average='weighted', num_classes=2)
+    
+    def convert_float_to_int32_and_onehot(value):
+        int_value = tf.cast(value, tf.int32)
+        onehot_value = tf.one_hot(int_value, depth=2)
+        print('onehot_value', onehot_value)
+        return onehot_value
+    metric.update_state(convert_float_to_int32_and_onehot(y_true), convert_float_to_int32_and_onehot(y_pred))
+    f1 = round(metric.result().numpy(), 5)
+
     return accuracy, sensitivity, specificity, f1
 
 
