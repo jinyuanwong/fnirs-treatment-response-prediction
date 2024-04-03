@@ -70,6 +70,8 @@ class TrainModel():
                         fnirs_data_path, model_name, self.hb_path, None)
                 num_of_k_fold = SPECIFY_FOLD
                 for SCVHO_index in range(STRATIFIED_CV_TOTAL_TRAININING_TIME):
+                    current_time = int(time.time())
+                    info['current_time_seed'] = current_time
                     for k in range(num_of_k_fold):
                         if using_adj:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
@@ -77,18 +79,15 @@ class TrainModel():
                         else:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                                 data, label, k, num_of_k_fold, seed=current_time)
-
-                        params = info['parameter']
+                        print('shape of X_train: {} , X_val: {} , X_test: {}'.format(X_train.shape, X_val.shape, X_test.shape))
                         params = info['parameter']
                         msg = info['message'] + get_params_info(params)
                         if len(msg)<=1:
-                            output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
-                            archive + \
-                            f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                            raise ValueError('The message is empty')
                         else:
                             output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                                 archive + \
-                                f'/{msg}/' + f'Stratified_{num_of_k_fold}_fold_CV/fold-' + str(k) + '/'
+                                f'/{msg}/' + f'SCVHO_{SCVHO_index}/Stratified_{num_of_k_fold}_fold_CV_fold-' + str(k) + '/'
                         create_directory(output_directory)
 
                         checkpoint_path = output_directory + 'checkpoint'

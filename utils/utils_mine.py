@@ -307,7 +307,12 @@ def save_data_to_file(filename, df, info=None):
             for i in df:
                 file.write(' {}: {} |'.format(i, df[i][0]))
             for key, value in info.items():
-                file.write(f'| {key}: {value}')
+                if key == 'Y_pred_in_test':
+                    # Handling the 2D array, converting each sub-array to a string and joining them
+                    array_string = '[' + '; '.join([' '.join([f"{val:.8f}" for val in row]) for row in value]) + ']'
+                    file.write(f'| {key}: {array_string}')
+                else:
+                    file.write(f'| {key}: {value}')
             file.write('\n')
 
     except Exception as e:
@@ -549,7 +554,7 @@ def shuffle_data_label(data, label, seed):
     combined = list(zip(data, label))
     random.shuffle(combined)
     data, label = zip(*combined)
-    return data, label 
+    return np.array(data), np.array(label) 
 
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42):
     total_amount = data.shape[0] 
