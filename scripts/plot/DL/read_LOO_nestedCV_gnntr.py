@@ -1,4 +1,14 @@
 
+dict_model_params = {
+    'gnn_transformer': 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
+    'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
+    'decisiontree': 'v1',
+    'zhu_xgboost': 'v1',
+    'wang_alex': 'v1lr_0.001_activation_relu',
+    'yu_gnn': 'v1'
+}
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -105,7 +115,7 @@ def get_val_metrics_and_test_accuracies(model,
             res_metrics, y_pred, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
-            if ALL_Y_pred_in_test: ALL_Y_pred_in_test.append(y_pred)
+            ALL_Y_pred_in_test.append(y_pred)
             # test_best_itr.append(val_best_itr)
             cv_fold_acc = get_test_acc_using_val_best_itr(read_test_path, val_best_itr)
             loo_acc.append(cv_fold_acc)
@@ -122,15 +132,7 @@ def get_val_metrics_and_test_accuracies(model,
     return mean_all_loo_metrics, all_loo_acc
 def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
         return len(os.listdir(val_fold_path)) >= TOTAL_Subject
-dict_model_params = {
-    'gnn_transformer': 'v2_repeat_2l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
-    'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
-    'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
-    'decisiontree': 'v1',
-    'zhu_xgboost': 'v1',
-    'wang_alex': 'v1lr_0.001_activation_relu',
-    'yu_gnn': 'v1'
-}
+
 
 def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=0.5):
     
@@ -181,77 +183,6 @@ def get_sorted_loo_array(model, model_params):
     # print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
     return sorted_indices
 
-# if __name__ == '__main__':
-#     # Create the parser
-#     parser = argparse.ArgumentParser(description='Process some integers.')
-    
-#     # Add the arguments
-#     parser.add_argument('--max', type=int, required=True,
-#                         help='The maximum number of iterations')
-#     parser.add_argument('--model', type=str, required=True,
-#                         help='The model name')
-    
-    
-#     # Parse the arguments
-#     args = parser.parse_args()
-#     model = args.model
-#     MAX_ITR = args.max
-#     for value_add_to_sensitivity_value in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-#         model_params = dict_model_params.get(args.model)
-#         if not model_params:
-#             raise ValueError('Model name is not correct or there is no parameter for the model')
-#         SUBJECTALL = np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
-
-#         time = 'prognosis/pre_treatment_hamd_reduction_50'
-#         # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-
-#         validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
-#         based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
-#         ALL_BEST_ITR = []
-#         ALL_TOTAL_ITERATION = []
-#         ALL_Y_pred_in_test = []
-
-
-#         val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-#         TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
-#         output_fold = f'FigureTable/DL/timedomain/{time}'
-
-#         if not os.path.exists(output_fold):
-#             os.makedirs(output_fold)
-
-#         # y_test_path = f'allData/prognosis/{time}'
-#         y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
-
-#         total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
-
-#         val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
-#         y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
-
-
-#         y_test = np.load(y_test_path + '/label.npy')
-#         if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-#         y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-         
-#         y_pred = y_pred_in_test_argmax
-        
-#         predict_accuracy_flag = y_pred==y_test
-#         test_metrics = get_metrics(y_test, y_pred)
-        
-#         print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
-#         print('Model name:', args.model)
-#         print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
-#         print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
-#         print()
-
-#         loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-#         loo_toal_itr = loo_toal_itr.reshape(-1, 5)
-#         loo_toal_itr = np.mean(loo_toal_itr, axis=1)
-#         sorted_indices = np.argsort(loo_toal_itr)
-#         sorted_indices = sorted_indices.tolist()
-#         print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
-#         print(loo_toal_itr)
-
-    
 if __name__ == '__main__':
     # Create the parser
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -261,22 +192,25 @@ if __name__ == '__main__':
                         help='The maximum number of iterations')
     parser.add_argument('--model', type=str, required=True,
                         help='The model name')
-    
-    
+    parser.add_argument('--value_add_to_sensitivity_value', type=float, required=False,
+                        default=0.0,
+                        help='The value that will be added to the sensitivity value')
     # Parse the arguments
     args = parser.parse_args()
+
     model = args.model
     MAX_ITR = args.max
+    value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     model_params = dict_model_params.get(args.model)
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
-    SUBJECTALL = None # np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+    SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
 
     time = 'prognosis/pre_treatment_hamd_reduction_50'
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
-    based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
+    based_best_metric = 'f1_score' # 'sensitivity' or 'f1_score'
     ALL_BEST_ITR = []
     ALL_TOTAL_ITERATION = []
     ALL_Y_pred_in_test = []
@@ -294,19 +228,22 @@ if __name__ == '__main__':
 
     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
 
-    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, None, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
+    val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
+    y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
 
 
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
         
+    y_pred = y_pred_in_test_argmax
     
     predict_accuracy_flag = y_pred==y_test
     test_metrics = get_metrics(y_test, y_pred)
     
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
     print('Model name:', args.model)
+    print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
     print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
     print()
 
@@ -317,5 +254,72 @@ if __name__ == '__main__':
     sorted_indices = sorted_indices.tolist()
     print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
     print(loo_toal_itr)
+
+    
+# if __name__ == '__main__':
+#     # Create the parser
+#     parser = argparse.ArgumentParser(description='Process some integers.')
+    
+#     # Add the arguments
+#     parser.add_argument('--max', type=int, required=True,
+#                         help='The maximum number of iterations')
+#     parser.add_argument('--model', type=str, required=True,
+#                         help='The model name')
+    
+    
+#     # Parse the arguments
+#     args = parser.parse_args()
+#     model = args.model
+#     MAX_ITR = args.max
+#     model_params = dict_model_params.get(args.model)
+#     if not model_params:
+#         raise ValueError('Model name is not correct or there is no parameter for the model')
+#     SUBJECTALL = None # np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
+
+#     time = 'prognosis/pre_treatment_hamd_reduction_50'
+#     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
+
+#     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
+#     based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
+#     ALL_BEST_ITR = []
+#     ALL_TOTAL_ITERATION = []
+#     ALL_Y_pred_in_test = []
+
+
+#     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
+#     TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+#     output_fold = f'FigureTable/DL/timedomain/{time}'
+
+#     if not os.path.exists(output_fold):
+#         os.makedirs(output_fold)
+
+#     # y_test_path = f'allData/prognosis/{time}'
+#     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
+
+#     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
+
+#     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, None, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
+
+
+#     y_test = np.load(y_test_path + '/label.npy')
+#     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
+#     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
+        
+    
+#     predict_accuracy_flag = y_pred==y_test
+#     test_metrics = get_metrics(y_test, y_pred)
+    
+#     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
+#     print('Model name:', args.model)
+#     print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
+#     print()
+
+#     loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
+#     loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+#     loo_toal_itr = np.mean(loo_toal_itr, axis=1)
+#     sorted_indices = np.argsort(loo_toal_itr)
+#     sorted_indices = sorted_indices.tolist()
+#     print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
+#     print(loo_toal_itr)
 
 
