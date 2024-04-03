@@ -543,8 +543,17 @@ for negtive label
     - train_val dataset is 8(1) + 22(0) 
     - test dataset is 4(1) + 11(0)
 """
-def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None):
+
+def shuffle_data_label(data, label, seed):
+    random.seed(seed)
+    combined = list(zip(data, label))
+    random.shuffle(combined)
+    data, label = zip(*combined)
+    return data, label 
+
+def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42):
     total_amount = data.shape[0] 
+    data, label = shuffle_data_label(data, label, seed)
     label_not_onehot = np.argmax(label, axis=1)
     pos = data[label_not_onehot==1]
     neg = data[label_not_onehot==0]

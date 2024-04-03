@@ -26,6 +26,8 @@ INPUT_HB_TYPE=['prognosis/pretreatment_benchmarks']
 INPUT_HB_TYPE = ['prognosis/pre_treatment_hamd_reduction_50'] 
 SPECIFY_FOLD=5
 
+STRATIFIED_CV_TOTAL_TRAININING_TIME = 20
+
 # INPUT_HB_TYPE = ['prognosis/pre_treatment_hamd_reduction_50'] # or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
 
 # for example:
