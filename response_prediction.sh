@@ -1,5 +1,7 @@
 
 # nohup ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_response --msg test > /dev/null 2>&1 &
+# nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_remission --msg loocv_v1 &
+# nohup bash ./response_prediction.sh --model gnn_transformer --validation holdout --msg holdout_v1 &
 #!/bin/bash
 # Activate conda environment
 source ~/miniconda3/bin/activate tf
