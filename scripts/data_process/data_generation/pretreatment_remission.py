@@ -172,7 +172,7 @@ for i, val in enumerate(label_hamd):
         # print('val -> ',val)
 print(label_remission)
 count = np.count_nonzero(label_remission == 1)
-print(count)
+print(f" number of remission subject in pretreatment -> {count}")
 
 
 # modify the hb data to be like (subject, 52, 2500)
