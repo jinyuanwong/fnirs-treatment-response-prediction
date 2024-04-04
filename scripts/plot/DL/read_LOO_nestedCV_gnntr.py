@@ -152,14 +152,14 @@ def avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION):
         loo_toal_itr = loo_toal_itr.reshape(-1, 5)
         loo_toal_itr = np.mean(loo_toal_itr, axis=1)
         return loo_toal_itr
-def get_sorted_loo_array(model, model_params):
+def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
 
     ALL_TOTAL_ITERATION = [] # store all the total iteration for each fold
-    TOTAL_Subject = 64 # number of subjects in the dataset for LOOCV in external testing set
+    # TOTAL_Subject = 64 # number of subjects in the dataset for LOOCV in external testing set
     K_FOLD = 5 # number of k folds in inner CV
     validation_method_external = 'LOO_nested_CV' # external validation method
     validation_method_inner = 'stratified_nested_5_CV_fold' # inner validation method
-    DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
+    # DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
     RESULT_FILE_NAME = 'val_acc.txt' # result file name
     val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
     total_subjects  = 46 if DATASET[:8] == 'pre_post' else TOTAL_Subject # '64' or '46

@@ -76,7 +76,7 @@ class TrainModel():
 
                 params = info['parameter']
                 msg = info['message'] + get_params_info(params)
-                loo_array = get_sorted_loo_array(model_name, msg)
+                loo_array = get_sorted_loo_array(model_name, msg, data.shape[0], DATASET=archive)
                 print('loo_array', loo_array)
                 for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
                     for k in range(num_of_k_fold):
