@@ -6,7 +6,7 @@ source ~/miniconda3/bin/activate tf
 sleep 2
 
 # Navigate to your project directory
-cd ~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning
+# cd ~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning
 
 config_file="config.py"
 # Process command line arguments

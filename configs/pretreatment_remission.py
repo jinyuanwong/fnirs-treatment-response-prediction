@@ -12,9 +12,23 @@ import numpy as np
 #         'HbO-right-PSFC-classification'
 #         ]
 
-# INPUT_HB_TYPE = ['HbO-All-HC-MDD'] # for prognosis
-INPUT_HB_TYPE = ['DMFC/hbo/pre_post_treatment_hamd_reduction_50',
-                 'DMFC/hbr/pre_post_treatment_hamd_reduction_50'] # for prognosis
+# INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50'] # for prognosis
+# INPUT_HB_TYPE = ['pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbo/pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbr/pre_post_treatment_hamd_reduction_50',
+                #  'DMFC/hbt/pre_post_treatment_hamd_reduction_50'] # for prognosis
+
+# INPUT_HB_TYPE = ['pre_treatment_hamd_reduction_50',
+#                  'pre_post_treatment_hamd_reduction_50'
+#                  ] # for prognosis
+# fnirs-depression-deeplearning/allData/
+INPUT_HB_TYPE = ['prognosis/pretreatment_remission'] 
+SPECIFY_FOLD=5
+
+STRATIFIED_CV_TOTAL_TRAININING_TIME = 20
+
+# INPUT_HB_TYPE = ['prognosis/pre_treatment_hamd_reduction_50'] # or ['prognosis/pre_treatment_hamd_reduction_50'] # for prognosis or 'diagnosis'
+
 # for example:
 # pre_post_treatment_hamd_reduction_50
 
@@ -31,30 +45,23 @@ IS_USING_WANDB = False
 
 MAX_EPOCHS = 1000
 
-SPECIFY_FOLD = None # [i for i in range(55, 65)]
-
-
-MODELS_NEED_ADJ_MATRIX = ['graphsage_transformer',
-                          'mvg_transformer',
-                          'gnn_transformer',
-                          'gin_transformer',
-                          'yu_gnn',
-                          'gnn',
-                          'mgn_transformer',
-                          'mgm_transformer']
 
 # left_to_do SVM_ZHIFEI, RSFC_DUAN, NMF_ZHONG
 MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
-                               'wang_alex', 'zhu_xgboost', 'yu_gnn']
+                               'wang_alex', 
+                               'zhu_xgboost', 
+                               'yu_gnn',
+                               'li_svm',
+                               'decisiontree']
 
 # PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-Lowmid-High/'
-PREPROCESSED_HB_FOLD_PATH = './allData/data_for_reproducing_model/HbO-All-HC-MDD/'
+PREPROCESSED_HB_FOLD_PATH = './allData/prognosis/pretreatment_benchmarks/'
 
 # DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
-DEFAULT_HB_FOLD_PATH = './allData/prognosis/' # for prognosis
+DEFAULT_HB_FOLD_PATH = './allData/' # for ./allData/prognosis/ diagnosis
 
 
-MONITOR_METRIC = 'accuracy'  # 'val_accuracy'
+MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' or 'f1_score'
 
 PARAMETER = {
     'graphsage_transformer': {
@@ -88,21 +95,53 @@ PARAMETER = {
         'lstm_unit': np.random.choice([64, 128, 256])
     },
     'cnn_transformer': {
-        'hb_path': 'data.npy',
+        'hb_path': 'hb_data.npy',
     },
     'pre_post_cnn_transformer': {
         'hb_path': 'data.npy',
     },
     'gnn': {
         'hb_path': 'data.npy',
-        'adj_path': 'neighbour_matrix.npy',
+        'adj_path': 'adj_matrix.npy',
     },
     'comb_cnn': {
         'hb_path': 'data.npy',
     },
     'gnn_transformer': {
+        'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6#np.random.choice([4, 8, 12]),
+    },
+    'gnn_transformer_tp_fc_fs': {
+        'hb_path': 'merge_feature.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'merge_sequence': [[0, 375],[375, 531],[531, 567],[567, 578]]
+    },
+    'gnn_transformer_tp_dp':{
+        'hb_path': 'merge_feature.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'merge_sequence': [[0, 375],[0,375],[567, 578]]
+    },
+    'graphformer': {
         'hb_path': 'data.npy',
-        'adj_path': 'euclidean_matrix.npy',
+        'adj_path': 'adj_matrix.npy',
+        'd_model': np.random.choice([16, 32, 64]),
+        'batch_size': np.random.choice([4, 8, 16, 64]),
+        'n_layers': np.random.choice([4, 8, 12]),
     },
     'rggcnn_transformer': {
         'hb_path': 'data.npy',
@@ -130,7 +169,7 @@ PARAMETER = {
         'hb_path': 'dgi_data.npy',
     },
     'zhu_xgboost': {
-        'hb_path': 'raw_data.npy',
+        'hb_path': 'data.npy',
     },
     'chao_cfnn': {
         'hb_path': 'data.npy',
@@ -138,12 +177,19 @@ PARAMETER = {
         'lr': 0.1,
     },
     'wang_alex': {
-        'hb_path': 'nor_allsubject_data.npy',
+        'hb_path': 'data.npy',
         'lr': 0.001,
         'activation': 'relu'
     },
     'yu_gnn': {
         'hb_path': 'data.npy',
-        'adj_path': 'A_1.npy',
+        'adj_path': 'adj_1.npy',
     },
+    'li_svm':{
+        'hb_path': 'data.npy',
+    },
+    'decisiontree': {
+        'hb_path': 'hb_data.npy',
+
+    }
 }
