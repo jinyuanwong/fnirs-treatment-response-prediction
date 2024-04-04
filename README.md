@@ -1,4 +1,4 @@
-# 1. Install Environment (Should install conda first)
+## 1. Install Environment (Should install conda first)
 
 ```
 conda create -n tf python==3.9
@@ -8,7 +8,7 @@ pip install scikit-learn==0.24.1 matplotlib==3.3.4 QtPy==1.9.0 jupyter==1.0.0 Ke
 
 ---
 
-# 2. Train the model 
+## 2. Train the model 
 
 ```
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response --msg test > /dev/null 2>&1 &
@@ -19,7 +19,7 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 
 ---
 
-# 3. To read the result
+## 3. To read the result
 
 - Validation method: loocv
 ```
@@ -33,6 +33,12 @@ python scripts/plot/DL/read_SCVHO.py --model gnn_transformer --max 4
 
 note: --max is the maximum iteration for each training fold that can be achieved.
 
+
+---
+
+## 4. SHAP explaining the model
+
+---
 
 ### Explaination of different files
 - train.py 
