@@ -22,12 +22,12 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 
 3. To read the result
 
-Validation method: loocv
+- Validation method: loocv
 ```
 python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 5
 ```
 
-Validation method: Stratified CV with hold out
+- Validation method: Stratified CV with hold out
 ```
 python scripts/plot/DL/read_SCVHO.py --model gnn_transformer --max 4
 ```
