@@ -623,7 +623,9 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
     train_val_pos_num = pos.shape[0]
     train_val_neg_num = neg.shape[0]
     one_fold_number_pos = train_val_pos_num//num_of_k_fold
+    if one_fold_number_pos == 0: one_fold_number_pos = 1
     one_fold_number_neg = train_val_neg_num//num_of_k_fold
+    if one_fold_number_neg == 0: one_fold_number_neg = 1
 
     train_val_pos = pos
     train_val_neg = neg
