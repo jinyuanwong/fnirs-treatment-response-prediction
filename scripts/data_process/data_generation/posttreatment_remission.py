@@ -69,6 +69,7 @@ def check_replicate_subject(all_subject):
         replicated_elements = [item for item, count in collections.Counter(all_subject_index).items() if count > 1]
         replicated_indices = np.where(np.isin(all_subject_index, replicated_elements))[0]
         print(f" Element {replicated_elements} shows up in the following indices: {replicated_indices}")
+    else: return None
     print(f' now will return replicated_indices[0::2]')
     return replicated_indices[0::2]
 
@@ -88,21 +89,23 @@ label_hamd = []
 demografic_data = []
 baseline_clinical_data = []
 
+def check_existing_subject_in_fnirs_path(path):
+    for hb in ['_Oxy.csv', '_Deoxy.csv']:
+        tmp = 0
+        all_subject = []
+        for i in os.listdir(path):
+            if i[-len(hb):] == hb:
+                subject = i.split(' ')[0]
+                all_subject.append(subject)
+                file_pattern = os.path.join(path, subject+'*'+hb)
+                file_list = glob.glob(file_pattern)
+                if len(file_list) < 1:
+                    print(file_list)
+                tmp+=1
+        all_subject.sort()
+    return all_subject
 
-for hb in ['_Oxy.csv', '_Deoxy.csv']:
-    tmp = 0
-    all_subject = []
-    for i in os.listdir(base_patient_path):
-        if i[-len(hb):] == hb:
-            subject = i.split(' ')[0]
-            all_subject.append(subject)
-            file_pattern = os.path.join(base_patient_path, subject+'*'+hb)
-            file_list = glob.glob(file_pattern)
-            if len(file_list) < 1:
-                print(file_list)
-            tmp+=1
-    all_subject.sort()
-    print(f'all_subject -> {all_subject}')
+all_subject = check_existing_subject_in_fnirs_path(T8_path)
 print(f'all_subject -> {len(all_subject)}')
 
 # def get_file_name(path, rest):
@@ -111,7 +114,7 @@ print(f'all_subject -> {len(all_subject)}')
 #     return file_list
 # # according to the subject name of all_subject create array now 
 
-mdd_subject_base = []#np.zeros((len(all_subject), 1251, 52, 2)) # time, channel, hbo/hbr
+mdd_subject_base_post = np.zeros((len(all_subject), 1251, 52, 2, 2))# []#np.zeros((len(all_subject), 1251, 52, 2)) # time, channel, hbo/hbr
 all_involve_subject = []
 for sub_index, subject in enumerate(all_subject):
     hamd_of_id_t1 = excel_data[excel_data['Subject ID'] == subject]['HAM-D Questionnaire (T1)'].iloc[0]
@@ -126,14 +129,19 @@ for sub_index, subject in enumerate(all_subject):
     label_hamd.append(sub_label)
     demografic_data.append(demographic)
     baseline_clinical_data.append(clinical)
-    hbo_hbr = np.zeros((1251, 52, 2))
     for hb_index, hb in enumerate(['_Oxy.csv', '_Deoxy.csv']):
 
         base_hb_file = get_file_name(base_patient_path, subject+'*'+hb)
         base_hb = read_from_file(base_hb_file[0])
-        hbo_hbr[...,hb_index] = base_hb
-    mdd_subject_base.append(hbo_hbr)
-mdd_subject_base = np.array(mdd_subject_base)
+        
+        post_hb_file = get_file_name(T8_path, subject+'*'+hb)
+        post_hb = read_from_file(post_hb_file[0])
+        
+        mdd_subject_base_post[sub_index, :, :, hb_index, 0] = base_hb
+        mdd_subject_base_post[sub_index, :, :, hb_index, 1] = post_hb
+        # print(f"sub :{sub_index} ({subject}) hb: {hb_index} was given base value {np.mean(base_hb)} and post value {np.mean(post_hb)}")
+
+mdd_subject_base = np.array(mdd_subject_base_post)
 label_hamd = np.array(label_hamd)
 demografic_data = np.squeeze(np.array(demografic_data))
 baseline_clinical_data = np.squeeze(np.array(baseline_clinical_data))
@@ -143,12 +151,20 @@ baseline_clinical_data = np.squeeze(np.array(baseline_clinical_data))
 replicated_indices = check_replicate_subject(all_subject)
 print(f'return replicated_indices {replicated_indices}')
 
+print(f'mdd_subject_base -> {mdd_subject_base.shape}')
+print(f'label_hamd -> {label_hamd.shape}')
+print(f'demografic_data -> {demografic_data.shape}')
+print(f'baseline_clinical_data -> {baseline_clinical_data.shape}')
+print('all_involve_subject', all_involve_subject)
 
 # delete the replicated subject
-mdd_subject_base = np.delete(mdd_subject_base, replicated_indices, axis=0)
-label_hamd = np.delete(label_hamd, replicated_indices, axis=0)
-demografic_data = np.delete(demografic_data, replicated_indices, axis=0)
-baseline_clinical_data = np.delete(baseline_clinical_data, replicated_indices, axis=0)
+if replicated_indices:
+    mdd_subject_base = np.delete(mdd_subject_base, replicated_indices, axis=0)
+    label_hamd = np.delete(label_hamd, replicated_indices, axis=0)
+    demografic_data = np.delete(demografic_data, replicated_indices, axis=0)
+    baseline_clinical_data = np.delete(baseline_clinical_data, replicated_indices, axis=0)
+
+
 
 
 # baseline HAMD will be added into the baseline_clinical_data 
@@ -172,23 +188,24 @@ for i, val in enumerate(label_hamd):
         # print('val -> ',val)
 print(label_remission)
 count = np.count_nonzero(label_remission == 1)
-print(count)
+print(f" number of remission subject in posttreatment -> {count}")
 
 
-# modify the hb data to be like (subject, 52, 2500)
-mdd_subject_base = mdd_subject_base[:, :1250, :, :]
-mdd_subject_base = mdd_subject_base.transpose((0, 2, 1, 3))
-mdd_subject_base = mdd_subject_base.reshape((mdd_subject_base.shape[0], 52, -1))
+# modify the hb data (46, 1251, 52, 2, 2) to be like (subject, 52, 2500, 2)
+mdd_subject_base = mdd_subject_base[:, :1250, :, :, :]
+mdd_subject_base = mdd_subject_base.transpose((0, 2, 1, 3, 4))
+mdd_subject_base = mdd_subject_base.reshape((mdd_subject_base.shape[0], 52, 2500, 2))
 
 hb_data = mdd_subject_base
 print('hb_data -> ', hb_data.shape)
 
-output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/pretreatment_remission'
+output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/posttreatment_remission'
 if not os.path.exists(output_path):
     os.makedirs(output_path)
     
 np.save(output_path + '/hb_data.npy', hb_data)
 np.save(output_path + '/label_hamd.npy', label_hamd)
+np.save(output_path + '/label.npy', label_remission)
 np.save(output_path + '/label_remission.npy', label_remission)
 np.save(output_path + '/demografic_data.npy', demografic_data)
 np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
