@@ -199,6 +199,12 @@ mdd_subject_base = mdd_subject_base.reshape((mdd_subject_base.shape[0], 52, 2500
 hb_data = mdd_subject_base
 print('hb_data -> ', hb_data.shape)
 
+# genrate adj matrix for gnn_transformer
+number_of_subjects = hb_data.shape[0]
+adj = generate_fnirs_adj().toarray()
+adj = np.tile(adj, (number_of_subjects, 1, 1))
+print("adj_matrix shape: ", adj.shape)
+
 output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis/posttreatment_remission'
 if not os.path.exists(output_path):
     os.makedirs(output_path)
@@ -209,3 +215,4 @@ np.save(output_path + '/label.npy', label_remission)
 np.save(output_path + '/label_remission.npy', label_remission)
 np.save(output_path + '/demografic_data.npy', demografic_data)
 np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
+np.save(output_path + '/adj_matrix.npy', adj)
