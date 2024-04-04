@@ -207,10 +207,10 @@ output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/cod
 if not os.path.exists(output_path):
     os.makedirs(output_path)
     
-# np.save(output_path + '/hb_data.npy', hb_data)
-# np.save(output_path + '/label_hamd.npy', label_hamd)
-# np.save(output_path + '/label.npy', label_response)
-# np.save(output_path + '/label_response.npy', label_response)
-# np.save(output_path + '/demografic_data.npy', demografic_data)
-# np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
-# np.save(output_path + '/adj_matrix.npy', adj)
+np.save(output_path + '/hb_data.npy', hb_data)
+np.save(output_path + '/label_hamd.npy', label_hamd)
+np.save(output_path + '/label.npy', label_response)
+np.save(output_path + '/label_response.npy', label_response)
+np.save(output_path + '/demografic_data.npy', demografic_data)
+np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
+np.save(output_path + '/adj_matrix.npy', adj)

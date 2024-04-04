@@ -22,7 +22,7 @@ import numpy as np
 #                  'pre_post_treatment_hamd_reduction_50'
 #                  ] # for prognosis
 # fnirs-depression-deeplearning/allData/
-INPUT_HB_TYPE = ['prognosis/posttreatment_response'] 
+INPUT_HB_TYPE = ['prognosis/pretreatment_response'] 
 SPECIFY_FOLD=5
 
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 20
