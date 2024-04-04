@@ -8,7 +8,6 @@ pip install scikit-learn==0.24.1 matplotlib==3.3.4 QtPy==1.9.0 jupyter==1.0.0 Ke
 
 2. Train the model 
 
-
 ```
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response --msg test > /dev/null 2>&1 &
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_response --msg test > /dev/null 2>&1 &
@@ -16,6 +15,12 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_remission --msg test > /dev/null 2>&1 &
 ```
 
+
+3. To read the result
+
+```
+python /home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 5
+```
 
 ### Explaination of different files
 - train.py 
