@@ -19,7 +19,6 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 
 ---
 
-
 # 3. To read the result
 
 - Validation method: loocv
