@@ -1,4 +1,20 @@
+1. Install Environment (Should install conda first)
 
+```
+conda create -n tf python==3.9
+conda activate tf
+pip install scikit-learn==0.24.1 matplotlib==3.3.4 QtPy==1.9.0 jupyter==1.0.0 Keras==2.12.0 numpy==1.22.4 pandas==1.2.4 wandb==0.15.11 tensorflow-addons==0.20.0 tensorflow[and-cuda]==2.12.0 PyWavelets==1.4.1 PyWavelets==1.4.1 xgboost==2.0.1
+```
+
+2. Train the model 
+
+
+```
+nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response --msg test > /dev/null 2>&1 &
+nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_response --msg test > /dev/null 2>&1 &
+nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_remission --msg test > /dev/null 2>&1 &
+nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_remission --msg test > /dev/null 2>&1 &
+```
 
 
 ### Explaination of different files
