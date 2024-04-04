@@ -1,6 +1,6 @@
 
 dict_model_params = {
-    'gnn_transformer': 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'loocv_v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -46,12 +46,14 @@ def read_file_metric_acc_sen_spe_f1(path):
     return acc, sen, spe, f1
 
 def read_file_metric_y_pred(path):
-    pattern = r"Y_pred_in_test: \[\[(.*?)\]\]"
+    print(
+        'path', path,
+    )
+    pattern = r"Y_pred_in_test: \[(.*?)\]"
     with open(path, 'r') as f:
         content = f.read()
         y_pred = re.findall(pattern, content)
     numbers_list = np.array([float(num) for s in y_pred for num in s.split()]).reshape(-1, 2).tolist()
-
     return numbers_list
 def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): # 
     
@@ -103,7 +105,6 @@ def get_val_metrics_and_test_accuracies(model,
     all_loo_acc = []
     LOOP_SUBJECT = SUBJECTALL if SUBJECTALL is not None else range(total_subjects)
     for loo in LOOP_SUBJECT: #range(total_subjects):
-        if loo == 34: continue
         ind_loo_folds =[]
         loo_acc = []
         # test_best_itr = []
@@ -138,6 +139,7 @@ def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
 def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=0.5):
     
     ALL_Y_pred_in_test = np.array(ALL_Y_pred_in_test)
+    
     ALL_Y_pred_in_test[:,1] += value_add_to_sensitivity
     y_pred_in_test_argmax = np.argmax(ALL_Y_pred_in_test, axis=1)
     y_pred_in_test_argmax = y_pred_in_test_argmax.reshape(-1, 5)
@@ -185,6 +187,7 @@ def get_sorted_loo_array(model, model_params):
     return sorted_indices
 
 if __name__ == '__main__':
+    TMP_ALL = []
     # Create the parser
     parser = argparse.ArgumentParser(description='Process some integers.')
     
@@ -240,8 +243,9 @@ if __name__ == '__main__':
     y_pred = y_pred_in_test_argmax
     
     predict_accuracy_flag = y_pred==y_test
+
     test_metrics = get_metrics(y_test, y_pred)
-    
+
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
     print('Model name:', args.model)
     print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)

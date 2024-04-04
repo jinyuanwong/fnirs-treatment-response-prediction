@@ -37,15 +37,15 @@ SPECIFY_FOLD = config.SPECIFY_FOLD
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
 
 class TrainModel():
-    def __init__(self, model_name, sweep_config=None):
+    def __init__(self, model_name, config, sweep_config=None):
         self.batch_size = 8
+        self.config = config
         self.epochs = config.MAX_EPOCHS
         # ['nor-all-hbo-hc-mdd']  # 'HbO-All-Three'
         self.all_archive = config.INPUT_HB_TYPE
-        self.all_classifiers = [model_name]
-        self.repeat_count_all = 1
-        self.sweep_config = sweep_config
         self.parameter = config.PARAMETER[model_name]
+        self.all_classifiers = [model_name]
+        self.sweep_config = sweep_config
         self.hb_path = self.parameter.get('hb_path')
         self.adj_path = self.parameter.get('adj_path')
 
@@ -57,7 +57,7 @@ class TrainModel():
         for archive in self.all_archive:
             hbo_fold_path = default_hb_fold_path + archive
             fnirs_data_path = preprocessed_hb_fold_path + \
-                model_name if model_name in config.MODELS_NEED_PREPROCESS_DATA else hbo_fold_path
+                model_name if model_name in self.config.MODELS_NEED_PREPROCESS_DATA else hbo_fold_path
             for classifier_name in self.all_classifiers:
                 # Read data and split into training+validation and testing set with a ratio of 9:1
                 # case - not using adj
@@ -120,7 +120,7 @@ class TrainModel():
 
 
                         model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
-                                                        monitor='val_' + config.MONITOR_METRIC,
+                                                        monitor='val_' + self.config.MONITOR_METRIC,
                                                         mode='max',
                                                         save_weights_only=True,
                                                         save_best_only=True)
@@ -380,12 +380,18 @@ model_names = ['transformer', 'gnn_transformer',
 if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
-    do_individual_normalize = True
+    
     info = {'current_time_seed': current_time,
             'message': arg[2],
             'parameter': config.PARAMETER[model_name],
             'monitor_metric': config.MONITOR_METRIC
             }
+    
+    config_file_name = 'configs.' + arg[3]
+    import importlib
+    config = importlib.import_module(config_file_name)
+    
+    
     print('You are using model: {}'.format(model_name))
     using_wandb = config.IS_USING_WANDB
     if model_name == 'zhu_xgboost':
@@ -414,5 +420,5 @@ if __name__ == '__main__':
             raise NotImplementedError(
                 'Currently sweep for mvg_transformer is not implemented yet.')
     else:
-        model = TrainModel(model_name)
+        model = TrainModel(model_name, config=config)
         model.begin()
