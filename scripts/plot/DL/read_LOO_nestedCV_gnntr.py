@@ -1,6 +1,6 @@
-
+# python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 5 --dataset posttreatment_response 
 dict_model_params = {
-    'gnn_transformer': 'loocv_v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'testl1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -170,19 +170,22 @@ def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
             fold_path = f'{val_fold_path}/LOO_{subject}/{validation_method_inner}-{fold}'
             try:
                 with open(f'{fold_path}/{RESULT_FILE_NAME}', 'r') as f:
-
                     total_lines = len(f.readlines())
                     ALL_TOTAL_ITERATION.append(total_lines)
             except:
                 # if the fold has not been created yet, then the total iteration is 0
                 print('fold_path', fold_path)
-                ALL_TOTAL_ITERATION.append(0)
+                # -100 means that in a loocv fold cv-fold 0~3 has been trained a lot of time but cv-fold 4 has not been trained yet, it will ask for training that fold first
+                ALL_TOTAL_ITERATION.append(-100)
                 print(f'{fold_path}/{RESULT_FILE_NAME} will be set to 0 because it has not been trained yet')
     # average the total iteration for each fold
     loo_toal_itr = avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION)
     sorted_indices = np.argsort(loo_toal_itr)
     sorted_indices = sorted_indices.tolist()
-    
+
+    print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
+    print(loo_toal_itr)
+        
     # print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
     return sorted_indices
 
@@ -196,6 +199,8 @@ if __name__ == '__main__':
                         help='The maximum number of iterations')
     parser.add_argument('--model', type=str, required=True,
                         help='The model name')
+    parser.add_argument('--dataset', type=str, required=True,
+                        help='The model name')
     parser.add_argument('--value_add_to_sensitivity_value', type=float, required=False,
                         default=0.0,
                         help='The value that will be added to the sensitivity value')
@@ -204,13 +209,17 @@ if __name__ == '__main__':
 
     model = args.model
     MAX_ITR = args.max
+    dataset = args.dataset
     value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     model_params = dict_model_params.get(args.model)
+    
+    total_subjects  = 46 if dataset[:4] == 'post' else 65 # '64' or '46
+
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
 
-    time = 'prognosis/pre_treatment_hamd_reduction_50'
+    time = 'prognosis/' + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
@@ -221,16 +230,15 @@ if __name__ == '__main__':
 
 
     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-    TOTAL_Subject = 64 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 64 else len(os.listdir(val_fold_path)) - 1
+    
     output_fold = f'FigureTable/DL/timedomain/{time}'
 
     if not os.path.exists(output_fold):
         os.makedirs(output_fold)
 
     # y_test_path = f'allData/prognosis/{time}'
-    y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
+    y_test_path = f'allData/prognosis/' + dataset
 
-    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
 
     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
     y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
