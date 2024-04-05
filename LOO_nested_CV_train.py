@@ -18,6 +18,8 @@ import config
 import gc
 from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
+import importlib
+
 current_time = int(time.time())
 
 # set the random seed
@@ -380,17 +382,13 @@ model_names = ['transformer', 'gnn_transformer',
 if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
-    
+    config_file_name = 'configs.' + arg[3]
+    config = importlib.import_module(config_file_name)
     info = {'current_time_seed': current_time,
             'message': arg[2],
             'parameter': config.PARAMETER[model_name],
             'monitor_metric': config.MONITOR_METRIC
             }
-    
-    config_file_name = 'configs.' + arg[3]
-    import importlib
-    config = importlib.import_module(config_file_name)
-    
     
     print('You are using model: {}'.format(model_name))
     using_wandb = config.IS_USING_WANDB
