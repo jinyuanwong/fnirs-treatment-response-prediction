@@ -80,7 +80,6 @@ def get_metrics(y_true, y_pred):
     def convert_float_to_int32_and_onehot(value):
         int_value = tf.cast(value, tf.int32)
         onehot_value = tf.one_hot(int_value, depth=2)
-        print('onehot_value', onehot_value)
         return onehot_value
     metric.update_state(convert_float_to_int32_and_onehot(y_true), convert_float_to_int32_and_onehot(y_pred))
     f1 = round(metric.result().numpy(), 5)

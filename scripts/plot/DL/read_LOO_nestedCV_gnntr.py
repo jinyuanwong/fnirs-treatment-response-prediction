@@ -1,6 +1,6 @@
 # python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 5 --dataset posttreatment_response 
 dict_model_params = {
-    'gnn_transformer': 'testl1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'loocv_v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -46,9 +46,7 @@ def read_file_metric_acc_sen_spe_f1(path):
     return acc, sen, spe, f1
 
 def read_file_metric_y_pred(path):
-    print(
-        'path', path,
-    )
+
     pattern = r"Y_pred_in_test: \[(.*?)\]"
     with open(path, 'r') as f:
         content = f.read()
@@ -162,7 +160,7 @@ def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
     # DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
     RESULT_FILE_NAME = 'val_acc.txt' # result file name
     val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
-    total_subjects  = 46 if DATASET[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
+    total_subjects  = 46 if DATASET[:4] == 'post' else TOTAL_Subject # '64' or '46
 
 
     for subject in range(total_subjects):
@@ -213,7 +211,7 @@ if __name__ == '__main__':
     value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     model_params = dict_model_params.get(args.model)
     
-    total_subjects  = 46 if dataset[:4] == 'post' else 65 # '64' or '46
+    total_subjects  = 46 if dataset[:4] == 'post' else 64 # '64' or '46
 
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
