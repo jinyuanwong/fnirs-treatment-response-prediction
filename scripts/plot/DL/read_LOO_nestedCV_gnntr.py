@@ -187,6 +187,14 @@ def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
     # print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
     return sorted_indices
 
+def compute_save_MMDT_score(ALL_Y_pred_in_test, save_fold, num_of_k_fold=5):
+    MMDT_score = ALL_Y_pred_in_test.copy()
+    MMDT_score = np.array(MMDT_score)
+    MMDT_score = MMDT_score.reshape(-1, num_of_k_fold, 2)
+    MMDT_score = np.mean(MMDT_score, axis=1)
+    np.save(save_fold + '/MMDT_score.npy', MMDT_score)
+    print('MMDT_score.shape', MMDT_score.shape)
+    
 if __name__ == '__main__':
     TMP_ALL = []
     # Create the parser
@@ -240,8 +248,8 @@ if __name__ == '__main__':
 
     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
     y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
-
-
+    compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path)
+    
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
