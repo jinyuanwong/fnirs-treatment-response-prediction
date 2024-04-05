@@ -15,6 +15,9 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_response --msg test > /dev/null 2>&1 &
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_remission --msg test > /dev/null 2>&1 &
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_remission --msg test > /dev/null 2>&1 &
+
+
+./response_prediction.sh --model fusion_xgboost --validation loocv --config fusion_pretreatment_response --msg test
 ```
 
 ---
@@ -27,6 +30,7 @@ python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 
 
 
 python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 1 --dataset posttreatment_remission --value_add_to_sensitivity_value 0.1
+python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model fusion_xgboost --max 2 --dataset pretreatment_response
 
 ```
 

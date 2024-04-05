@@ -5,6 +5,8 @@ dict_model_params = {
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
     'zhu_xgboost': 'v1',
+    'fusion_xgboost': 'test',
+    'fusion_catboost': 'testiterations_1000_learning_rate_0.1_depth_6',
     'wang_alex': 'v1lr_0.001_activation_relu',
     'yu_gnn': 'v1'
 }
@@ -107,6 +109,7 @@ def get_val_metrics_and_test_accuracies(model,
         loo_acc = []
         # test_best_itr = []
         for cv_fold in range(num_of_cv_folds):
+            print(f"loo - {loo} - cv_fold - {cv_fold}")
             # read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
@@ -247,15 +250,19 @@ if __name__ == '__main__':
 
 
     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
-    y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
-    compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path)
+    
     
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-    y_pred = convert_result_to_y_pred(test_accuracy, y_test)
+    if model != 'fusion_catboost':
+        y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
         
-    y_pred = y_pred_in_test_argmax
-    
+        compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path)
+            
+        y_pred = y_pred_in_test_argmax
+        
+    else: 
+        y_pred = convert_result_to_y_pred(test_accuracy, y_test)
     predict_accuracy_flag = y_pred==y_test
 
     test_metrics = get_metrics(y_test, y_pred)
