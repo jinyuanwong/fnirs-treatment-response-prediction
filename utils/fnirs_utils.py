@@ -71,7 +71,7 @@ def get_metrics(y_true, y_pred):
     accuracy = (tp + tn) / (tp + tn + fp + fn)
     sensitivity = tp / (tp + fn)
     specificity = tn / (tn + fp)
-    f1 = f1_score(y_true, y_pred)
+    # f1 = f1_score(y_true, y_pred)
 
     import tensorflow_addons as tfa
     import tensorflow as tf
