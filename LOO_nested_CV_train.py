@@ -14,7 +14,6 @@ import numpy as np
 import random
 import tensorflow_addons as tfa
 import wandb
-import config
 import gc
 from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
@@ -31,9 +30,7 @@ tf.random.set_seed(current_time)
 # tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=1024*6)])
 # 保存日志
 
-preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
-default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
-SPECIFY_FOLD = config.SPECIFY_FOLD
+
 # hbo_fold_path = './allData/Output_npy/twoDoctor/nor-all-hbo-hc-mdd'
 
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
@@ -384,6 +381,9 @@ if __name__ == '__main__':
     model_name = arg[1]
     config_file_name = 'configs.' + arg[3]
     config = importlib.import_module(config_file_name)
+    preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
+    default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
+    SPECIFY_FOLD = config.SPECIFY_FOLD
     info = {'current_time_seed': current_time,
             'message': arg[2],
             'parameter': config.PARAMETER[model_name],

@@ -14,9 +14,9 @@ import numpy as np
 import random
 import tensorflow_addons as tfa
 import wandb
-import config
 import gc
 import importlib
+from classifiers.classifier_factory import create_classifier
 
 current_time = int(time.time())
 
@@ -57,6 +57,7 @@ class TrainModel():
 
         epochs = self.epochs
         using_adj = self.parameter.get('adj_path')
+        using_cli_demo = self.parameter.get('cli_demo_path')
 
         for archive in self.all_archive:
             hbo_fold_path = default_hb_fold_path + archive
@@ -69,11 +70,13 @@ class TrainModel():
                 if using_adj:
                     data, label, adj = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, self.adj_path)
+                    if using_cli_demo:
+                        data, label, adj, cli_demo = simply_read_data_fnirs(
+                            fnirs_data_path, model_name, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
                 else:
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, None)
                 num_of_k_fold = SPECIFY_FOLD
-                print(f"num_of_k_fold - > {num_of_k_fold}" * 1000)
                 for SCVHO_index in range(STRATIFIED_CV_TOTAL_TRAININING_TIME):
                     current_time = int(time.time())
                     info['current_time_seed'] = current_time
@@ -81,6 +84,10 @@ class TrainModel():
                         if using_adj:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
                                 data, label, k, num_of_k_fold, adj, seed=current_time)
+                            if using_cli_demo:
+                                X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test = stratified_k_fold_cross_validation_with_holdout_with_cli_demo(
+                                data, label, cli_demo, k, num_of_k_fold, adj, seed=current_time)
+                                
                         else:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                                 data, label, k, num_of_k_fold, seed=current_time)
@@ -131,17 +138,21 @@ class TrainModel():
                             print(
                                 f'Current / Total repeat count: {repeat_count} / {self.repeat_count_all}')
 
-                            model = self.create_classifier(
+                            model = create_classifier(
                                 classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
 
                             if using_adj:
-                                model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+                                if using_cli_demo:
+                                    model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test)
+                                else:
+                                    model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+                                
                             else:
                                 model.fit(X_train, Y_train, X_val,
                                         Y_val, X_test, Y_test)
 
                             del model
-                            del X_train, Y_train, X_val, Y_val, X_test, Y_test
+                            del X_train, Y_train, X_val, Y_val, X_test, Y_test, 
                             if using_adj:
                                 del adj_train, adj_val, adj_test
                             # clear the memory
@@ -154,67 +165,7 @@ class TrainModel():
                         # for obj in gc.get_objects():
                         #     print(type(obj), repr(obj))
 
-    def create_classifier(self, classifier_name, output_directory, callbacks, input_shape, epochs, info, sweep_config=None):
-        if classifier_name == 'cnn_transformer':  # Time-CNN
-            from classifiers import cnn_transformer
-            return cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'pre_post_cnn_transformer':  # Time-CNN
-            from classifiers import pre_post_cnn_transformer
-            return pre_post_cnn_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'transformer':  # Time-CNN
-            from classifiers import transformer
-            return transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'gnn':  # Time-CNN
-            from classifiers import gnn
-            return gnn.Classifier_GNN(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'gnn_transformer':  # Time-CNN
-            from classifiers import gnn_transformer
-            return gnn_transformer.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'gin_transformer':  # Time-CNN
-            from classifiers import gin_transformer
-            return gin_transformer.Classifier_GIN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'graphformer':  # Time-CNN
-            from classifiers import graphformer
-            return graphformer.Classifier_Graph_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'rggcnn_transformer':  # Time-CNN
-            from classifiers import rggcnn_transformer
-            return rggcnn_transformer.Classifier_RGGCNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'mvg_transformer':  # Time-CNN
-            from classifiers import mvg_transformer
-            return mvg_transformer.Classifier_MVG_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'mgn_transformer':  # Time-CNN
-            from classifiers import mvg_transformer
-            return mvg_transformer.Classifier_MVG_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'mgm_transformer':  # Time-CNN
-            from classifiers import mgm_transformer
-            return mgm_transformer.Classifier_MGM_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'graphsage_transformer':  # Time-CNN
-            from classifiers import graphsage_transformer
-            return graphsage_transformer.Classifier_GraphSAGE_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'dgi_transformer':  # Time-CNN
-            from classifiers import dgi_transformer
-            return dgi_transformer.Classifier_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'yu_gnn':
-            from classifiers import yu_gnn
-            return yu_gnn.Classifier_GCN(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'wang_alex':
-            from classifiers import wang_alex
-            return wang_alex.Classifier_AlexNet(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'comb_cnn':  # Time-CNN
-            from classifiers import comb_cnn
-            return comb_cnn.Classifier_CNN(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'chao_cfnn':  # Time-CNN
-            from classifiers import chao_cfnn
-            return chao_cfnn.Classifier_CFNN(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'zhu_xgboost':  # Time-CNN
-            from classifiers import zhu_xgboost
-            return zhu_xgboost.Classifier_XGBoost(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-        if classifier_name == 'li_svm':  
-            from classifiers import li_svm
-            return li_svm.Classifier_LI_SVM(output_directory, callbacks, input_shape, epochs, sweep_config, info)
-                
-        else:
-            raise Exception('Your error message here')
+   
 
 
 def train_model():
@@ -448,6 +399,7 @@ if __name__ == '__main__':
     model_name = arg[1]
     config_file_name = 'configs.' + arg[3]
     config = importlib.import_module(config_file_name)
+    print('config.PARAMETER -> ', config.PARAMETER)
     do_individual_normalize = True
     info = {'current_time_seed': current_time,
             'message': arg[2],

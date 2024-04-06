@@ -6,7 +6,8 @@ dict_model_params = {
     'decisiontree': 'v1',
     'zhu_xgboost': 'v1',
     'wang_alex': 'v1lr_0.001_activation_relu',
-    'yu_gnn': 'v1'
+    'yu_gnn': 'v1',
+    'gnn_transformer_with_cli_demo': 'holdout_v2_cv_4l1_rate_0.01_l2_rate_0.001_d_model_16_batch_size_64_n_layers_6',
 }
 
 import numpy as np
@@ -106,8 +107,8 @@ def get_val_metrics_and_test_accuracies_SCVHO(model,
     print('num_of_cv_folds', num_of_cv_folds)
     outer_folds_metrics = []
     inner_folds_metrics =[]
-
-    for repeatation in range(NUMBER_OF_REPEATATION): #range(total_subjects):
+    x = 5
+    for repeatation in range(x, x+NUMBER_OF_REPEATATION): #range(total_subjects):
         
         loo_acc = []
         # test_best_itr = []
@@ -210,7 +211,7 @@ if __name__ == '__main__':
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
-    NUMBER_OF_REPEATATION = 1
+    NUMBER_OF_REPEATATION = 5
     time = 'prognosis/' + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
@@ -234,7 +235,8 @@ if __name__ == '__main__':
 
 
     inner_metrics, outer_metrics = get_val_metrics_and_test_accuracies_SCVHO(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR, NUMBER_OF_REPEATATION=NUMBER_OF_REPEATATION)
-
+    print('outer_metrics')
+    print(outer_metrics) 
     inner_metrics = np.mean(inner_metrics, axis=0)  
     outer_metrics = np.mean(outer_metrics, axis=0)
     
@@ -306,7 +308,7 @@ if __name__ == '__main__':
 #     output_fold = f'FigureTable/DL/timedomain/{time}'
 
 #     if not os.path.exists(output_fold):
-2#         os.makedirs(output_fold)
+#         os.makedirs(output_fold)
 
 #     # y_test_path = f'allData/prognosis/{time}'
 #     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'

@@ -29,7 +29,7 @@ from sklearn.model_selection import LeaveOneOut
 def get_params_info(params):
     return_string = ''
     for key, value in params.items():
-        if key not in ['hb_path', 'adj_path']:
+        if key not in ['hb_path', 'adj_path', 'cli_demo_path', 'cli_demo_shape']:
             if return_string != '':
                 return_string += '_'
             return_string += f"{key}_{value}"
@@ -484,7 +484,7 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
         return X_train, X_test, Y_train, Y_test
 
 
-def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None):
+def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None, cli_demo_path=None):
 
     data = np.load(file_name + '/' + hb_path)
 
@@ -503,6 +503,9 @@ def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None):
 
     if adj_path is not None:
         adj = np.load(file_name + '/' + adj_path)
+        if cli_demo_path is not None:
+            cli_demo = np.load(file_name + '/' + cli_demo_path)
+            return data, label, adj, cli_demo
         return data, label, adj
     else:
         return data, label
@@ -556,6 +559,13 @@ def shuffle_data_label(data, label, seed):
     data, label = zip(*combined)
     return np.array(data), np.array(label) 
 
+def shuffle_data_demo_label(data, label, demo, seed):
+    random.seed(seed)
+    combined = list(zip(data, demo, label))
+    random.shuffle(combined)
+    data, demo, label = zip(*combined)
+    return np.array(data), np.array(demo), np.array(label) 
+
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42):
     total_amount = data.shape[0] 
     data, label = shuffle_data_label(data, label, seed)
@@ -606,7 +616,59 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
         adj_test = adj[:X_test.shape[0]]
         return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
         # raise NotImplementedError('adj is not implemented yet')
+
+def stratified_k_fold_cross_validation_with_holdout_with_cli_demo(data, label, cli_demo, k, num_of_k_fold, adj=None, seed=42):
+    data, cli_demo, label = shuffle_data_demo_label(data, label, cli_demo, seed)
+    index_1 = np.where(label == 1)[0]
+    index_0 = np.where(label == 0)[0]
+
+    num_of_test_data_1 = int(len(index_1) // 3)
+    num_of_test_data_0 = int(len(index_0) // 3)
+
+    test_index_1 = index_1[:num_of_test_data_1]
+    test_index_0 = index_0[:num_of_test_data_0]
+
+    val_train_index_1 = index_1[num_of_test_data_1:]
+    val_train_index_0 = index_0[num_of_test_data_0:]
+
+    one_fold_number_1 = len(val_train_index_1) // num_of_k_fold
+    one_fold_number_0 = len(val_train_index_0) // num_of_k_fold
+
+
+    val_index_1 = val_train_index_1[k*one_fold_number_1:(k+1)*one_fold_number_1]
+    val_index_0 = val_train_index_0[k*one_fold_number_0:(k+1)*one_fold_number_0]
+
+    train_index_1 = np.concatenate([val_train_index_1[:k*one_fold_number_1], val_train_index_1[(k+1)*one_fold_number_1:]])
+    train_index_0 = np.concatenate([val_train_index_0[:k*one_fold_number_0], val_train_index_0[(k+1)*one_fold_number_0:]])
+
+    test_index = np.concatenate([test_index_1, test_index_0])
+    val_index = np.concatenate([val_index_1, val_index_0])
+    train_index = np.concatenate([train_index_1, train_index_0])
+
+    X_train = data[train_index]
+    X_val = data[val_index]
+    X_test = data[test_index]
+
+    Y_train = label[train_index]
+    Y_val = label[val_index]
+    Y_test = label[test_index]
+
+    cli_demo_train = cli_demo[train_index]
+    cli_demo_val = cli_demo[val_index]
+    cli_demo_test = cli_demo[test_index]
+
     
+    
+    if adj is None:
+        raise NotImplementedError('adj, should have adj')
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test, cli_demo_train, cli_demo_val, cli_demo_test
+    else:
+        adj_train = adj[train_index]
+        adj_val = adj[val_index]
+        adj_test = adj[test_index]
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test
+        # raise NotImplementedError('adj
+        
 def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=None):
     total_amount = data.shape[0] 
     

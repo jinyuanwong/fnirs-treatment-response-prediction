@@ -101,6 +101,17 @@ PARAMETER = {
         'n_layers': 6,#np.random.choice([4, 8, 12]),
         'merge_sequence': [[0, 375],[0,375],[567, 578]]
     },
+    'gnn_transformer_with_cli_demo':{
+        'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.001,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'cli_demo_shape': [18],
+        'cli_demo_path': 'nor_demo_cli_merge_data.npy',
+    },
     'graphformer': {
         'hb_path': 'data.npy',
         'adj_path': 'adj_matrix.npy',
