@@ -188,8 +188,8 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(fmt))
 
     # Set the ticks and labels as required
-    plt.xticks([ i + 0.5 for i in [1, 26, 52]])
-    plt.gca().set_xticklabels([1, 26, 52], fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
+    plt.xticks([ i + 0.5 for i in np.arange(1,53)])
+    plt.gca().set_xticklabels(np.arange(1,53), fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
     plt.yticks([0.5,1.5,2.5], title, fontsize=16, fontweight='bold')
 
     # 隐藏上边框
@@ -286,8 +286,8 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     plt.savefig(output_fold+f'/{fig_name}.png')
     plt.show()
     
-DATA =  np.load('allData/prognosis/pre_treatment_hamd_reduction_50/hb_data_v1.npy')
-LABEL =  np.load('allData/prognosis/pre_treatment_hamd_reduction_50/label.npy')
+DATA =  np.load('allData/prognosis/pretreatment_response/hb_data.npy')
+LABEL =  np.load('allData/prognosis/pretreatment_response/label.npy')
 
 pre_post_data_combine_type = 'substract'
 
@@ -306,24 +306,27 @@ for fig_name in name_of_input:
         data = DATA
         label = LABEL
 
-    print('data.shape', data.shape)
+
 
 # data[subject1] - mean(data[subject1])
-    # def individual_normalization(data):
-    #     for i in range(data.shape[0]):
-    #         data[i] = (data[i] - np.mean(data[i])) #/ np.std(data[i])
-    #     return data
-    # data = individual_normalization(data)
+    def individual_normalization(data):
+        for i in range(data.shape[0]):
+            data[i] = (data[i] - np.mean(data[i])) #/ np.std(data[i])
+        return data
+    data = individual_normalization(data)
     
-    HbO = np.transpose(data[...,0],(0,2,1))
+    HbO = np.transpose(data[...,:1250],(0,2,1))
     print(f'HbO: {HbO.shape}')
-    HbR = np.transpose(data[...,1],(0,2,1))
-    HbT = np.transpose(data[...,2],(0,2,1))
+    HbR = np.transpose(data[...,-1250:],(0,2,1))
+    HbT = HbO + HbR
     
 
     HC = HbO[label==0]
     MDD = HbO[label==1]
     plt.figure() 
+    mean_HC = np.mean(HC, axis=(0,2))
+    print('mean_HC', mean_HC.shape)
+    print(mean_HC)
     plt.plot(np.mean(HC, axis=(0,2)), label=f"Nonresponders {HC.shape[0]}")
     plt.plot(np.mean(MDD, axis=(0,2)), label=f"Responders {MDD.shape[0]}")
     plt.legend()

@@ -190,12 +190,12 @@ print(f" number of remission subject in posttreatment -> {count}")
 
 
 # modify the hb data (46, 1251, 52, 2, 2) to be like (subject, 52, 2500, 2)
-mdd_subject_base = mdd_subject_base[:, :1250, :, :, :]
-mdd_subject_base = mdd_subject_base.transpose((0, 2, 1, 3, 4))
-mdd_subject_base = mdd_subject_base.reshape((mdd_subject_base.shape[0], 52, 2500, 2))
-
-hb_data = mdd_subject_base
-print('hb_data -> ', hb_data.shape)
+mdd_subject_base = np.transpose(mdd_subject_base, (0, 2, 1, 3, 4))
+hb_data = np.empty((mdd_subject_base.shape[0], 52, 2500, 2))
+hbo = mdd_subject_base[:, :, :1250, 0, :]
+hbr = mdd_subject_base[:, :, :1250, 1, :]
+hb_data[:, :, :1250, :] = hbo
+hb_data[:, :, 1250:, :] = hbr
 
 # genrate adj matrix for gnn_transformer
 number_of_subjects = hb_data.shape[0]
