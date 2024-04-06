@@ -178,6 +178,9 @@ mdd_subject_base = np.transpose(mdd_subject_base, (0, 2, 1, 3))
 hb_data = np.empty((mdd_subject_base.shape[0], 52, 2500))
 hbo = mdd_subject_base[:, :, :1250, 0]
 hbr = mdd_subject_base[:, :, :1250, 1]
+from utils.utils_mine import normalize_individual
+hbo = normalize_individual(hbo)
+hbr = normalize_individual(hbr)
 hb_data[:, :, :1250] = hbo
 hb_data[:, :, 1250:] = hbr
 
