@@ -37,7 +37,7 @@ case $validation in
         ;;
     holdout)
         while true; do
-            python ./StratifiedKFold_holdout_train.py "$model_name" "$training_message"
+            python ./StratifiedKFold_holdout_train.py "$model_name" "$training_message" "$config_file"
             sleep 1  # Adjust the sleep duration as needed
         done
         ;;

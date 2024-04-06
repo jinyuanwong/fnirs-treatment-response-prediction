@@ -1,6 +1,6 @@
 
 dict_model_params = {
-    'gnn_transformer': 'hold_out_v1_l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'holdout_v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -20,7 +20,6 @@ from utils.fnirs_utils import convert_result_to_y_pred
 import re
 
 import argparse
-
 def print_result_detail_in_every_fold(ALL_BEST_ITR, ALL_TOTAL_ITERATION, predict_accuracy_flag, y_test):
     for i, v in enumerate(ALL_TOTAL_ITERATION):
         loo = i // 5 
@@ -94,7 +93,7 @@ def get_val_metrics_and_test_accuracies_SCVHO(model,
                                         SUBJECTALL=None, 
                                         total_subjects=65, 
                                         MAX_ITR=999,
-                                        NUMBER_OF_REPEATATION=20
+                                        NUMBER_OF_REPEATATION=10
                                         ):
     # get the averay validation result 
     ## only consider 1 iteration 
@@ -195,6 +194,8 @@ if __name__ == '__main__':
                         help='The maximum number of iterations')
     parser.add_argument('--model', type=str, required=True,
                         help='The model name')
+    parser.add_argument('--dataset', type=str, required=True,
+                        help='The model name')
     parser.add_argument('--value_add_to_sensitivity_value', type=float, required=False,
                         default=0.0,
                         help='The value that will be added to the sensitivity value')
@@ -203,17 +204,18 @@ if __name__ == '__main__':
 
     model = args.model
     MAX_ITR = args.max
+    dataset = args.dataset
     value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     model_params = dict_model_params.get(args.model)
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
 
-    time = 'prognosis/pre_treatment_hamd_reduction_50'
+    time = 'prognosis/' + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'SCVHO'  # 'LOOCV' or 'k_fold' LOO_nested_CV
-    based_best_metric = 'f1_score' # 'sensitivity' or 'f1_score'
+    based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
     ALL_BEST_ITR = []
     ALL_TOTAL_ITERATION = []
     ALL_Y_pred_in_test = []
@@ -221,16 +223,15 @@ if __name__ == '__main__':
 
     val_fold_path = f'results/{model}/{time}/{model_params}/{validation_method}'
     print('val_fold_path', val_fold_path)
-    TOTAL_Subject = 65 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
+    total_subjects  = 46 if dataset[:4] == 'post' else 64 # '65' or '46 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 65 else len(os.listdir(val_fold_path)) - 1
     output_fold = f'FigureTable/DL/timedomain/{time}'
 
     if not os.path.exists(output_fold):
         os.makedirs(output_fold)
 
     # y_test_path = f'allData/prognosis/{time}'
-    y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
+    y_test_path = f'allData/prognosis/' + dataset
 
-    total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '65' or '46
 
     inner_metrics, outer_metrics = get_val_metrics_and_test_accuracies_SCVHO(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
 

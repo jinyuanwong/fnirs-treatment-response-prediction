@@ -16,6 +16,8 @@ import tensorflow_addons as tfa
 import wandb
 import config
 import gc
+import importlib
+
 current_time = int(time.time())
 
 # set the random seed
@@ -441,6 +443,8 @@ model_names = ['transformer', 'gnn_transformer',
 if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
+    config_file_name = 'configs.' + arg[3]
+    config = importlib.import_module(config_file_name)
     do_individual_normalize = True
     info = {'current_time_seed': current_time,
             'message': arg[2],

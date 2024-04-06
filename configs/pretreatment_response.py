@@ -1,4 +1,4 @@
 from configs.config import *
 
 
-INPUT_HB_TYPE = ['prognosis/pretreatment_remsponse'] 
+INPUT_HB_TYPE = ['prognosis/pretreatment_response'] 

@@ -5,7 +5,7 @@ dict_model_params = {
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
     'zhu_xgboost': 'v1',
-    'fusion_xgboost': 'test',
+    'fusion_xgboost': 'loocv_v2',
     'fusion_catboost': 'testiterations_1000_learning_rate_0.1_depth_6',
     'wang_alex': 'v1lr_0.001_activation_relu',
     'yu_gnn': 'v1'
@@ -193,7 +193,8 @@ def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
 def compute_save_MMDT_score(ALL_Y_pred_in_test, save_fold, num_of_k_fold=5):
     MMDT_score = ALL_Y_pred_in_test.copy()
     MMDT_score = np.array(MMDT_score)
-    MMDT_score = MMDT_score.reshape(-1, num_of_k_fold, 2)
+    MMDT_score = np.argmax(MMDT_score, axis=-1)
+    MMDT_score = MMDT_score.reshape(-1, num_of_k_fold)
     MMDT_score = np.mean(MMDT_score, axis=1)
     np.save(save_fold + '/MMDT_score.npy', MMDT_score)
     print('MMDT_score.shape', MMDT_score.shape)
