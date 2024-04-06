@@ -1,6 +1,6 @@
 
 dict_model_params = {
-    'gnn_transformer': 'holdout_v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
+    'gnn_transformer': 'holdout_v3_cv_4_total_training_time_1l1_rate_0.01_l2_rate_0.001_d_model_16_batch_size_64_n_layers_6', # 'v2_repeat_3l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',#
     'gnn_transformer_tp_fc_fs': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'gnn_transformer_tp_dp': 'v1l1_rate_0.01_l2_rate_0.01_d_model_16_batch_size_64_n_layers_6',
     'decisiontree': 'v1',
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
-
+    NUMBER_OF_REPEATATION = 1
     time = 'prognosis/' + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     y_test_path = f'allData/prognosis/' + dataset
 
 
-    inner_metrics, outer_metrics = get_val_metrics_and_test_accuracies_SCVHO(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
+    inner_metrics, outer_metrics = get_val_metrics_and_test_accuracies_SCVHO(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR, NUMBER_OF_REPEATATION=NUMBER_OF_REPEATATION)
 
     inner_metrics = np.mean(inner_metrics, axis=0)  
     outer_metrics = np.mean(outer_metrics, axis=0)

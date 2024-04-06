@@ -28,6 +28,8 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 ```
 python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 4 --dataset pretreatment_response 
 
+python scripts/plot/DL/read_SCVHO.py --model gnn_transformer --dataset posttreatment_response --max 5
+
 
 python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 1 --dataset posttreatment_remission --value_add_to_sensitivity_value 0.1
 python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model fusion_xgboost --max 2 --dataset pretreatment_response

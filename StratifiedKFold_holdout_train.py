@@ -29,10 +29,7 @@ tf.random.set_seed(current_time)
 # tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=1024*6)])
 # 保存日志
 
-preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
-default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
-SPECIFY_FOLD = config.SPECIFY_FOLD
-STRATIFIED_CV_TOTAL_TRAININING_TIME = config.STRATIFIED_CV_TOTAL_TRAININING_TIME
+
 # hbo_fold_path = './allData/Output_npy/twoDoctor/nor-all-hbo-hc-mdd'
 
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
@@ -52,6 +49,11 @@ class TrainModel():
         self.adj_path = self.parameter.get('adj_path')
 
     def begin(self):
+        
+        preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
+        default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
+        SPECIFY_FOLD = config.SPECIFY_FOLD
+        STRATIFIED_CV_TOTAL_TRAININING_TIME = config.STRATIFIED_CV_TOTAL_TRAININING_TIME
 
         epochs = self.epochs
         using_adj = self.parameter.get('adj_path')
@@ -71,6 +73,7 @@ class TrainModel():
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, None)
                 num_of_k_fold = SPECIFY_FOLD
+                print(f"num_of_k_fold - > {num_of_k_fold}" * 1000)
                 for SCVHO_index in range(STRATIFIED_CV_TOTAL_TRAININING_TIME):
                     current_time = int(time.time())
                     info['current_time_seed'] = current_time
