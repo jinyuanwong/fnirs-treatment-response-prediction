@@ -107,8 +107,7 @@ def get_val_metrics_and_test_accuracies_SCVHO(model,
     print('num_of_cv_folds', num_of_cv_folds)
     outer_folds_metrics = []
     inner_folds_metrics =[]
-    x = 5
-    for repeatation in range(x, x+NUMBER_OF_REPEATATION): #range(total_subjects):
+    for repeatation in range(5,5+NUMBER_OF_REPEATATION): #range(total_subjects):
         
         loo_acc = []
         # test_best_itr = []
