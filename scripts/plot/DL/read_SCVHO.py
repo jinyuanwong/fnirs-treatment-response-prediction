@@ -66,6 +66,7 @@ def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): #
         raise ValueError('based_best_metric should be either sensitivity or f1_score')
     based_on_best_metric_location = based_on_best_metric_location[:MAX_ITR]
     best_index = np.argmax(based_on_best_metric_location)
+    if specify_itr is not None: best_index = specify_itr
     # best_index = np.min([best_index, MAX_ITR])
     # print(f" all sen {sen} - best sen {sen[best_index]} - best index {best_index}")
     res = [acc[best_index],
@@ -195,6 +196,8 @@ if __name__ == '__main__':
     parser.add_argument('--result_path', type=str, required=True,
                         help='result_path')
     parser.add_argument('--K_FOLD', type=int, required=False,)
+    parser.add_argument('--specify_itr', type=int, required=False,
+                        help='specify the iteration, this value is conflict with the max value')    
     parser.add_argument('--NUMBER_OF_REPEATATION', type=int, required=False,
                         default=1,
                         help='Repeated experiments')
@@ -211,6 +214,8 @@ if __name__ == '__main__':
     data_prefix = result_path[2] + '/'
     dataset = result_path[3]
     model_params = result_path[4]
+    specify_itr = args.specify_itr
+    print('specify_itr', specify_itr)
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
     
     time = data_prefix + dataset
