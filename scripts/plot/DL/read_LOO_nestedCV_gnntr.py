@@ -10,7 +10,6 @@ dict_model_params = {
     'wang_alex': 'v1lr_0.001_activation_relu',
     'yu_gnn': 'v1'
 }
-
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -68,6 +67,7 @@ def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): #
         raise ValueError('based_best_metric should be either sensitivity or f1_score')
     based_on_best_metric_location = based_on_best_metric_location[:MAX_ITR]
     best_index = np.argmax(based_on_best_metric_location)
+    if specify_itr is not None: best_index = specify_itr
     # best_index = np.min([best_index, MAX_ITR])
     # print(f" all sen {sen} - best sen {sen[best_index]} - best index {best_index}")
     res = [acc[best_index],
@@ -137,13 +137,13 @@ def check_if_all_subjects_are_trained(val_fold_path, TOTAL_Subject):
         return len(os.listdir(val_fold_path)) >= TOTAL_Subject
 
 
-def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=0.5):
+def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_add_to_sensitivity=0.5):
     
     ALL_Y_pred_in_test = np.array(ALL_Y_pred_in_test)
     
     ALL_Y_pred_in_test[:,1] += value_add_to_sensitivity
     y_pred_in_test_argmax = np.argmax(ALL_Y_pred_in_test, axis=1)
-    y_pred_in_test_argmax = y_pred_in_test_argmax.reshape(-1, 5)
+    y_pred_in_test_argmax = y_pred_in_test_argmax.reshape(-1, K_FOLD)
     y_pred_in_test_argmax = np.mean(y_pred_in_test_argmax, axis=1)
     y_pred_in_test_argmax = [1 if i >= 0.5 else 0 for i in y_pred_in_test_argmax]
     return y_pred_in_test_argmax
@@ -206,29 +206,34 @@ if __name__ == '__main__':
     # Add the arguments
     parser.add_argument('--max', type=int, required=True,
                         help='The maximum number of iterations')
-    parser.add_argument('--model', type=str, required=True,
-                        help='The model name')
-    parser.add_argument('--dataset', type=str, required=True,
-                        help='The model name')
+    parser.add_argument('--result_path', type=str, required=True,
+                        help='result_path')
+    parser.add_argument('--K_FOLD', type=int, required=False,)
+    parser.add_argument('--specify_itr', type=int, required=False,
+                        help='specify the iteration, this value is conflict with the max value')
     parser.add_argument('--value_add_to_sensitivity_value', type=float, required=False,
                         default=0.0,
                         help='The value that will be added to the sensitivity value')
     # Parse the arguments
     args = parser.parse_args()
-
-    model = args.model
-    MAX_ITR = args.max
-    dataset = args.dataset
-    value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
-    model_params = dict_model_params.get(args.model)
+    K_FOLD = args.K_FOLD
     
+    result_path = args.result_path
+    result_path = result_path.split('/')
+    model = result_path[1]
+    data_prefix = result_path[2] + '/'
+    dataset = result_path[3]
+    model_params = result_path[4]
+    specify_itr = args.specify_itr
+    MAX_ITR = args.max
+    value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     total_subjects  = 46 if dataset[:4] == 'post' else 64 # '64' or '46
 
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
 
-    time = 'prognosis/' + dataset
+    time = data_prefix + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
@@ -255,9 +260,9 @@ if __name__ == '__main__':
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     if model != 'fusion_catboost':
-        y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_sensitivity=value_add_to_sensitivity_value)
+        y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_add_to_sensitivity=value_add_to_sensitivity_value)
         
-        compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path)
+        compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path, K_FOLD)
             
         y_pred = y_pred_in_test_argmax
         
@@ -268,13 +273,13 @@ if __name__ == '__main__':
     test_metrics = get_metrics(y_test, y_pred)
 
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
-    print('Model name:', args.model)
+    print('Model name:', model)
     print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
     print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
     print()
 
     loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-    loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+    loo_toal_itr = loo_toal_itr.reshape(-1, K_FOLD)
     loo_toal_itr = np.mean(loo_toal_itr, axis=1)
     sorted_indices = np.argsort(loo_toal_itr)
     sorted_indices = sorted_indices.tolist()

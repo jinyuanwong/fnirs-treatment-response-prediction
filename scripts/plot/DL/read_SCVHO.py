@@ -192,26 +192,28 @@ if __name__ == '__main__':
     # Add the arguments
     parser.add_argument('--max', type=int, required=True,
                         help='The maximum number of iterations')
-    parser.add_argument('--model', type=str, required=True,
-                        help='The model name')
-    parser.add_argument('--dataset', type=str, required=True,
-                        help='The model name')
-    parser.add_argument('--value_add_to_sensitivity_value', type=float, required=False,
-                        default=0.0,
-                        help='The value that will be added to the sensitivity value')
+    parser.add_argument('--result_path', type=str, required=True,
+                        help='result_path')
+    parser.add_argument('--K_FOLD', type=int, required=False,)
+    parser.add_argument('--NUMBER_OF_REPEATATION', type=int, required=False,
+                        default=1,
+                        help='Repeated experiments')
+
     # Parse the arguments
     args = parser.parse_args()
-
-    model = args.model
+    result_path = args.result_path
     MAX_ITR = args.max
-    dataset = args.dataset
-    value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
-    model_params = dict_model_params.get(args.model)
-    if not model_params:
-        raise ValueError('Model name is not correct or there is no parameter for the model')
+    K_FOLD = args.K_FOLD
+    NUMBER_OF_REPEATATION = args.NUMBER_OF_REPEATATION
+    
+    result_path = result_path.split('/')
+    model = result_path[1]
+    data_prefix = result_path[2] + '/'
+    dataset = result_path[3]
+    model_params = result_path[4]
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,65).tolist()
-    NUMBER_OF_REPEATATION = 5
-    time = 'prognosis/' + dataset
+    
+    time = data_prefix + dataset
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'SCVHO'  # 'LOOCV' or 'k_fold' LOO_nested_CV
@@ -240,8 +242,8 @@ if __name__ == '__main__':
     outer_metrics = np.mean(outer_metrics, axis=0)
     
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
-    print('Model name:', args.model)
-    print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
+    print('Model name:', model)
+    print('NUMBER_OF_REPEATATION: ', NUMBER_OF_REPEATATION)
     print_md_table_val_test(model, outer_metrics, inner_metrics)
     print()
     
