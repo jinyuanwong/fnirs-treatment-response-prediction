@@ -148,18 +148,17 @@ def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, value_add_to_se
     y_pred_in_test_argmax = [1 if i >= 0.5 else 0 for i in y_pred_in_test_argmax]
     return y_pred_in_test_argmax
 
-def avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION):
+def avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION, K_FOLD):
         loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-        loo_toal_itr = loo_toal_itr.reshape(-1, 5)
+        loo_toal_itr = loo_toal_itr.reshape(-1, K_FOLD)
         loo_toal_itr = np.mean(loo_toal_itr, axis=1)
         return loo_toal_itr
-def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
+def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET, K_FOLD):
 
     ALL_TOTAL_ITERATION = [] # store all the total iteration for each fold
     # TOTAL_Subject = 64 # number of subjects in the dataset for LOOCV in external testing set
-    K_FOLD = 5 # number of k folds in inner CV
     validation_method_external = 'LOO_nested_CV' # external validation method
-    validation_method_inner = 'stratified_nested_5_CV_fold' # inner validation method
+    validation_method_inner = f'stratified_nested_{K_FOLD}_CV_fold' # inner validation method
     # DATASET = 'prognosis/pre_treatment_hamd_reduction_50' # dataset name
     RESULT_FILE_NAME = 'val_acc.txt' # result file name
     val_fold_path = f'results/{model}/{DATASET}/{model_params}/{validation_method_external}'
@@ -175,12 +174,12 @@ def get_sorted_loo_array(model, model_params, TOTAL_Subject, DATASET):
                     ALL_TOTAL_ITERATION.append(total_lines)
             except:
                 # if the fold has not been created yet, then the total iteration is 0
-                print('fold_path', fold_path)
+                print('fold_path is not founded yet', fold_path)
                 # -100 means that in a loocv fold cv-fold 0~3 has been trained a lot of time but cv-fold 4 has not been trained yet, it will ask for training that fold first
                 ALL_TOTAL_ITERATION.append(-100)
                 print(f'{fold_path}/{RESULT_FILE_NAME} will be set to 0 because it has not been trained yet')
     # average the total iteration for each fold
-    loo_toal_itr = avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION)
+    loo_toal_itr = avg_total_itr_for_each_fold(ALL_TOTAL_ITERATION, K_FOLD)
     sorted_indices = np.argsort(loo_toal_itr)
     sorted_indices = sorted_indices.tolist()
 
@@ -306,7 +305,7 @@ if __name__ == '__main__':
 #     time = 'prognosis/pre_treatment_hamd_reduction_50'
 #     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
-#     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
+#     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'get_sorted_loo_array' LOO_nested_CV
 #     based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
 #     ALL_BEST_ITR = []
 #     ALL_TOTAL_ITERATION = []
