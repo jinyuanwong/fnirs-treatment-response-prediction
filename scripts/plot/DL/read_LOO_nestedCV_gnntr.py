@@ -19,7 +19,7 @@ from utils.fnirs_utils import get_metrics
 from utils.fnirs_utils import print_md_table_val_test
 from utils.fnirs_utils import convert_result_to_y_pred
 import re
-
+from sklearn.metrics import roc_auc_score
 import argparse
 
 def print_result_detail_in_every_fold(ALL_BEST_ITR, ALL_TOTAL_ITERATION, predict_accuracy_flag, y_test):
@@ -109,7 +109,7 @@ def get_val_metrics_and_test_accuracies(model,
         loo_acc = []
         # test_best_itr = []
         for cv_fold in range(num_of_cv_folds):
-            print(f"loo - {loo} - cv_fold - {cv_fold}")
+            # print(f"loo - {loo} - cv_fold - {cv_fold}")
             # read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
@@ -119,6 +119,7 @@ def get_val_metrics_and_test_accuracies(model,
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
             ALL_Y_pred_in_test.append(y_pred)
+            ALL_inner_fold.append(res_metrics)
             # test_best_itr.append(val_best_itr)
             cv_fold_acc = get_test_acc_using_val_best_itr(read_test_path, val_best_itr)
             loo_acc.append(cv_fold_acc)
@@ -141,10 +142,22 @@ def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_a
     
     ALL_Y_pred_in_test = np.array(ALL_Y_pred_in_test)
     
+    
+    # --- using mean of the value 
+    # ALL_Y_pred_in_test = np.reshape(ALL_Y_pred_in_test, (-1, K_FOLD, 2))
+    # ALL_Y_pred_in_test = np.mean(ALL_Y_pred_in_test, axis=1)
+    # y_pred_in_test_argmax = np.argmax(ALL_Y_pred_in_test, axis=1)
+    # print('y_pred_in_test_argmax', y_pred_in_test_argmax)
+    # --- 
+    
+    # --- previous -- slightly higher accuracy because of mean value will value some examples: true label = 1 but it is classified as 0.9999, 0.0001 in one fold in CV but other has a value like [0.4, 0.6] ... 
+    
     ALL_Y_pred_in_test[:,1] += value_add_to_sensitivity
     y_pred_in_test_argmax = np.argmax(ALL_Y_pred_in_test, axis=1)
     y_pred_in_test_argmax = y_pred_in_test_argmax.reshape(-1, K_FOLD)
     y_pred_in_test_argmax = np.mean(y_pred_in_test_argmax, axis=1)
+    
+    # --- 
     y_pred_in_test_argmax = [1 if i >= 0.5 else 0 for i in y_pred_in_test_argmax]
     return y_pred_in_test_argmax
 
@@ -197,6 +210,14 @@ def compute_save_MMDT_score(ALL_Y_pred_in_test, save_fold, num_of_k_fold=5):
     MMDT_score = np.mean(MMDT_score, axis=1)
     np.save(save_fold + '/MMDT_score.npy', MMDT_score)
     print('MMDT_score.shape', MMDT_score.shape)
+
+def save_y_pred(y_pred, path, specify_itr):
+    if specify_itr is not None:
+        path = path + f'/itr_{specify_itr}' 
+    if not os.path.exists(path):
+        os.makedirs(path)
+    np.save(path + '/y_pred.npy', y_pred)
+    print("the y_pred has been saved in", path)
     
 if __name__ == '__main__':
     TMP_ALL = []
@@ -241,6 +262,7 @@ if __name__ == '__main__':
     ALL_BEST_ITR = []
     ALL_TOTAL_ITERATION = []
     ALL_Y_pred_in_test = []
+    ALL_inner_fold = [] # create this to see individual fold's result
 
 
     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
@@ -260,6 +282,8 @@ if __name__ == '__main__':
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     if model != 'fusion_catboost':
+        print('ALL_Y_pred_in_test -> ', np.array(ALL_Y_pred_in_test).shape)
+        save_y_pred(ALL_Y_pred_in_test, val_fold_path, specify_itr)
         y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_add_to_sensitivity=value_add_to_sensitivity_value)
         
         compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path, K_FOLD)
@@ -274,9 +298,26 @@ if __name__ == '__main__':
 
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
     print('Model name:', model)
+    print('specify_itr', specify_itr)
+    
     print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
     print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
     print()
+    
+    ALL_inner_fold = np.array(ALL_inner_fold)
+    ALL_inner_fold = ALL_inner_fold.reshape(-1, K_FOLD, 4)
+    ALL_Y_pred_in_test_np = np.array(ALL_Y_pred_in_test)
+    ALL_Y_pred_in_test_np = ALL_Y_pred_in_test_np.reshape(-1, K_FOLD, 2)
+    for k in range(K_FOLD):
+        mean_all_inner = np.mean(ALL_inner_fold[:,k,:], axis=0)
+        k_y_pred = ALL_Y_pred_in_test_np[:,k,:]
+        auc1 = round(roc_auc_score(y_test, k_y_pred[:,1]), 2)
+        k_y_pred = np.argmax(k_y_pred, axis=-1)
+        auc2 = round(roc_auc_score(y_test, k_y_pred), 2)
+        k_test_metrics = get_metrics(y_test, k_y_pred)
+        print_md_table_val_test(f'test_k_fold_{k}_AUC1_{auc1}_AUC2_{auc2}', k_test_metrics, mean_all_inner, print_table_header=False)
+        print()
+
 
     loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
     loo_toal_itr = loo_toal_itr.reshape(-1, K_FOLD)

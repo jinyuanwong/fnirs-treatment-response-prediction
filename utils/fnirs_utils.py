@@ -922,3 +922,31 @@ def calculate_f1_precision(y_test, y_pred):
     precision = precision_score(y_test, y_pred)
     print(f"Precision: {precision}")
     print(f'f1: {f1}')
+    
+    
+def show_shap_channel_importance(data):
+    
+    
+    # Calculate both mean and standard deviation along the specified axes
+    channel_importance_mean = np.mean(data, axis=(0, 2))
+    channel_importance_std = np.std(data, axis=(0, 2))
+    error = [np.zeros(channel_importance_std.shape), channel_importance_std]  # First row zeros, second row stds
+    # Plotting
+    plt.figure(figsize=(9, 9))
+    # np.arange(1, 53) is the x-values, channel_importance_mean is the height of the bars, and
+    # channel_importance_std is used for the error bars (yerr parameter)
+    plt.bar(np.arange(1, 53), channel_importance_mean, yerr=error, capsize=5)
+    plt.xlabel('Channel')
+    plt.ylabel('Importance')
+    plt.title('Channel Importance with Standard Deviation')
+    plt.xticks(np.arange(1, 53))  # Optional: Improve x-axis readability if necessary
+    plt.tight_layout()  # Adjust layout to make room for the rotated x-axis labels
+
+    # Ranking the channels by their importance (mean values)
+    ranked_channel = np.argsort(channel_importance_mean) + 1
+    print("Ranked channels by importance:", ranked_channel)
+
+    # Show plot
+    plt.show()
+    
+    

@@ -12,7 +12,6 @@ from datetime import date
 import numpy as np
 import random
 import tensorflow_addons as tfa
-import config
 import gc
 from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
@@ -29,9 +28,7 @@ tf.random.set_seed(current_time)
 # tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=1024*6)])
 # 保存日志
 
-preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
-default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
-SPECIFY_FOLD = config.SPECIFY_FOLD
+
 # hbo_fold_path = './allData/Output_npy/twoDoctor/nor-all-hbo-hc-mdd'
 
 # /home/jy/Documents/JinyuanWang_pythonCode/results/wang_alex/HbO-All-HC-MDD
@@ -57,8 +54,8 @@ class TrainModel():
         using_adj = self.parameter.get('adj_path')
 
         for archive in self.all_archive:
-            hbo_fold_path = default_hb_fold_path + archive
-            fnirs_data_path = preprocessed_hb_fold_path + \
+            hbo_fold_path = self.config.DEFAULT_HB_FOLD_PATH + archive
+            fnirs_data_path = self.config.PREPROCESSED_HB_FOLD_PATH + \
                 self.model_name if self.model_name in self.config.MODELS_NEED_PREPROCESS_DATA else hbo_fold_path
             for classifier_name in self.all_classifiers:
                 # Read data and split into training+validation and testing set with a ratio of 9:1
@@ -72,12 +69,7 @@ class TrainModel():
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, self.model_name, self.hb_path, None)
                     self.data, self.label = data, label
-                if SPECIFY_FOLD:
-                    num_of_k_fold = SPECIFY_FOLD
-                else:
-                    label_not_one_hot = np.argmax(label, axis=1)
-                    num_of_k_fold = 3  # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
-
+                num_of_k_fold = self.config.SPECIFY_FOLD
                 params = info['parameter']
                 msg = info['message'] + get_params_info(params)
                 loo_array = get_sorted_loo_array(
@@ -147,7 +139,9 @@ def build_model(model_name, config_file_name, msg):
             'parameter': config.PARAMETER[model_name],
             'monitor_metric': config.MONITOR_METRIC
             }
-    
+    preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
+    default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
+    SPECIFY_FOLD = config.SPECIFY_FOLD
     model = TrainModel(model_name, config=config)
     model.begin(info)
     return model
@@ -157,13 +151,17 @@ if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
 
-    info = {'current_time_seed': current_time,
-            'message': arg[2],
-            'parameter': config.PARAMETER[model_name],
-            'monitor_metric': config.MONITOR_METRIC
-            }
 
     config_file_name = 'configs.' + arg[3]
     config = importlib.import_module(config_file_name)
+    info = {'current_time_seed': current_time,
+        'message': arg[2],
+        'parameter': config.PARAMETER[model_name],
+        'monitor_metric': config.MONITOR_METRIC
+        }
+
+    preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
+    default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
+    SPECIFY_FOLD = config.SPECIFY_FOLD
     model = TrainModel(model_name, config=config)
     model.begin()
