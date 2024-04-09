@@ -23,6 +23,7 @@ from statsmodels.stats.multitest import multipletests
 import pingouin as pg
 import subprocess
 import collections
+from utils.fnirs_utils import read_demographic, read_clinical_history, read_psychiatry_history, read_HAMD_ALL_HISTORY
 
 # path of data 
 
@@ -80,14 +81,13 @@ cli_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/f
 
 cgi_sgs_data = pd.read_excel(cli_path, sheet_name='SDS_CGI_All Timepoints')
 
-# cgi_sgs_data.iloc[:, 1:7]
 
 excel_data = pd.read_excel(cli_path, sheet_name='Summary T0T8_fNIRS Analysis')
-# cgi_sgs_data = pd.read_excel(cgi_sgs_path, sheet_name='SDS_CGI_All Timepoints')
 label_hamd = []
+
+
 demografic_data = []
 baseline_clinical_data = []
-
 
 for hb in ['_Oxy.csv', '_Deoxy.csv']:
     tmp = 0
@@ -114,18 +114,24 @@ print(f'all_subject -> {len(all_subject)}')
 mdd_subject_base = []#np.zeros((len(all_subject), 1251, 52, 2)) # time, channel, hbo/hbr
 all_involve_subject = []
 for sub_index, subject in enumerate(all_subject):
+    
     hamd_of_id_t1 = excel_data[excel_data['Subject ID'] == subject]['HAM-D Questionnaire (T1)'].iloc[0]
     hamd_of_id_t8 = excel_data[excel_data['Subject ID'] == subject]['HAM-D Questionnaire (T8)'].iloc[0]
-    demographic = excel_data[excel_data['Subject ID'] == subject].iloc[:, 2:13]
-    clinical = cgi_sgs_data[cgi_sgs_data['Subject ID'] == subject].iloc[:, 1:7]
     if type(hamd_of_id_t8) is not int:
         print(hamd_of_id_t8)
         continue
-    all_involve_subject.append(subject)
     sub_label = [hamd_of_id_t1, hamd_of_id_t8]
     label_hamd.append(sub_label)
+    
+    demographic = excel_data[excel_data['Subject ID'] == subject].iloc[:, 2:13]
     demografic_data.append(demographic)
+    
+    clinical = cgi_sgs_data[cgi_sgs_data['Subject ID'] == subject].iloc[:, 1:7]
     baseline_clinical_data.append(clinical)
+    
+
+    
+    all_involve_subject.append(subject)
     hbo_hbr = np.zeros((1251, 52, 2))
     for hb_index, hb in enumerate(['_Oxy.csv', '_Deoxy.csv']):
 
@@ -133,16 +139,30 @@ for sub_index, subject in enumerate(all_subject):
         base_hb = read_from_file(base_hb_file[0])
         hbo_hbr[...,hb_index] = base_hb
     mdd_subject_base.append(hbo_hbr)
+    
 mdd_subject_base = np.array(mdd_subject_base)
 label_hamd = np.array(label_hamd)
 demografic_data = np.squeeze(np.array(demografic_data))
 baseline_clinical_data = np.squeeze(np.array(baseline_clinical_data))
 
 
+
 # check if there is any replicated subject, becasue there might be two files with same subject names
 replicated_indices = check_replicate_subject(all_subject)
 print(f'return replicated_indices {replicated_indices}')
+all_involve_subject = np.array(all_involve_subject)
+all_involve_subject = np.delete(all_involve_subject, replicated_indices, axis=0)
 
+HAMD_ALL_HISTORY = read_HAMD_ALL_HISTORY(cli_path, all_involve_subject)
+PSYCHIATRY_HISTORY = read_psychiatry_history(cli_path, all_involve_subject)
+CLINICAL_HISTORY = read_clinical_history(cli_path, all_involve_subject)
+demographic = read_demographic(cli_path, all_involve_subject)
+
+
+print('HAMD_ALL_HISTORY.shape', HAMD_ALL_HISTORY.shape)
+print('PSYCHIATRY_HISTORY.shape', PSYCHIATRY_HISTORY.shape)
+print('CLINICAL_HISTORY.shape', CLINICAL_HISTORY.shape)
+print('demographic', demographic.shape)
 
 # delete the replicated subject
 mdd_subject_base = np.delete(mdd_subject_base, replicated_indices, axis=0)
@@ -195,6 +215,11 @@ np.save(output_path + '/hb_data.npy', hb_data)
 np.save(output_path + '/label_hamd.npy', label_hamd)
 np.save(output_path + '/label_response.npy', label_response)
 np.save(output_path + '/label.npy', label_response)
-np.save(output_path + '/demografic_data.npy', demografic_data)
+np.save(output_path + '/demografic_data.npy', demografic_data) # demografic is 2-13 (2-9 is demographic, 10-13 is clinical)
 np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
 np.save(output_path + '/adj_matrix.npy', adj)
+
+np.save(output_path + '/HAMD_ALL_HISTORY.npy', HAMD_ALL_HISTORY)
+np.save(output_path + '/PSYCHIATRY_HISTORY.npy', PSYCHIATRY_HISTORY)
+np.save(output_path + '/CLINICAL_HISTORY.npy', CLINICAL_HISTORY)
+np.save(output_path + '/demographic.npy', demographic)

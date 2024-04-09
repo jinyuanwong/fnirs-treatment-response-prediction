@@ -950,3 +950,62 @@ def show_shap_channel_importance(data):
     plt.show()
     
     
+    
+    
+def read_HAMD_ALL_HISTORY(excel_path, subject_ids, sheet_name='HAM-D_All Timepoints'):
+    HAMD_data = pd.read_excel(excel_path, sheet_name=sheet_name)
+
+    # estimate the index of all history HAMD-17 score
+    HAMD_17_total_col = HAMD_data.iloc[1] == 'HAMD-17 total'
+    all_HAMD17_score_index = np.where(HAMD_17_total_col)[0]
+
+    # keep record of all history HAMD-17 score
+    HAMD_ALL_HISTORY = []
+
+    for subject_id in subject_ids:
+        this_subject = HAMD_data[
+            HAMD_data['The Hamilton Rating Scale for Depression (HAM-D)'] == subject_id]
+
+        T_HAMD_score = this_subject.iloc[:, all_HAMD17_score_index].values[0]
+        HAMD_ALL_HISTORY.append(T_HAMD_score)
+
+    HAMD_ALL_HISTORY = np.array(HAMD_ALL_HISTORY)
+    return HAMD_ALL_HISTORY
+
+
+def read_psychiatry_history(excel_path, subject_ids, sheet_name='Summary T0T8_fNIRS Analysis'):
+    data = pd.read_excel(excel_path, sheet_name=sheet_name)
+    res = []
+    for subject_id in subject_ids:
+        this_subject = data[data['Subject ID'] == subject_id]
+        psychiatry = this_subject.iloc[:, 9:24].values[0]
+        res.append(psychiatry)
+
+    res = np.array(res)
+    return res
+
+def read_clinical_history(excel_path, subject_ids, sheet_name='SDS_CGI_All Timepoints'):
+    data = pd.read_excel(excel_path, sheet_name=sheet_name)
+    res = []
+    for subject_id in subject_ids:
+        this_subject = data[data['Subject ID'] == subject_id]
+        if not this_subject.empty:
+            psychiatry = this_subject.iloc[:, 1:].values[0]
+        
+            res.append(psychiatry)
+
+    res = np.array(res)
+    return res
+
+def read_demographic(excel_path, subject_ids, sheet_name='Summary T0T8_fNIRS Analysis'):
+    data = pd.read_excel(excel_path, sheet_name=sheet_name)
+    res = []
+    for subject_id in subject_ids:
+        this_subject = data[data['Subject ID'] == subject_id]
+        if not this_subject.empty:
+            psychiatry = this_subject.iloc[:, 2:9].values[0]
+        
+            res.append(psychiatry)
+
+    res = np.array(res)
+    return res
