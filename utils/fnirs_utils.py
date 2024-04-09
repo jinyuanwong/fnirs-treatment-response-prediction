@@ -849,7 +849,27 @@ def print_md_table_val_test(model_name, test_result, val_result, print_table_hea
     for val in val_result:
         print(f' {val*100:.4f}  |', end='')        
         
-    # print()
+
+
+def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table_header=True):
+    if print_table_header:
+        print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
+        print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
+        print('|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |')
+
+
+    # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
+    # print('|------------|------------|----------|-------------|-------------|----------|')
+    print(f'| {model_name}   |', end='')
+    test_result = np.array(test_result)
+    val_result = np.array(val_result)
+    test_result[0] = (test_result[1] + test_result[2]) / 2
+    val_result[0] = (val_result[1] + val_result[2]) / 2
+    for val in test_result:
+        print(f' {val*100:.4f}  |', end='')
+    for val in val_result:
+        print(f' {val*100:.4f}  |', end='')       
+        
 
 # Define custom scoring functions
 def specificity_score(y_true, y_pred):
