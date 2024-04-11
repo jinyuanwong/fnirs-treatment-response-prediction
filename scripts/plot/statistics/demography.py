@@ -71,14 +71,15 @@ def find_group_demography(type, specify_group=None):
         # sub will be an array of [True, False, False, ...]
         if True in sub.values:
             if type == 'PT': all_involved_subject_id.append(sub_id)
-            for key in dict_demography:
+            for key in dict_demography_treatment_response:
                 if key not in res:
                     res[key] = []
-                value = excel_data[sub][dict_demography[key]].iloc[0]
+                value = excel_data[sub][dict_demography_treatment_response[key]].iloc[0]
 
                 if pd.isna(value):
                    res[key].append(value)
                 else:
+                    if value == '[LOSS TO FOLLOW-UP]': value = -1 
                     res[key].append(int(value))
     return res 
 
@@ -136,6 +137,16 @@ def compare_two_groups(g1, g2, name):
             stat, p_value, _, _ = stats.chi2_contingency([g1_group, g2_group])  # Use chi2_contingency for categorical variables
             print(f"{key} chi2_stat: {stat}, p_value: {p_value}")
 
+def address_post_treatment_HAMD_score_missing(MDD):
+    zero_indices = np.where(np.array(MDD['posttreatment HAM-D score']) == -1)[0]
+    non_zero_indices = np.where(np.array(MDD['posttreatment HAM-D score']) != -1)[0]
+    non_zero_number = np.array(MDD['posttreatment HAM-D score'])[non_zero_indices]
+    mean_non_zero = np.mean(non_zero_number)
+    new_post_treatment_HAMD_score = np.array(MDD['posttreatment HAM-D score'])
+    new_post_treatment_HAMD_score[zero_indices] = int(mean_non_zero)
+    MDD['posttreatment HAM-D score'] = new_post_treatment_HAMD_score
+    return MDD
+
 """
 HC, MDD, RESPOND, NONRESPOND have forms like this 
 {
@@ -156,17 +167,15 @@ NONRESPOND = address_nan_value(find_group_demography(None, nonresp))
 print('responders', RESPOND)
 print('nonresponders', NONRESPOND)
 
-show_metrics(HC,'HC')
-print('-------------------')
-show_metrics(MDD,'MDD')
-print('-------------------')
-show_metrics(RESPOND,'RESPOND')
-print('-------------------')
-show_metrics(NONRESPOND,'NONRESPOND')
-
-
-print('-------------------')
-compare_two_groups(HC, MDD, 'HCs vs MDDs')
+# show_metrics(HC,'HC')
+# print('-------------------')
+# show_metrics(MDD,'MDD')
+# print('-------------------')
+# show_metrics(RESPOND,'RESPOND')
+# print('-------------------')
+# show_metrics(NONRESPOND,'NONRESPOND')
+# print('-------------------')
+# compare_two_groups(HC, MDD, 'HCs vs MDDs')
 print('-------------------')
 compare_two_groups(RESPOND, NONRESPOND, 'responders vs nonresponders')
 
@@ -225,9 +234,19 @@ def print_demo_numer(data):
                 for k, b in counter.items():
                     print(f"{sex_category[k]} N = {b}, % = {b/Total*100:.2f}")
             print('-')
-print("For responders, total subject is ", len(RESPOND['age']))
-print_demo_numer(RESPOND)
+
+
+# print("For responders, total subject is ", len(RESPOND['age']))
+# print_demo_numer(RESPOND)
+
+# print('-------------------')
+# print("For nonresponders, total subject is ", len(NONRESPOND['age']))
+# print_demo_numer(NONRESPOND)
 
 print('-------------------')
-print("For nonresponders, total subject is ", len(NONRESPOND['age']))
-print_demo_numer(NONRESPOND)
+print("For all - MDD, total subject is ", len(MDD['age']))
+# MDD = address_post_treatment_HAMD_score_missing(MDD)
+print_demo_numer(MDD)
+
+
+
