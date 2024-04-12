@@ -76,9 +76,9 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
 
     cmap = LinearSegmentedColormap.from_list('RedToWhite', colors, N=256)
     title = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
-    plt.figure(figsize=(21,6))
+    plt.figure(figsize=(24,6))
     plt.subplot(2, 1, 1)  # 1 row, 2 columns, select the 1st subplot
-    plt.title('HCs vs MDDs (P-value)', fontsize=20, fontweight='bold')
+    plt.title('Nonresponders vs. Responders (P-value)', fontsize=20, fontweight='bold')
     for channel in range(52):
         channel_p = []
         channel_effect_size = []
@@ -103,7 +103,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
             channel_p.append(p_value)
             
 
-            g1 = pg.compute_effsize(responders_hbo,nonresponders_hbo, eftype='Hedges')
+            g1 = pg.compute_effsize(nonresponders_hbo, responders_hbo, eftype='Hedges')
             channel_effect_size.append(g1)
         
         # add the FDR here 
@@ -218,7 +218,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # plt.show()
     
     plt.subplot(2, 1, 2)  # 1 row, 2 columns, select the 1st subplot
-    plt.title('HCs vs MDDs (Effect size)', fontsize=20, fontweight='bold')
+    plt.title('Nonresponders vs. Responders (Effect size)', fontsize=20, fontweight='bold')
 
     for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, MPC_indices], [PSFC_color, DPC_color, STG_color, VPC_color, MPC_color]):
         for index in indices:
@@ -286,8 +286,8 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     plt.savefig(output_fold+f'/{fig_name}.png')
     plt.show()
     
-DATA =  np.load('allData/prognosis/pretreatment_response/hb_data.npy')
-LABEL =  np.load('allData/prognosis/pretreatment_response/label.npy')
+DATA =  np.load('allData/prognosis_mix_hb/pretreatment_response/hb_data.npy')
+LABEL =  np.load('allData/prognosis_mix_hb/pretreatment_response/label.npy')
 
 pre_post_data_combine_type = 'substract'
 
@@ -298,10 +298,10 @@ import os
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 # name_of_input = ['pre_treatment', 'post_treatment', 'pre_minus_post_treatment']
-name_of_input = ['HCs vs MDDs']
+name_of_input = ['Nonresponders vs. Responders']
 for fig_name in name_of_input:
     print(fig_name)
-    if fig_name =='HCs vs MDDs':
+    if fig_name =='Nonresponders vs. Responders':
         print('entering - 1')
         data = DATA
         label = LABEL
@@ -311,27 +311,34 @@ for fig_name in name_of_input:
 # data[subject1] - mean(data[subject1])
     def individual_normalization(data):
         for i in range(data.shape[0]):
-            data[i] = (data[i] - np.mean(data[i])) #/ np.std(data[i])
+            data[i] = (data[i] - np.mean(data[i])) / np.std(data[i])
         return data
-    data = individual_normalization(data)
+    # data = individual_normalization(data)
     
-    HbO = np.transpose(data[...,:1250],(0,2,1))
+    HbO = np.transpose(data[...,0::2],(0,2,1))
+    # HbO = individual_normalization(HbO)
     print(f'HbO: {HbO.shape}')
-    HbR = np.transpose(data[...,-1250:],(0,2,1))
+    HbR = np.transpose(data[...,1::2],(0,2,1))
+    # HbR = individual_normalization(HbR)
     HbT = HbO + HbR
     
 
-    HC = HbO[label==0]
-    MDD = HbO[label==1]
-    plt.figure() 
-    mean_HC = np.mean(HC, axis=(0,2))
-    print('mean_HC', mean_HC.shape)
-    print(mean_HC)
-    plt.plot(np.mean(HC, axis=(0,2)), label=f"Nonresponders {HC.shape[0]}")
-    plt.plot(np.mean(MDD, axis=(0,2)), label=f"Responders {MDD.shape[0]}")
+    plt.figure()     
+    nonresponder_hbo = HbO[label==0]
+    responder_hbo = HbO[label==1]    
+    nonresponder_hbr = HbR[label==0]
+    responder_hbr = HbR[label==1]
+    plt.subplot(1,2,1)
+    plt.plot(np.mean(nonresponder_hbo, axis=(0,2)), label=f"Nonresponders {nonresponder_hbo.shape[0]}")
+    plt.plot(np.mean(responder_hbo, axis=(0,2)), label=f"Responders {responder_hbo.shape[0]}")
+    
+    plt.subplot(1,2,2)
+    plt.plot(np.mean(nonresponder_hbr, axis=(0,2)), label=f"Nonresponders {nonresponder_hbr.shape[0]}")
+    plt.plot(np.mean(responder_hbr, axis=(0,2)), label=f"Responders {responder_hbr.shape[0]}")
+    
     plt.legend()
-    plt.title('Jinyuan Process 1')
-    plt.savefig(output_fold+'/Responders vs. Nonresponders.png')
+    plt.title('Average HbO and HbR of Responders and Nonresponders')
+    plt.savefig(output_fold+'/Nonresponders vs. Responders.png')
     
     # For pre - treatment HAMD reduction 50 - HbO 
     show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 100, 700)
