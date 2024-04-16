@@ -23,6 +23,8 @@ from scipy import stats
 from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score, confusion_matrix, precision_score
 from sklearn.model_selection import cross_validate, StratifiedKFold
+import random
+from sklearn.metrics import roc_auc_score
 
 
 def test_hello_world():
@@ -85,6 +87,24 @@ def get_metrics(y_true, y_pred):
     f1 = round(metric.result().numpy(), 5)
 
     return accuracy, sensitivity, specificity, f1
+
+def get_metrics_auc(y_true, y_pred_prob):
+    # tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    y_pred = np.argmax(y_pred_prob, axis=1)
+    # 明确指定labels参数
+    cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
+
+    # 现在cm是一个2x2矩阵，即使数据只包含一个类别
+    tn, fp, fn, tp = cm.ravel()
+
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+    # f1 = f1_score(y_true, y_pred)
+
+    auc = roc_auc_score(y_true, y_pred_prob[:, 1])
+
+    return accuracy, sensitivity, specificity, auc
 
 
 def get_activity_start_time(data, index_start):
@@ -653,7 +673,6 @@ def avg_every_ten_point_in_last_dimension(data):
     data = np.reshape(data, (data.shape[0], 52, -1, 10))
     data = np.mean(data, axis=-1)
     return data 
-import random
 def generate_random_params(seed):
     random.seed(seed)
     params = {
@@ -830,12 +849,18 @@ def retrieve_model(model_name, seed):
     return model, para
 
 
-def print_md_table_val_test(model_name, test_result, val_result, print_table_header=True):
+def print_md_table_val_test(model_name, test_result, val_result, print_table_header=True, using_AUC=False):
     if print_table_header:
-        print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
-        print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
-        print('|            | Balanced Accuracy | Sensitivity | Specificity | F1 Score | Balanced Accuracy | Sensitivity | Specificity | F1 Score |')
-
+        if using_AUC:            
+            print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
+            print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
+            print('|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |')
+        else:
+            
+            print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
+            print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
+            print('|            | Balanced Accuracy | Sensitivity | Specificity | F1 Score | Balanced Accuracy | Sensitivity | Specificity | F1 Score |')
+    
 
     # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
     # print('|------------|------------|----------|-------------|-------------|----------|')
@@ -869,8 +894,33 @@ def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table
         print(f' {val*100:.4f}  |', end='')
     for val in val_result:
         print(f' {val*100:.4f}  |', end='')       
-        
 
+
+def save_itr_version_with_test_val_auc(itr_version, test_metrics, val_nested_CV_metrics, result_path):
+    # Create a dictionary with the data
+    data = {
+        'Iteration Version': [itr_version],
+        'Test Accuracy': [test_metrics[0]],
+        'Test Sensitivity': [test_metrics[1]],
+        'Test Specificity': [test_metrics[2]],
+        'Test AUC': [test_metrics[3]],
+        'Validation Accuracy': [val_nested_CV_metrics[0]],
+        'Validation Sensitivity': [val_nested_CV_metrics[1]],
+        'Validation Specificity': [val_nested_CV_metrics[2]],
+        'Validation AUC': [val_nested_CV_metrics[3]]
+    }
+    
+    # Convert the dictionary into a DataFrame
+    df = pd.DataFrame(data)
+
+    import os
+    if os.path.exists(result_path):
+        # Append without writing the header
+        df.to_csv(result_path, mode='a', index=False, header=False)
+    else:
+        # Write with the header if file is being created
+        df.to_csv(result_path, mode='w', index=False, header=True)
+    print(f"Data appended successfully to {result_path}")
 # Define custom scoring functions
 def specificity_score(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()

@@ -15,8 +15,9 @@ import matplotlib.pyplot as plt
 import os
 import sys 
 sys.path.append(os.getcwd())
-from utils.fnirs_utils import get_metrics
+from utils.fnirs_utils import get_metrics, get_metrics_auc
 from utils.fnirs_utils import print_md_table_val_test
+from utils.fnirs_utils import save_itr_version_with_test_val_auc
 from utils.fnirs_utils import convert_result_to_y_pred
 import re
 from sklearn.metrics import roc_auc_score
@@ -46,6 +47,15 @@ def read_file_metric_acc_sen_spe_f1(path):
         f1 = convert_to_float(re.findall(r'F1-score: (\d+\.\d+)', content))
     return acc, sen, spe, f1
 
+def read_file_metric_acc_sen_spe_auc(path):
+    with open(path, 'r') as f:
+        content = f.read()
+        acc = convert_to_float(re.findall(r'accuracy: (\d+\.\d+)', content))
+        sen = convert_to_float(re.findall(r'sensitivity: (\d+\.\d+)', content))
+        spe = convert_to_float(re.findall(r'specificity: (\d+\.\d+)', content))
+        auc = convert_to_float(re.findall(r'AUC: (\d+\.\d+)', content))
+    return acc, sen, spe, auc
+
 def read_file_metric_y_pred(path):
 
     pattern = r"Y_pred_in_test: \[(.*?)\]"
@@ -56,7 +66,8 @@ def read_file_metric_y_pred(path):
     return numbers_list
 def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): # 
     
-    acc, sen, spe, f1 = read_file_metric_acc_sen_spe_f1(path)
+    acc, sen, spe, auc = read_file_metric_acc_sen_spe_auc(path)
+    _, _, _, f1 = read_file_metric_acc_sen_spe_f1(path)
     y_pred = read_file_metric_y_pred(path)
     # get the itr of the best sensitivity result 
     if based_best_metric == 'sensitivity':
@@ -73,7 +84,7 @@ def read_metrics_txt_best_itr(path, MAX_ITR, based_best_metric='sensitivity'): #
     res = [acc[best_index],
            sen[best_index],
            spe[best_index],
-           f1[best_index]]
+           auc[best_index]]
     
     if len(y_pred) >= best_index + 1:
         return_y_pred = y_pred[best_index]
@@ -211,14 +222,21 @@ def compute_save_MMDT_score(ALL_Y_pred_in_test, save_fold, num_of_k_fold=5):
     np.save(save_fold + '/MMDT_score.npy', MMDT_score)
     print('MMDT_score.shape', MMDT_score.shape)
 
-def save_y_pred(y_pred, path, specify_itr):
+def save_y_pred(y_pred, path, specify_itr, itr_version):
     if specify_itr is not None:
         path = path + f'/itr_{specify_itr}' 
     if not os.path.exists(path):
         os.makedirs(path)
-    np.save(path + '/y_pred.npy', y_pred)
+    np.save(path + f'/y_pred_{itr_version}.npy', y_pred)
     print("the y_pred has been saved in", path)
+
+def get_average_of_y_pred(y_pred, K_FOLD=5):
+    y_pred = np.array(y_pred)
+    y_pred = y_pred.reshape(-1, K_FOLD, 2)
+    y_pred = np.mean(y_pred, axis=1)
+    return y_pred
     
+
 if __name__ == '__main__':
     TMP_ALL = []
     # Create the parser
@@ -244,12 +262,19 @@ if __name__ == '__main__':
     model = result_path[1]
     data_prefix = result_path[2] + '/'
     dataset = result_path[3]
+    save_path = '/'.join(result_path[:3])
     model_params = result_path[4]
     specify_itr = args.specify_itr
     MAX_ITR = args.max
     value_add_to_sensitivity_value = args.value_add_to_sensitivity_value
     total_subjects  = 46 if dataset[:4] == 'post' else 64 # '64' or '46
 
+    itr_version = model_params[7:9]
+    if itr_version[-1].isdigit():
+        itr_version = int(itr_version)
+    else:
+        itr_version = int(itr_version[0])
+        
     if not model_params:
         raise ValueError('Model name is not correct or there is no parameter for the model')
     SUBJECTALL = None #np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
@@ -268,7 +293,6 @@ if __name__ == '__main__':
     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
     
     output_fold = f'FigureTable/DL/timedomain/{time}'
-
     if not os.path.exists(output_fold):
         os.makedirs(output_fold)
 
@@ -283,7 +307,8 @@ if __name__ == '__main__':
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
     if model != 'fusion_catboost':
         print('ALL_Y_pred_in_test -> ', np.array(ALL_Y_pred_in_test).shape)
-        save_y_pred(ALL_Y_pred_in_test, val_fold_path, specify_itr)
+        y_pred_save_path = y_test_path + '/MDDR'
+        save_y_pred(ALL_Y_pred_in_test, y_pred_save_path, specify_itr, f'loocv_v{itr_version}')
         y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_add_to_sensitivity=value_add_to_sensitivity_value)
         
         compute_save_MMDT_score(ALL_Y_pred_in_test, y_test_path, K_FOLD)
@@ -293,15 +318,15 @@ if __name__ == '__main__':
     else: 
         y_pred = convert_result_to_y_pred(test_accuracy, y_test)
     predict_accuracy_flag = y_pred==y_test
-
-    test_metrics = get_metrics(y_test, y_pred)
+    y_pred_prob = get_average_of_y_pred(ALL_Y_pred_in_test)
+    test_metrics = get_metrics_auc(y_test, y_pred_prob)
 
     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
     print('Model name:', model)
     print('specify_itr', specify_itr)
     
     print('value_add_to_sensitivity_value', value_add_to_sensitivity_value)
-    print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
+    print_md_table_val_test(model, test_metrics, val_nested_CV_metrics, using_AUC=True)
     print()
     
     ALL_inner_fold = np.array(ALL_inner_fold)
@@ -325,73 +350,7 @@ if __name__ == '__main__':
     sorted_indices = np.argsort(loo_toal_itr)
     sorted_indices = sorted_indices.tolist()
     print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
-    print(loo_toal_itr)
+    print(loo_toal_itr)    
+    save_itr_version_with_test_val_auc(itr_version, test_metrics, val_nested_CV_metrics, save_path + '/metrics.txt')
 
     
-# if __name__ == '__main__':
-#     # Create the parser
-#     parser = argparse.ArgumentParser(description='Process some integers.')
-    
-#     # Add the arguments
-#     parser.add_argument('--max', type=int, required=True,
-#                         help='The maximum number of iterations')
-#     parser.add_argument('--model', type=str, required=True,
-#                         help='The model name')
-    
-    
-#     # Parse the arguments
-#     args = parser.parse_args()
-#     model = args.model
-#     MAX_ITR = args.max
-#     model_params = dict_model_params.get(args.model)
-#     if not model_params:
-#         raise ValueError('Model name is not correct or there is no parameter for the model')
-#     SUBJECTALL = None # np.arange(4).tolist() + np.arange(30,34,1).tolist() + np.arange(49,55,1).tolist()# # np.arange(16).tolist()#None # np.arange(10).tolist() + np.arange(34,64).tolist()
-
-#     time = 'prognosis/pre_treatment_hamd_reduction_50'
-#     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
-
-#     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'get_sorted_loo_array' LOO_nested_CV
-#     based_best_metric = 'sensitivity' # 'sensitivity' or 'f1_score'
-#     ALL_BEST_ITR = []
-#     ALL_TOTAL_ITERATION = []
-#     ALL_Y_pred_in_test = []
-
-
-#     val_fold_path = f'results/{model}/{time}/{model_params}/LOO_nested_CV'
-#     TOTAL_Subject = 64 # len(os.listdir(val_fold_path))  if len(os.listdir(val_fold_path)) == 64 else len(os.listdir(val_fold_path)) - 1
-#     output_fold = f'FigureTable/DL/timedomain/{time}'
-
-#     if not os.path.exists(output_fold):
-#         os.makedirs(output_fold)
-
-#     # y_test_path = f'allData/prognosis/{time}'
-#     y_test_path = f'allData/prognosis/pre_treatment_hamd_reduction_50'
-
-#     total_subjects  = 46 if time[:8] == 'pre_post' else TOTAL_Subject # '64' or '46
-
-#     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, None, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
-
-
-#     y_test = np.load(y_test_path + '/label.npy')
-#     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-#     y_pred = convert_result_to_y_pred(test_accuracy, y_test)
-        
-    
-#     predict_accuracy_flag = y_pred==y_test
-#     test_metrics = get_metrics(y_test, y_pred)
-    
-#     print(f"MAX_ITR: {MAX_ITR} ranging ( {np.min(ALL_TOTAL_ITERATION)} ~ {np.max(ALL_TOTAL_ITERATION)} )")
-#     print('Model name:', args.model)
-#     print_md_table_val_test(model, test_metrics, val_nested_CV_metrics)
-#     print()
-
-#     loo_toal_itr = np.array(ALL_TOTAL_ITERATION).copy()
-#     loo_toal_itr = loo_toal_itr.reshape(-1, 5)
-#     loo_toal_itr = np.mean(loo_toal_itr, axis=1)
-#     sorted_indices = np.argsort(loo_toal_itr)
-#     sorted_indices = sorted_indices.tolist()
-#     print("Sorted indices:", sorted_indices, "Sorted values:", loo_toal_itr[sorted_indices])
-#     print(loo_toal_itr)
-
-
