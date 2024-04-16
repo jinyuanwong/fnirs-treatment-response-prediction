@@ -79,3 +79,6 @@ note: --max is the maximum iteration for each training fold that can be achieved
 
 
 
+# File function
+- DL_main.ipynb 
+ - plot all and average metircs of GNN and save into a csv file call metrics.txt under results/prognosis_mix_hb

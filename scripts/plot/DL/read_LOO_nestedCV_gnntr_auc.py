@@ -297,7 +297,7 @@ if __name__ == '__main__':
         os.makedirs(output_fold)
 
     # y_test_path = f'allData/prognosis/{time}'
-    y_test_path = f'allData/prognosis_mix_hb/' + dataset
+    y_test_path = f'allData/{data_prefix}' + dataset
 
 
     val_nested_CV_metrics, test_accuracy = get_val_metrics_and_test_accuracies(model, val_fold_path, ALL_BEST_ITR, ALL_TOTAL_ITERATION, ALL_Y_pred_in_test, based_best_metric=based_best_metric, SUBJECTALL=SUBJECTALL, total_subjects=total_subjects, MAX_ITR=MAX_ITR)
