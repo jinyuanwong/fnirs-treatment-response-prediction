@@ -155,14 +155,24 @@ def get_best_hyperparameters(X, y, num_evals=200, random_seed=1024):
     # Define the search space
     space = {
         'learning_rate': hp.loguniform('learning_rate', -6.907755278982137, 0), # loguniform for 0.001 to 1
-        'min_child_weight': hp.uniform('min_child_weight', 0.8, 2.0),
-        'max_depth': hp.choice('max_depth', range(3, 16)),
-        'gamma': hp.uniform('gamma', 0.0, 2.0),
+        'min_child_weight': hp.uniform('min_child_weight', 0.7, 2.5),
+        'max_depth': hp.choice('max_depth', range(5, 18)),
+        'gamma': hp.uniform('gamma', 0.0, 3.0),
         'lambda': hp.uniform('lambda', 0.0, 4.0),
-        'alpha': hp.uniform('alpha', 0.0, 2.0),
-        'n_estimators': hp.choice('n_estimators', range(50, 301)),
+        'alpha': hp.uniform('alpha', 0.0, 3.0),
+        'n_estimators': hp.choice('n_estimators', range(60, 301)),
         'scale_pos_weight': hp.loguniform('scale_pos_weight', np.log(1), np.log(1e8)),
     }
+    # space = {
+    #     'learning_rate': hp.loguniform('learning_rate', -6.907755278982137, 0), # loguniform for 0.001 to 1
+    #     'min_child_weight': hp.uniform('min_child_weight', 0.8, 2.0),
+    #     'max_depth': hp.choice('max_depth', range(3, 16)),
+    #     'gamma': hp.uniform('gamma', 0.0, 2.0),
+    #     'lambda': hp.uniform('lambda', 0.0, 4.0),
+    #     'alpha': hp.uniform('alpha', 0.0, 2.0),
+    #     'n_estimators': hp.choice('n_estimators', range(50, 301)),
+    #     'scale_pos_weight': hp.loguniform('scale_pos_weight', np.log(1), np.log(1e8)),
+    # }
 
 
     # Setup Trials
@@ -231,11 +241,11 @@ def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc(X, y, num_e
         loocv_bacc = balanced_accuracy_score(y, all_pred_labels)
 
 
-        mean_recall_skf = np.mean(recall_scores_skf) * 0.2
-        mean_recall_loo = loocv_recall * 0.3
+        mean_recall_skf = np.mean(recall_scores_skf) * 0.25
+        mean_recall_loo = loocv_recall * 0.25
         
-        mean_bacc_skf = np.mean(balanced_accuracy_scores_skf) * 0.2
-        mean_bacc_loo = loocv_bacc * 0.3
+        mean_bacc_skf = np.mean(balanced_accuracy_scores_skf) * 0.25
+        mean_bacc_loo = loocv_bacc * 0.25
 
         combined_recall = mean_recall_skf + mean_recall_loo + mean_bacc_skf + mean_bacc_loo
 
@@ -247,12 +257,12 @@ def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc(X, y, num_e
     # Define the search space
     space = {
         'learning_rate': hp.loguniform('learning_rate', -6.907755278982137, 0), # loguniform for 0.001 to 1
-        'min_child_weight': hp.uniform('min_child_weight', 0.8, 2.0),
-        'max_depth': hp.choice('max_depth', range(3, 16)),
-        'gamma': hp.uniform('gamma', 0.0, 2.0),
+        'min_child_weight': hp.uniform('min_child_weight', 0.7, 2.5),
+        'max_depth': hp.choice('max_depth', range(5, 18)),
+        'gamma': hp.uniform('gamma', 0.0, 3.0),
         'lambda': hp.uniform('lambda', 0.0, 4.0),
-        'alpha': hp.uniform('alpha', 0.0, 2.0),
-        'n_estimators': hp.choice('n_estimators', range(50, 301)),
+        'alpha': hp.uniform('alpha', 0.0, 3.0),
+        'n_estimators': hp.choice('n_estimators', range(60, 301)),
         'scale_pos_weight': hp.loguniform('scale_pos_weight', np.log(1), np.log(1e8)),
     }
 
