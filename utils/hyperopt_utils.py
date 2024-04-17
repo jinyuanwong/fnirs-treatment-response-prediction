@@ -215,11 +215,11 @@ def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc(X, y, num_e
             all_pred_probas.append(preds)
             # Stratified 5-Fold CV
             for train_index, val_index in skf.split(X_train_fold, y_train_fold):
-                X_train_fold, X_val_fold = X[train_index], X[val_index]
-                y_train_fold, y_val_fold = y[train_index], y[val_index]
+                inner_X_train_fold, X_val_fold = X_train_fold[train_index], X_train_fold[val_index]
+                inner_y_train_fold, y_val_fold = y_train_fold[train_index], y_train_fold[val_index]
                 
                 clf_fold = clone(clf)
-                clf_fold.fit(X_train_fold, y_train_fold)
+                clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
                 preds = clf_fold.predict_proba(X_val_fold)[:,1]
                 fold_recall = f1_score(y_val_fold, preds>0.5)
                 recall_scores_skf.append(fold_recall)
