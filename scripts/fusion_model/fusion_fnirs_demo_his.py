@@ -26,10 +26,8 @@ elif sys.platform == 'linux':
 else:
     print("Current system is neither macOS nor Ubuntu")
     
-print('current folder is ', os.getcwd())
-sys.path.append(main_fold_path)
+sys.path.append(main_fold_path)    
 os.chdir(main_fold_path)
-print('after chdir folder is ', os.getcwd())
 from utils.hyperopt_utils import get_best_hyperparameters, get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc
 
 from utils.fnirs_utils import print_md_table_val_test_AUC
@@ -161,7 +159,8 @@ def train_xgboost_shuffle_feature(X,
                                   is_shuffling=True,
                                   is_computing_shap=True,
                                   best_params_xgboost=None,
-                                  num_evals=10):
+                                  num_evals=10,
+                                  loocv_metrics_save_file_name='fNIRS_demo_his_metrics.npy'):
     scale = 1e6# for scale in [1e6]: # [1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]:
     
 
@@ -317,6 +316,8 @@ def train_xgboost_shuffle_feature(X,
     
     if is_plotting_avg_auc:
         plot_avg_auc(fprs, tprs, roc_aucs, title)
+        loocv_metrics = {'fprs': fprs, 'tprs': tprs, 'roc_aucs': roc_aucs}
+        np.save('results/' + loocv_metrics_save_file_name, loocv_metrics)
     # plt.show()
     
     mean_shuffle_inner_fold = np.mean(shuffle_inner_fold, axis=0)
@@ -327,7 +328,7 @@ def train_xgboost_shuffle_feature(X,
     
     print_md_table_val_test_AUC('Mean ' + model_name, mean_shuffle_outer_fold, mean_shuffle_inner_fold)
     print_md_table_val_test_AUC('SD ' + model_name, std_shuffle_outer_fold, std_shuffle_inner_fold)
-    
+
     if is_computing_shap: return shuffle_all_shaps
     else: return None
 
@@ -378,6 +379,7 @@ fnirs_feature = derive_average_MMDR_score(MMDR_path) # np.mean(np.load(MMDR_path
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
+data_name = 'fNIRS_demo_his_metrics'
 X_data = np.concatenate((pro_pyschiatry[:,:9], pro_demographic, fnirs_feature), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
@@ -390,8 +392,7 @@ shuffle_all_shaps = train_xgboost_shuffle_feature(X_data,
                                                   is_shuffling=True, 
                                                   is_computing_shap=True,
                                                   best_params_xgboost=True,
-                                                  num_evals=150)
+                                                  num_evals=150,
+                                                  loocv_metrics_save_file_name= data_name + '.npy')
 
-save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_fnirs_demographic_pyschiatry.npy')
-
-# run me  nohup python scripts/fusion_model/fusion_fnirs_demo_his.py > results/fnirs_demo_his.log 2>&1 &
+save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
