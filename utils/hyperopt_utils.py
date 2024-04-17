@@ -101,8 +101,8 @@ def loocv_train(best_params):
 
 
 
-def get_best_hyperparameters(X, y, num_evals=200):
-
+def get_best_hyperparameters(X, y, num_evals=200, random_seed=1024):
+    # np.random.seed(random_seed)
     # Define the objective function
     def objective(params):
         # Initialize classifier
@@ -174,7 +174,8 @@ def get_best_hyperparameters(X, y, num_evals=200):
         space=space,
         algo=tpe.suggest,
         max_evals=num_evals,
-        trials=trials
+        trials=trials,
+        rstate=np.random.default_rng(random_seed)
     )
 
     print("Best hyperparameters:", best)
