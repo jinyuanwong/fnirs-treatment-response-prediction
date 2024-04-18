@@ -894,6 +894,7 @@ def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table
         print(f' {val*100:.4f}  |', end='')
     for val in val_result:
         print(f' {val*100:.4f}  |', end='')       
+    print('')
 
 
 def save_itr_version_with_test_val_auc(itr_version, test_metrics, val_nested_CV_metrics, result_path):

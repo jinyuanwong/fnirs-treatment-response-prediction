@@ -1,4 +1,3 @@
-# first make sure the input data are good 
 import numpy as np 
 import os 
 import sys
@@ -17,19 +16,7 @@ from sklearn.model_selection import KFold, cross_val_predict
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import shap
-if sys.platform == 'darwin':
-    print("Current system is macOS")
-    main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
-elif sys.platform == 'linux':
-    print("Current system is Ubuntu")
-    main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
-else:
-    print("Current system is neither macOS nor Ubuntu")
-    
-sys.path.append(main_fold_path)    
-os.chdir(main_fold_path)
 from utils.hyperopt_utils import get_best_hyperparameters, get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc
-
 from utils.fnirs_utils import print_md_table_val_test_AUC
 
 def derive_average_MMDR_score(input_fold, K_FOLD=5):
@@ -231,7 +218,7 @@ def train_xgboost_shuffle_feature(X,
         model = model_dict[model_name]
         
 
-        for train_index, test_index in loo.split(X):
+        for train_index, test_index in loo.split(X_tmp_shuffled):
             # Splitting the dataset for this LOOCV iteration
             X_train, X_test = X_tmp_shuffled[train_index], X_tmp_shuffled[test_index]
             Y_train, Y_test = Y_tmp_shuffled[train_index], Y_tmp_shuffled[test_index]
@@ -354,48 +341,3 @@ def save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_
         os.makedirs(output_fold)
         
     np.save(output_fold + '/' + name, shap_values)
-
-
-fold_path = 'allData/prognosis_mix_hb/pretreatment_response'
-MMDR_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR'
-
-base_T2_SDS_CGI = read_base_T2_SDS_CGI(fold_path)
-pyschiatry = read_pychiatry(fold_path)
-HAMD_score = read_HAMD_score(fold_path)
-demographic = read_demographic(fold_path)
-
-pro_base_T2_SDS_CGI = process_with_nan_using_imputation_zscore(base_T2_SDS_CGI)
-pro_pyschiatry = process_with_nan_using_imputation_zscore(pyschiatry)
-print('pro_pyschiatry ->', pro_pyschiatry.shape)
-pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:]), axis=1) # must remove the -3rd column, because its existen will cause nan value of that column
-pro_HAMD_score = process_with_nan_using_imputation_zscore(HAMD_score)
-pro_demographic = process_with_nan_using_imputation_zscore(demographic)
-
-K_FOLD = 5
-MMDR_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR'
-fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
-fnirs_feature = derive_average_MMDR_score(MMDR_path) # np.mean(np.load(MMDR_path + '/y_pred_loocv_v4.npy').reshape(-1, K_FOLD, 2), axis=1)[:, 1:]
-
-Y = np.load(fold_path + '/label.npy', allow_pickle=True)
-
-# repeat to see if seed is working 
-data_name = 'fNIRS_demo_metrics'    
-X_data = np.concatenate((pro_demographic, fnirs_feature), axis=1)
-
-shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
-                                                  Y, 
-                                                  model_name='XGBoost',
-                                                  num_shuffle=10, 
-                                                  random_seed=1024,
-                                                  title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
-                                                  is_plotting_avg_auc=True, 
-                                                  is_shuffling=True, 
-                                                  is_computing_shap=True,
-                                                  best_params_xgboost=True,
-                                                  num_evals=150,
-                                                  loocv_metrics_save_file_name= data_name + '.npy')
-
-save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
-
-
-
