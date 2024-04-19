@@ -186,9 +186,7 @@ def train_xgboost_shuffle_feature(X,
     shuffle_inner_fold = []
     shuffle_outer_fold = []
     if is_computing_shap: shuffle_all_shaps = []
-    
-    if not is_shuffling: num_shuffle = 1
-    
+        
     for shuffle_i in range(num_shuffle):
      
         np.random.seed(ten_shuffle_seed[shuffle_i])
