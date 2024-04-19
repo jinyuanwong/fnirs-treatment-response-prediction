@@ -64,7 +64,7 @@ fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
-data_name = 'his_metrics'
+data_name = 'demo_his_metrics'
 X_data = np.concatenate((pro_pyschiatry[:,:9], pro_demographic), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 

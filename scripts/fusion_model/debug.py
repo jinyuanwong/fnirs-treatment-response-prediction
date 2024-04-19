@@ -43,7 +43,7 @@ from scripts.fusion_model.fusion_model_utils import plot_avg_auc
 from scripts.fusion_model.fusion_model_utils import train_xgboost_shuffle_feature 
 from scripts.fusion_model.fusion_model_utils import save_shap
 import time
-start_time = time.time()
+
 
 K_FOLD = 5
 fold_path = 'allData/prognosis_mix_hb/pretreatment_response'
@@ -63,28 +63,30 @@ pro_demographic = process_with_nan_using_imputation_zscore(demographic)
 fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
+
+start_time = time.time()
 # repeat to see if seed is working 
-data_name = 'demo_metrics'
-X_data = pro_demographic #np.concatenate((pro_pyschiatry[:,:9], fnirs_feature), axis=1)
+data_name = 'fNIRS_demo_his_metrics-deleteme'
+X_data = np.concatenate((pro_pyschiatry[:,:9], pro_demographic, fnirs_feature), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
                                                   Y, 
                                                   model_name='XGBoost',
-                                                  num_shuffle=10, 
+                                                  num_shuffle=3, 
                                                   random_seed=1024,
-                                                  title=f"Treatment Response Prediction (fNIRS + psychiatric history feature) ", 
+                                                  title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
                                                   is_computing_shap=True,
-                                                  best_params_xgboost=True,
-                                                  num_evals=150,
+                                                  best_params_xgboost=None,
+                                                  num_evals=2,
                                                   loocv_metrics_save_file_name= data_name + '.npy')
 
-save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
+# save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
+
 # End timing
 end_time = time.time()
 
 # Calculate total time taken
 total_time = end_time - start_time
 print(f"The program took {total_time} seconds to run.")
-# nohup python scripts/fusion_model/fusion_demo.py > results/demo.log 2>&1 &

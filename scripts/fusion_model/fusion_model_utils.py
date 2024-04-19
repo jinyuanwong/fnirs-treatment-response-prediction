@@ -158,7 +158,7 @@ def train_xgboost_shuffle_feature(X,
     np.random.seed(random_seed)
     ten_shuffle_seed = np.random.randint(0, 10000, num_shuffle)
     
-    plt.figure(figsize=(10, 10))
+    
 
     def specificity_score(y_true, y_pred):
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
@@ -176,7 +176,7 @@ def train_xgboost_shuffle_feature(X,
                 'sensitivity': make_scorer(recall_score),
                 'specificity': specificity_scorer,
                 'f1_score': get_f1_scorer,
-                'AUC': make_scorer(roc_auc_score)}
+                'AUC': make_scorer(roc_auc_score, needs_proba=True)}
     # Assuming X, Y, and a dictionary of models are already defined
 
     # Outer loop: Leave-One-Out Cross-Validation (LOOCV)
@@ -186,7 +186,7 @@ def train_xgboost_shuffle_feature(X,
     shuffle_inner_fold = []
     shuffle_outer_fold = []
     if is_computing_shap: shuffle_all_shaps = []
-        
+    
     for shuffle_i in range(num_shuffle):
      
         np.random.seed(ten_shuffle_seed[shuffle_i])
@@ -205,6 +205,7 @@ def train_xgboost_shuffle_feature(X,
         print(" shuffled_indices ", shuffled_indices)
         
         X_tmp_shuffled = X[:,shuffled_indices]
+        original_indices = [shuffled_indices.tolist().index(i) for i in range(X.shape[1])]
         Y_tmp_shuffled = Y
         
         if best_params_xgboost is not None:
@@ -228,17 +229,10 @@ def train_xgboost_shuffle_feature(X,
             mean_sensitivity = cv_results['test_sensitivity'].mean()
             mean_specificity = cv_results['test_specificity'].mean()
             mean_AUC = cv_results['test_AUC'].mean()
-            # m
             
             # Store the results
-            results[model_name] = {'bAcc': mean_accuracy, 'Sensitivity': mean_sensitivity, 'Specificity': mean_specificity, 'AUC': mean_AUC}
-            all_inner_fold.append([results[model_name]['bAcc'], results[model_name]['Sensitivity'], results[model_name]['Specificity'], results[model_name]['AUC']])
-            # print('inner cv results', results[model_name])
-            # Inner loop: 5-fold cross-validation for training and validating the model
-            # Note: Adjustments might be needed depending on how you intend to use the results of inner CV for model selection or tuning
-            
-            # Train the model using the inner CV folds
-            # Note: You might use cross_val_predict or another approach here for model selection or tuning
+            all_inner_fold.append([mean_accuracy, mean_sensitivity, mean_specificity, mean_AUC])
+
             model.fit(X_train, Y_train)
             Y_pred = model.predict(X_test)
 
@@ -250,7 +244,8 @@ def train_xgboost_shuffle_feature(X,
                 # Create an explainer object
                 explainer = shap.TreeExplainer(model)
                 # Calculate SHAP values for all samples
-                shap_values = explainer(X_test) 
+                shap_values = explainer(X_test)  # result is {values - (1, feature_num), base_values, data}
+                shap_values = shap_values.values[0, original_indices]
                 all_shaps.append(shap_values)
 
             # Assuming X, Y, and a trained XGBoost model are already defined        
@@ -279,7 +274,7 @@ def train_xgboost_shuffle_feature(X,
         fprs.append(fpr)
         tprs.append(tpr)
         roc_aucs.append(roc_auc)
-        plt.plot(fpr, tpr, lw=2, label='ROC curve (area = %0.2f) } - random - %d' % (roc_auc, shuffle_i) + msg)
+        # plt.plot(fpr, tpr, lw=2, label='ROC curve (area = %0.2f) } - random - %d' % (roc_auc, shuffle_i) + msg)
 
         all_inner_fold = np.array(all_inner_fold)
         all_inner_fold_mean = np.mean(all_inner_fold, axis=0)
@@ -290,23 +285,20 @@ def train_xgboost_shuffle_feature(X,
         if is_computing_shap: shuffle_all_shaps.append(all_shaps)
         
     # Plotting the ROC curve
-
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('1 - Specificity')
-    plt.ylabel('Sensitivity')
-    plt.title(title)
-    plt.legend(loc="lower right")
     
     if is_plotting_avg_auc:
+        plt.figure(figsize=(10, 10))
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('1 - Specificity')
+        plt.ylabel('Sensitivity')
+        plt.title(title)
+        plt.legend(loc="lower right")
         plot_avg_auc(fprs, tprs, roc_aucs, title)
         loocv_metrics = {'fprs': fprs, 'tprs': tprs, 'roc_aucs': roc_aucs}
         np.save('results/' + loocv_metrics_save_file_name, loocv_metrics)
     # plt.show()
-    
-    mean_shuffle_inner_fold = np.mean(shuffle_inner_fold, axis=0)
-    mean_shuffle_outer_fold = np.mean(shuffle_outer_fold, axis=0)
     
     # SD for bAcc should be re-calculated
     shuffle_inner_fold = np.array(shuffle_inner_fold)
@@ -314,31 +306,23 @@ def train_xgboost_shuffle_feature(X,
     shuffle_inner_fold[:, 0] = (shuffle_inner_fold[:, 1] + shuffle_inner_fold[:, 2]) / 2
     shuffle_outer_fold[:, 0] = (shuffle_outer_fold[:, 1] + shuffle_outer_fold[:, 2]) / 2
 
+    mean_shuffle_inner_fold = np.mean(shuffle_inner_fold, axis=0)
+    mean_shuffle_outer_fold = np.mean(shuffle_outer_fold, axis=0)
+    
     std_shuffle_inner_fold = np.std(shuffle_inner_fold, axis=0)
     std_shuffle_outer_fold = np.std(shuffle_outer_fold, axis=0)
     
-    print_md_table_val_test_AUC('Mean ' + model_name, mean_shuffle_outer_fold, mean_shuffle_inner_fold)
-    print_md_table_val_test_AUC('SD ' + model_name, std_shuffle_outer_fold, std_shuffle_inner_fold)
+    print_md_table_val_test_AUC('Mean ' + model_name, mean_shuffle_outer_fold, mean_shuffle_inner_fold, already_balanced_accuracy=True)
+    print_md_table_val_test_AUC('SD ' + model_name, std_shuffle_outer_fold, std_shuffle_inner_fold, print_table_header=False, already_balanced_accuracy=True)
 
     if is_computing_shap: return shuffle_all_shaps
     else: return None
 
 
 def save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_fnirs_demographic_pyschiatry.npy'):
-    shap_values = []
-    shap_base_values = []
+    shap_values = np.array(shuffle_all_shaps)
     num_subject = X_data.shape[0]
     num_features = X_data.shape[1]
-    for i in range(len(shuffle_all_shaps)):
-        for j in range(num_subject):
-                shap_v = []
-                shap_b = []
-                for k in range(num_features):  
-                    shap_v.append(shuffle_all_shaps[i][j][0][k].values)
-                    shap_b.append(shuffle_all_shaps[i][j][0][k].base_values)
-                shap_values.append(shap_v)
-                shap_base_values.append(shap_b)
-
     shap_values = np.array(shap_values) / np.max(np.abs(shap_values))
     shap_values = shap_values.reshape(-1, num_subject, num_features)
     if not os.path.exists(output_fold):
