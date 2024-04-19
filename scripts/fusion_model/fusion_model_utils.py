@@ -309,6 +309,12 @@ def train_xgboost_shuffle_feature(X,
     
     mean_shuffle_inner_fold = np.mean(shuffle_inner_fold, axis=0)
     mean_shuffle_outer_fold = np.mean(shuffle_outer_fold, axis=0)
+    
+    # SD for bAcc should be re-calculated
+    shuffle_inner_fold = np.array(shuffle_inner_fold)
+    shuffle_outer_fold = np.array(shuffle_outer_fold)
+    shuffle_inner_fold[:, 0] = (shuffle_inner_fold[:, 1] + shuffle_inner_fold[:, 2]) / 2
+    shuffle_outer_fold[:, 0] = (shuffle_outer_fold[:, 1] + shuffle_outer_fold[:, 2]) / 2
 
     std_shuffle_inner_fold = np.std(shuffle_inner_fold, axis=0)
     std_shuffle_outer_fold = np.std(shuffle_outer_fold, axis=0)
