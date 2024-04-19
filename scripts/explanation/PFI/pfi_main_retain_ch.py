@@ -83,14 +83,14 @@ def retain_importance(model, X_val_test, y, adj_test, num_iterations=1):
 
 
 from sklearn.metrics import accuracy_score
-k_fold_all_importance = []
 
-all_subjects_shap = []
+
 
 def model_predict(model, X):
     return model.predict(X).argmax(axis=1)  # Modify according to your model's output
 
 for v_itr in range(4,14):
+    k_fold_all_importance = []
     for k_fold in range(0, 5):
         all_importance = []
         for subject in range(64):
@@ -114,6 +114,6 @@ for v_itr in range(4,14):
         np_all_importance = np.array(all_importance)
 
         k_fold_all_importance.append(np_all_importance)
-np_k_fold_all_importance = np.array(k_fold_all_importance)
+    np_k_fold_all_importance = np.array(k_fold_all_importance)
 
-np.save(f'results/gnn_transformer/prognosis_mix_hb/pretreatment_response/ten_itr_retain_single_ch_performance.npy', np_k_fold_all_importance)
+    np.save(f'results/gnn_transformer/prognosis_mix_hb/pretreatment_response/ten_itr_retain_single_ch_performance_v{v_itr}.npy', np_k_fold_all_importance)

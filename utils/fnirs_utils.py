@@ -876,7 +876,7 @@ def print_md_table_val_test(model_name, test_result, val_result, print_table_hea
         
 
 
-def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table_header=True):
+def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table_header=True, already_balanced_accuracy=False):
     if print_table_header:
         print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
         print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
@@ -888,8 +888,9 @@ def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table
     print(f'| {model_name}   |', end='')
     test_result = np.array(test_result)
     val_result = np.array(val_result)
-    test_result[0] = (test_result[1] + test_result[2]) / 2
-    val_result[0] = (val_result[1] + val_result[2]) / 2
+    if not already_balanced_accuracy:
+        test_result[0] = (test_result[1] + test_result[2]) / 2
+        val_result[0] = (val_result[1] + val_result[2]) / 2
     for val in test_result:
         print(f' {val*100:.4f}  |', end='')
     for val in val_result:
