@@ -361,13 +361,14 @@ class Classifier_GNN_Transformer():
 
         self.output_directory = output_directory
         self.callbacks = callbacks
-        self.epochs = epochs
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         params = info['parameter']
+        self.epochs = params['epochs'] if params.get('epochs') else epochs 
+
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128

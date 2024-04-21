@@ -16,6 +16,7 @@ nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv -
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_remission --msg test > /dev/null 2>&1 &
 nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_remission --msg test > /dev/null 2>&1 &
 
+nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_frontal --msg loocv_v0 > /dev/null 2>&1 &
 
 ./response_prediction.sh --model fusion_xgboost --validation loocv --config fusion_pretreatment_response --msg test
 ```
