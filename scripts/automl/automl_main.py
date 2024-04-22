@@ -42,17 +42,21 @@ print(count)
 current_itr = len(count)-1
 print(f"len(count): {current_itr}")
 
-# check if the itr_{current_itr} have all LOO_63 and 5 fold
-for i in count:
-    if not i[7:9].isdigit():
-        itr = int(i[7])
-    else:
-        itr = int(i[7:9])
-    if itr == current_itr:
-        print(i)
-        cuurent_itr_para = i
-        
-res = check_have_enough_files(run_path, cuurent_itr_para)
+# if no loocv_v0 .... no need to check just run loocv_v0
+if current_itr != -1:
+    # check if the itr_{current_itr} have all LOO_63 and 5 fold
+    for i in count:
+        if not i[7:9].isdigit():
+            itr = int(i[7])
+        else:
+            itr = int(i[7:9])
+        if itr == current_itr:
+            print(i)
+            cuurent_itr_para = i
+            
+    res = check_have_enough_files(run_path, cuurent_itr_para)
+else: 
+    res = True 
 
 if res: 
     run_itr = f"loocv_v{current_itr+1}"
