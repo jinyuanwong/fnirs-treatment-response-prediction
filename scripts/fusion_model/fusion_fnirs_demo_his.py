@@ -60,7 +60,6 @@ pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:])
 pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :1], pro_pyschiatry[:, 2:]), axis=1) # delete Current psychiatric comorbidities — Binary because already have Current psychiatric comorbidities — Coded
 pro_HAMD_score = process_with_nan_using_imputation_zscore(HAMD_score)
 pro_demographic = process_with_nan_using_imputation_zscore(demographic)
-
 K_FOLD = 5
 MMDR_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR'
 fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
@@ -70,7 +69,8 @@ Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
 data_name = 'fNIRS_demo_his_metrics'
-X_data = np.concatenate((pro_pyschiatry, pro_HAMD_score[:, -1], pro_demographic, fnirs_feature), axis=1)
+
+X_data = np.concatenate((pro_pyschiatry[:, :8], pro_HAMD_score[:, -1:], pro_demographic, fnirs_feature), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
                                                   Y, 
