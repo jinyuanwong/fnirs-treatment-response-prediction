@@ -76,7 +76,7 @@ shuffle_all_shaps = train_xgboost_shuffle_feature(X_data,
                                                   Y, 
                                                   model_name='XGBoost',
                                                   num_shuffle=10,  #10
-                                                  random_seed=1025,
+                                                  random_seed=1026,
                                                   title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
