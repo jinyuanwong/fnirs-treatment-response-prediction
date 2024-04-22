@@ -70,7 +70,7 @@ Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 # repeat to see if seed is working 
 data_name = 'fNIRS_demo_his_metrics'
 
-X_data = np.concatenate((pro_pyschiatry[:, :8], pro_HAMD_score[:, -1:], pro_demographic, fnirs_feature), axis=1)
+X_data = np.concatenate((pro_pyschiatry[:, :8], pro_demographic, fnirs_feature), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
                                                   Y, 
