@@ -63,7 +63,6 @@ pro_demographic = process_with_nan_using_imputation_zscore(demographic)
 K_FOLD = 5
 MMDR_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR'
 fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
-fnirs_feature = derive_average_MMDR_score(MMDR_path) # np.mean(np.load(MMDR_path + '/y_pred_loocv_v4.npy').reshape(-1, K_FOLD, 2), axis=1)[:, 1:]
 
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 

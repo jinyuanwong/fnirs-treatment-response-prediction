@@ -208,9 +208,10 @@ def train_xgboost_shuffle_feature(X,
         original_indices = [shuffled_indices.tolist().index(i) for i in range(X.shape[1])]
         Y_tmp_shuffled = Y
         
-        if best_params_xgboost is not None:
+        if best_params_xgboost is None:
             best_params_xgboost = get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc(X_tmp_shuffled, Y_tmp_shuffled, num_evals=num_evals, random_seed=ten_shuffle_seed[shuffle_i])
-            model_dict['XGBoost'] = XGBClassifier(**best_params_xgboost)               
+        
+        model_dict['XGBoost'] = XGBClassifier(**best_params_xgboost)               
 
         # for model_name, model in models.items():
         # model_name = 'XGBoost'
