@@ -56,35 +56,59 @@ demographic = read_demographic(fold_path)
 
 pro_base_T2_SDS_CGI = process_with_nan_using_imputation_zscore(base_T2_SDS_CGI)
 pro_pyschiatry = process_with_nan_using_imputation_zscore(pyschiatry)
-pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:]), axis=1) # must remove the -3rd column, because its existen will cause nan value of that column
+pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:]), axis=1) # must remove the -3rd column, because its existen will cause nan value of that column which is On antidpressant(s) ONLY
+# pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :1], pro_pyschiatry[:, 2:]), axis=1) # delete Current psychiatric comorbidities — Binary because already have Current psychiatric comorbidities — Coded
 pro_HAMD_score = process_with_nan_using_imputation_zscore(HAMD_score)
 pro_demographic = process_with_nan_using_imputation_zscore(demographic)
-
+K_FOLD = 5
+MMDR_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR'
 fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
+
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
 data_name = 'his_metrics'
-X_data = pro_pyschiatry[:,:9] # np.concatenate((pro_pyschiatry[:,:9], fnirs_feature), axis=1)
+
+X_data = pro_pyschiatry[:, :9] #np.concatenate((pro_pyschiatry[:, :9], pro_demographic, fnirs_feature), axis=1)
 
 shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
                                                   Y, 
                                                   model_name='XGBoost',
-                                                  num_shuffle=10, 
-                                                  random_seed=1024,
-                                                  title=f"Treatment Response Prediction (fNIRS + psychiatric history feature) ", 
+                                                  num_shuffle=10,  #10
+                                                  random_seed=1026,
+                                                  title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
                                                   is_computing_shap=True,
-                                                  best_params_xgboost=True,
-                                                  num_evals=150,
+                                                  best_params_xgboost=None,
+                                                  num_evals=150,#150
                                                   loocv_metrics_save_file_name= data_name + '.npy')
 
 save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
-# End timing
-end_time = time.time()
 
-# Calculate total time taken
-total_time = end_time - start_time
-print(f"The program took {total_time} seconds to run.")
 # nohup python scripts/fusion_model/fusion_his.py > results/his.log 2>&1 &
+
+# data_name = 'his_metrics'
+# X_data = pro_pyschiatry[:,:9] # np.concatenate((pro_pyschiatry[:,:9], fnirs_feature), axis=1)
+
+# shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
+#                                                   Y, 
+#                                                   model_name='XGBoost',
+#                                                   num_shuffle=10, 
+#                                                   random_seed=1024,
+#                                                   title=f"Treatment Response Prediction (fNIRS + psychiatric history feature) ", 
+#                                                   is_plotting_avg_auc=True, 
+#                                                   is_shuffling=True, 
+#                                                   is_computing_shap=True,
+#                                                   best_params_xgboost=True,
+#                                                   num_evals=150,
+#                                                   loocv_metrics_save_file_name= data_name + '.npy')
+
+# save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
+# # End timing
+# end_time = time.time()
+
+# # Calculate total time taken
+# total_time = end_time - start_time
+# print(f"The program took {total_time} seconds to run.")
+# # nohup python scripts/fusion_model/fusion_his.py > results/his.log 2>&1 &
