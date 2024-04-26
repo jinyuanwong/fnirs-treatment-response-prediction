@@ -287,3 +287,88 @@ def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc(X, y, num_e
     # skf_metrics.append([accuracies, sensitivities, specificities, auc_scores])
     # loocv_metrics.append([overall_acc, overall_sensitivity, overall_specificity, overall_auc])
     return best_params
+
+def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective(X, y, num_evals=200, random_seed=1024):
+    # np.random.seed(random_seed)
+    # Define the objective function
+    def objective(params):
+        # Initialize classifier
+        clf = XGBClassifier(**params)
+        
+        # Setup StratifiedKFold
+        skf = StratifiedKFold(n_splits=5)
+        loo = LeaveOneOut()
+        
+        # List to store the AUC scores for each validation scheme
+        auc_scores_skf = []
+        recall_scores_skf = []    
+        balanced_accuracy_scores_skf = []
+        all_pred_probas = []
+        
+
+
+        # Leave-One-Out CV
+        for train_index, test_index in loo.split(X):
+            X_train_fold, X_test_fold = X[train_index], X[test_index]
+            y_train_fold, y_test_fold = y[train_index], y[test_index]            
+            clf_fold = clone(clf)
+            clf_fold.fit(X_train_fold, y_train_fold)
+            preds = clf_fold.predict_proba(X_test_fold)[:,1]
+            # Stratified 5-Fold CV
+            for train_index, val_index in skf.split(X_train_fold, y_train_fold):
+                inner_X_train_fold, X_val_fold = X_train_fold[train_index], X_train_fold[val_index]
+                inner_y_train_fold, y_val_fold = y_train_fold[train_index], y_train_fold[val_index]
+                
+                clf_fold = clone(clf)
+                clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
+                preds = clf_fold.predict_proba(X_val_fold)[:,1]
+                fold_recall = f1_score(y_val_fold, preds>0.5)
+                recall_scores_skf.append(fold_recall)
+                balanced_accuracy_scores_skf.append(balanced_accuracy_score(y_val_fold, preds>0.5))
+            
+
+
+        mean_recall_skf = np.mean(recall_scores_skf) * 0.25
+        
+        mean_bacc_skf = np.mean(balanced_accuracy_scores_skf) * 0.25
+
+        combined_recall = mean_recall_skf + mean_bacc_skf
+
+        return {'loss': -combined_recall, 'status': STATUS_OK}
+
+
+    # loocv_metrics = []
+    # skf_metrics = []
+    # Define the search space
+    space = {
+        'learning_rate': hp.loguniform('learning_rate', -6.907755278982137, 0), # loguniform for 0.001 to 1
+        'min_child_weight': hp.uniform('min_child_weight', 0.7, 2.5),
+        'max_depth': hp.choice('max_depth', range(5, 18)),
+        'gamma': hp.uniform('gamma', 0.0, 3.0),
+        'lambda': hp.uniform('lambda', 0.0, 4.0),
+        'alpha': hp.uniform('alpha', 0.0, 3.0),
+        'n_estimators': hp.choice('n_estimators', range(60, 301)),
+        'scale_pos_weight': hp.loguniform('scale_pos_weight', np.log(1), np.log(1e8)),
+    }
+
+
+    # Setup Trials
+    trials = Trials()
+
+    # Run optimization
+    best = fmin(
+        fn=objective,
+        space=space,
+        algo=tpe.suggest,
+        max_evals=num_evals,
+        trials=trials,
+        rstate=np.random.default_rng(random_seed)
+    )
+
+    print("Best hyperparameters:", best)
+    best_params = space_eval(space, best)
+    # accuracies, sensitivities, specificities, auc_scores = skf_train(best_params)
+    # overall_acc, overall_sensitivity, overall_specificity, overall_auc = loocv_train(best_params)
+    # skf_metrics.append([accuracies, sensitivities, specificities, auc_scores])
+    # loocv_metrics.append([overall_acc, overall_sensitivity, overall_specificity, overall_auc])
+    return best_params

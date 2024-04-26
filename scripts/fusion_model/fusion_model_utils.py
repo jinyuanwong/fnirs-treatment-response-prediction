@@ -321,6 +321,191 @@ def train_xgboost_shuffle_feature(X,
     if is_computing_shap: return shuffle_all_shaps
     else: return None
 
+def train_xgboost_shuffle_feature_objective(X, 
+                                  Y, 
+                                  model_name='XGBoost',
+                                  num_shuffle=2, 
+                                  random_seed=1024,
+                                  msg="", 
+                                  title="", 
+                                  is_plotting_avg_auc=False, 
+                                  is_shuffling=True,
+                                  is_computing_shap=True,
+                                  best_params_xgboost=None,
+                                  num_evals=10,
+                                  loocv_metrics_save_file_name='fNIRS_demo_his_metrics.npy'):
+    scale = 1e6# for scale in [1e6]: # [1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]:
+    
+
+    model_dict = {
+        'XGBoost': XGBClassifier(scale_pos_weight=scale, eval_metric='logloss'),
+        'CatBoost': CatBoostClassifier(scale_pos_weight=5, verbose=0),
+    }
+    np.random.seed(random_seed)
+    ten_shuffle_seed = np.random.randint(0, 10000, num_shuffle)
+    
+    
+
+    def specificity_score(y_true, y_pred):
+        tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+        specificity = tn / (tn + fp)
+        return specificity
+
+    def get_f1_score(y_true, y_pred):
+        return f1_score(y_true, y_pred, average='weighted')
+    
+    # Create a scorer for specificity
+    specificity_scorer = make_scorer(specificity_score)
+    get_f1_scorer = make_scorer(get_f1_score)
+
+    scoring = {'balanced_accuracy': make_scorer(balanced_accuracy_score),
+                'sensitivity': make_scorer(recall_score),
+                'specificity': specificity_scorer,
+                'f1_score': get_f1_scorer,
+                'AUC': make_scorer(roc_auc_score, needs_proba=True)}
+    # Assuming X, Y, and a dictionary of models are already defined
+
+    # Outer loop: Leave-One-Out Cross-Validation (LOOCV)
+    loo = LeaveOneOut()
+
+    fprs, tprs, roc_aucs = [], [], []
+    shuffle_inner_fold = []
+    shuffle_outer_fold = []
+    if is_computing_shap: shuffle_all_shaps = []
+    
+    for shuffle_i in range(num_shuffle):
+     
+        np.random.seed(ten_shuffle_seed[shuffle_i])
+        y_pred_all = []
+        results = {}
+        all_inner_fold = []
+        all_outer_fold = []
+        all_shaps = []
+        y_pred_prob_all = []
+
+        # Shuffle X_tmp and Y_tmp
+        if is_shuffling:
+            shuffled_indices = np.random.permutation(X.shape[1])
+        else:
+            shuffled_indices = np.arange(X.shape[1])
+        print(" shuffled_indices ", shuffled_indices)
+        
+        X_tmp_shuffled = X[:,shuffled_indices]
+        original_indices = [shuffled_indices.tolist().index(i) for i in range(X.shape[1])]
+        Y_tmp_shuffled = Y
+        
+        if best_params_xgboost is None:
+            get_best_params_xgboost = get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective(X_tmp_shuffled, Y_tmp_shuffled, num_evals=num_evals, random_seed=ten_shuffle_seed[shuffle_i])
+        else:
+            get_best_params_xgboost = best_params_xgboost
+            
+        model_dict['XGBoost'] = XGBClassifier(**get_best_params_xgboost)               
+
+        # for model_name, model in models.items():
+        # model_name = 'XGBoost'
+        model = model_dict[model_name]
+        
+
+        for train_index, test_index in loo.split(X_tmp_shuffled):
+            # Splitting the dataset for this LOOCV iteration
+            X_train, X_test = X_tmp_shuffled[train_index], X_tmp_shuffled[test_index]
+            Y_train, Y_test = Y_tmp_shuffled[train_index], Y_tmp_shuffled[test_index]
+            stratified_kfold = StratifiedKFold(n_splits=5)
+            cv_results = cross_validate(model, X_train, Y_train, cv=stratified_kfold, scoring=scoring, return_train_score=False)
+        
+            # Calculate mean scores
+            mean_accuracy = cv_results['test_balanced_accuracy'].mean()
+            mean_sensitivity = cv_results['test_sensitivity'].mean()
+            mean_specificity = cv_results['test_specificity'].mean()
+            mean_AUC = cv_results['test_AUC'].mean()
+            
+            # Store the results
+            all_inner_fold.append([mean_accuracy, mean_sensitivity, mean_specificity, mean_AUC])
+
+            model.fit(X_train, Y_train)
+            Y_pred = model.predict(X_test)
+
+            probabilities = model.predict_proba(X_test)
+            y_pred_prob_all.append(probabilities)
+            y_pred_all.append(Y_pred)
+            
+            if is_computing_shap:
+                # Create an explainer object
+                explainer = shap.TreeExplainer(model)
+                # Calculate SHAP values for all samples
+                shap_values = explainer(X_test)  # result is {values - (1, feature_num), base_values, data}
+                shap_values = shap_values.values[0, original_indices]
+                all_shaps.append(shap_values)
+
+            # Assuming X, Y, and a trained XGBoost model are already defined        
+
+        y_pred_ind = []
+        for i in range(len(y_pred_all)):
+            y_pred_ind.append(y_pred_all[i][0])
+
+
+        
+        f1 = f1_score(Y_tmp_shuffled, y_pred_ind, average='weighted')
+        accuracy = accuracy_score(Y_tmp_shuffled, y_pred_ind)
+        # Calculate sensitivity (recall)
+        sensitivity = recall_score(Y_tmp_shuffled, y_pred_ind)  # This is already done in your snippet
+        # Calculate specificity
+        specificity = specificity_score(Y_tmp_shuffled, y_pred_ind)
+        np_y_pred_prob_all = np.array([i[0] for i in y_pred_prob_all])
+
+        fpr, tpr, _ = roc_curve(Y_tmp_shuffled, np_y_pred_prob_all[:, 1])
+        roc_auc = auc(fpr, tpr)
+        
+        all_outer_fold = [accuracy, sensitivity, specificity, roc_auc]
+        shuffle_outer_fold.append(all_outer_fold)
+        print(f"num_of_shuffle {shuffle_i} scaled by {scale} Accuracy: {accuracy} Sensitivity is {sensitivity} Specificity is {specificity} AUC is {roc_auc}")
+
+        fprs.append(fpr)
+        tprs.append(tpr)
+        roc_aucs.append(roc_auc)
+        # plt.plot(fpr, tpr, lw=2, label='ROC curve (area = %0.2f) } - random - %d' % (roc_auc, shuffle_i) + msg)
+
+        all_inner_fold = np.array(all_inner_fold)
+        all_inner_fold_mean = np.mean(all_inner_fold, axis=0)
+        shuffle_inner_fold.append(all_inner_fold_mean)
+        print(all_inner_fold_mean)
+        
+
+        if is_computing_shap: shuffle_all_shaps.append(all_shaps)
+        
+    # Plotting the ROC curve
+    
+    if is_plotting_avg_auc:
+        plt.figure(figsize=(10, 10))
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('1 - Specificity')
+        plt.ylabel('Sensitivity')
+        plt.title(title)
+        plt.legend(loc="lower right")
+        plot_avg_auc(fprs, tprs, roc_aucs, title)
+        loocv_metrics = {'fprs': fprs, 'tprs': tprs, 'roc_aucs': roc_aucs}
+        np.save('results/' + loocv_metrics_save_file_name, loocv_metrics)
+    # plt.show()
+    
+    # SD for bAcc should be re-calculated
+    shuffle_inner_fold = np.array(shuffle_inner_fold)
+    shuffle_outer_fold = np.array(shuffle_outer_fold)
+    shuffle_inner_fold[:, 0] = (shuffle_inner_fold[:, 1] + shuffle_inner_fold[:, 2]) / 2
+    shuffle_outer_fold[:, 0] = (shuffle_outer_fold[:, 1] + shuffle_outer_fold[:, 2]) / 2
+
+    mean_shuffle_inner_fold = np.mean(shuffle_inner_fold, axis=0)
+    mean_shuffle_outer_fold = np.mean(shuffle_outer_fold, axis=0)
+    
+    std_shuffle_inner_fold = np.std(shuffle_inner_fold, axis=0)
+    std_shuffle_outer_fold = np.std(shuffle_outer_fold, axis=0)
+    
+    print_md_table_val_test_AUC('Mean ' + model_name, mean_shuffle_outer_fold, mean_shuffle_inner_fold, already_balanced_accuracy=True)
+    print_md_table_val_test_AUC('SD ' + model_name, std_shuffle_outer_fold, std_shuffle_inner_fold, print_table_header=False, already_balanced_accuracy=True)
+
+    if is_computing_shap: return shuffle_all_shaps
+    else: return None
 
 def save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_fnirs_demographic_pyschiatry.npy'):
     shap_values = np.array(shuffle_all_shaps)
