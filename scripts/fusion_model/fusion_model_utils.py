@@ -16,7 +16,7 @@ from sklearn.model_selection import KFold, cross_val_predict
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import shap
-from utils.hyperopt_utils import get_best_hyperparameters, get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc
+from utils.hyperopt_utils import get_best_hyperparameters, get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc, get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective
 from utils.fnirs_utils import print_md_table_val_test_AUC
 
 def derive_average_MMDR_score(input_fold, K_FOLD=5):

@@ -40,7 +40,7 @@ from scripts.fusion_model.fusion_model_utils import read_pychiatry
 from scripts.fusion_model.fusion_model_utils import read_HAMD_score
 from scripts.fusion_model.fusion_model_utils import read_demographic
 from scripts.fusion_model.fusion_model_utils import plot_avg_auc
-from scripts.fusion_model.fusion_model_utils import train_xgboost_shuffle_feature 
+from scripts.fusion_model.fusion_model_utils import train_xgboost_shuffle_feature_objective 
 from scripts.fusion_model.fusion_model_utils import save_shap
 import time
 start_time = time.time()
@@ -67,11 +67,11 @@ fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
-data_name = 'fNIRS_demo_his_metrics'
+data_name = 'fNIRS_demo_his_metrics_objective'
 
 X_data = np.concatenate((pro_pyschiatry[:, :9], pro_demographic, fnirs_feature), axis=1)
 
-shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
+shuffle_all_shaps = train_xgboost_shuffle_feature_objective(X_data, 
                                                   Y, 
                                                   model_name='XGBoost',
                                                   num_shuffle=10,  #10
@@ -80,10 +80,10 @@ shuffle_all_shaps = train_xgboost_shuffle_feature(X_data,
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
                                                   is_computing_shap=True,
-                                                  best_params_xgboost=True,
+                                                  best_params_xgboost=None,
                                                   num_evals=150,#150
                                                   loocv_metrics_save_file_name= data_name + '.npy')
 
 save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
 
-# nohup python scripts/fusion_model/fusion_fnirs_demo_his.py > results/fnirs_demo_his.log 2>&1 &
+# nohup python scripts/fusion_model/fusion_fnirs_demo_his.py > results/fnirs_demo_his_objective.log 2>&1 &
