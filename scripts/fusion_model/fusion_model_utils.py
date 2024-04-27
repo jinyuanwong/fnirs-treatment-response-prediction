@@ -340,6 +340,7 @@ def train_xgboost_shuffle_feature_objective(X,
     model_dict = {
         'XGBoost': XGBClassifier(scale_pos_weight=scale, eval_metric='logloss'),
         'CatBoost': CatBoostClassifier(scale_pos_weight=5, verbose=0),
+        'SVM': SVC(kernel='poly', probability=True),
     }
     np.random.seed(random_seed)
     ten_shuffle_seed = np.random.randint(0, 10000, num_shuffle)
@@ -395,11 +396,14 @@ def train_xgboost_shuffle_feature_objective(X,
         Y_tmp_shuffled = Y
         
         if best_params_xgboost is None:
-            get_best_params_xgboost = get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective(X_tmp_shuffled, Y_tmp_shuffled, num_evals=num_evals, random_seed=ten_shuffle_seed[shuffle_i])
+            get_best_params_xgboost = get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective(X_tmp_shuffled, Y_tmp_shuffled, model=model_name, num_evals=num_evals, random_seed=ten_shuffle_seed[shuffle_i])
         else:
             get_best_params_xgboost = best_params_xgboost
             
-        model_dict['XGBoost'] = XGBClassifier(**get_best_params_xgboost)               
+        if model_name == 'SVM':
+            model_dict[model_name] = SVC(**get_best_params_xgboost)
+        elif model_name == 'XGBoost':    
+            model_dict[model_name] = XGBClassifier(**get_best_params_xgboost)               
 
         # for model_name, model in models.items():
         # model_name = 'XGBoost'

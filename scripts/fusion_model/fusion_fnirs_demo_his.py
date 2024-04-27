@@ -73,15 +73,15 @@ X_data = np.concatenate((pro_pyschiatry[:, :9], pro_demographic, fnirs_feature),
 
 shuffle_all_shaps = train_xgboost_shuffle_feature_objective(X_data, 
                                                   Y, 
-                                                  model_name='XGBoost',
+                                                  model_name='SVM',
                                                   num_shuffle=10,  #10
                                                   random_seed=1025,
                                                   title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
-                                                  is_computing_shap=True,
+                                                  is_computing_shap=False,
                                                   best_params_xgboost=None,
-                                                  num_evals=150,#150
+                                                  num_evals=500,#150
                                                   loocv_metrics_save_file_name= data_name + '.npy')
 
 save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
