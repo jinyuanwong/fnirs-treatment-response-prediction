@@ -52,7 +52,47 @@ VPC_indices = location_to_index(VPC_location)
 MPC_indices = location_to_index(MPC_location)
 
 
+def get_nine_region_data(data):
+    def get_channel_index_of_region(ch_name):
+        return np.array([int(ch_name[1:])-1 for ch_name in ch_name])
 
+    # Posterior superior frontal cortex
+    # PSFC_ch = ['C9', 'C10', 'C20', 'C21', 'C1', 'C2', 'C11', 'C12'] # 
+    left_PSFC_location = ['C9', 'C10', 'C20', 'C21']
+    right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
+
+    # Dorsolateral prefrontal cortex
+    # DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+    left_DPC_location = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29']
+    right_DPC_location = ['C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+
+    #Superior temporal gyrus
+    # STG_ch = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44', 'C30', 'C31', 'C41', 'C42', 'C51', 'Cnum_of_region'] #
+    left_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
+    right_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+
+    # Ventrolateral prefrontal cortex
+    # VPC_ch = ['C34', 'C35', 'C45', 'C46','C39', 'C40', 'C49', 'C50'] # 
+    left_VPC_location = ['C34', 'C35', 'C45', 'C46']
+    right_VPC_location = ['C39', 'C40', 'C49', 'C50']
+
+    # Medial prefrontal cortex
+    MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
+    
+
+    all_region_location = [left_PSFC_location, right_PSFC_location, left_DPC_location, right_DPC_location, left_STG_location, right_STG_location, left_VPC_location, right_VPC_location, MPC_location]
+    all_region_location = [get_channel_index_of_region(i) for i in all_region_location]
+    print(len(all_region_location))
+    print(all_region_location)
+
+
+    nine_region_data = np.zeros((data.shape[0], len(all_region_location), data.shape[2]))
+
+    for i, region_ch in enumerate(all_region_location):
+        region_data = data[:,region_ch,:]
+        region_data = np.mean(region_data, axis=1)
+        nine_region_data[:,i,:] = region_data
+    return nine_region_data
 
 def modify_char_position(cbar):
     
@@ -64,25 +104,16 @@ def modify_char_position(cbar):
 
     cbar.ax.set_position([cbar_pos.x0, new_y, cbar_pos.width, new_height])
 
-def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end_index, using_fdr):
-
-
+def compute_p_value_effect_size(data, label, task_start_index, task_end_index):
+    data_shape = data.shape
     responders = data[label==1]
     nonresponders = data[label==0]
-
-    all_p = np.zeros((3,52))
-    all_effect_size = np.zeros((3,52))
-    colors = ['red','white']
-
-    cmap = LinearSegmentedColormap.from_list('RedToWhite', colors, N=256)
-    title = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
-    plt.figure(figsize=(24,6))
-    plt.subplot(2, 1, 1)  # 1 row, 2 columns, select the 1st subplot
-    plt.title('Nonresponders vs. Responders (P-value)', fontsize=20, fontweight='bold')
-    for channel in range(52):
+    all_p = np.zeros((3,data_shape[2]))
+    all_effect_size = np.zeros((3,data_shape[2]))
+    
+    for channel in range(data_shape[2]):
         channel_p = []
         channel_effect_size = []
-
         responders_task_change = np.mean(responders[:,task_end_index:, channel], axis=1) - np.mean(responders[:,0:task_start_index, channel], axis=1)
         nonresponders_task_change = np.mean(nonresponders[:,task_end_index:, channel], axis=1) - np.mean(nonresponders[:,0:task_start_index, channel], axis=1)
 
@@ -109,127 +140,15 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
         # add the FDR here 
         all_p[:,channel] = channel_p
         all_effect_size[:,channel] = channel_effect_size
-            
-        #     print(f'{p_value} | ', end='')
-        # print()
         
-        # 使用指数型的p_value颜色变化
+    return all_p, all_effect_size
 
-    for spine in plt.gca().spines.values():
-        spine.set_linewidth(0.4)
-    
-
-
-
-    # Create the figure and axes
-    # plt.figure(figsize=(25,15))
-
-    # Define the height at which the markers will be placed (above the heatmap)
-    marker_height = all_p.shape[0]  # You can adjust this as needed
-
-
-    for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, MPC_indices], [PSFC_color, DPC_color, STG_color, VPC_color, MPC_color]):
-        for index in indices:
-            # Fill a small rectangle (vertical span) above each channel index
-            # Adjust the 'width' to control the span width of each colored area
-            width = 1  # Adjust this width to your preference
-            plt.axvspan(index, index+1, ymin=0.8, ymax=1, color=color, zorder=1)
-
-
-    # plt.axvspan(1, 2, ymin=0.85, ymax=1, color='red', zorder=1)
-
-    # print(marker_height/(marker_height+1))
-    # # Draw the color markers first
-    # plt.fill_between(x=np.arange(25, 53), y1=marker_height+0.25, y2=marker_height+1, color='purple', label='Rear Brain')
-
-    # 在 marker_height 位置添加一条黑线
-    plt.axhline(y=marker_height+0.05, color='black', linewidth=0.4)
-    plt.axvline(x=1, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-    plt.axvline(x=53, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-    # plt.axvline(x=53, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-
-
-    # Adjust the y-axis limits to accommodate the markers
-    plt.ylim([0, marker_height+1])
-
-    if using_fdr:
-        fdr_p = np.zeros(all_p.shape)
-        for i in range(all_p.shape[0]):
-            tmp = all_p[i]
-            _, adjusted_all_p, _, _ = multipletests(tmp, alpha=0.05, method='fdr_bh')
-            fdr_p[i] = adjusted_all_p
-        all_p = fdr_p
-    # Now, plot the heatmap on top of the color markers
-    im = plt.imshow(all_p, norm=LogNorm(vmin=0.001, vmax=0.05), cmap=cmap, extent=[1,53, 0, marker_height])
-
-    ax = plt.gca()
-    # print(f'all_p: {all_p}')
-    cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.001, 0.01, 0.05])
-    cbar.ax.set_yticklabels(['0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
-
-    # cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.00001, 0.0001, 0.001, 0.01, 0.05])
-    # cbar.ax.set_yticklabels(['0.00001', '0.0001', '0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
-    # 获取颜色条的位置信息
-    
-
-    modify_char_position(cbar)
-    # cbar.ax.set_yticklabels(['0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
-    #  设置颜色条的刻度标签为科学计数法格式
-    # cbar.ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1e'))
-
-    # 定义一个函数，用于格式化刻度标签
-    def fmt(x, pos):
-        if x == 0:  # 避免对0取对数
-            return '0'
-        if x == 0.05:
-            return r'$5 \times 10^{-2}$'
-        return r'$10^{%d}$' % np.round(np.log10(x))
-
-    # 使用FuncFormatter
-    # cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(fmt))
-
-    # Set the ticks and labels as required
-    plt.xticks([ i + 0.5 for i in np.arange(1,53)])
-    plt.gca().set_xticklabels(np.arange(1,53), fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
-    plt.yticks([0.5,1.5,2.5], title, fontsize=16, fontweight='bold')
-
-    # 隐藏上边框
-    plt.gca().spines['top'].set_visible(False)
-
-    plt.gca().spines['left'].set_visible(False)
-
-    plt.gca().spines['right'].set_visible(False)
-
-
-    # 为其他三个边框设置线宽，颜色
-    for spine_position, spine in plt.gca().spines.items():
-        if spine_position in ['left', 'right', 'bottom']:
-            spine.set_linewidth(0.4)
-            spine.set_color('black')
-            
-            
-    # Add colorbar and other plot settings as required
-    # plt.colorbar(shrink=0.2)
-
-
-
-
-    plt.xlim([1, 53.01])
-    # Show the plot
-    # plt.show()
-    
-    plt.subplot(2, 1, 2)  # 1 row, 2 columns, select the 1st subplot
+def plot_pretreatment_analysis(ax, data, data_shape, hb_type_name):
     plt.title('Nonresponders vs. Responders (Effect size)', fontsize=20, fontweight='bold')
+    y_label_name = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
 
-    for indices, color in zip([PSFC_indices, DPC_indices, STG_indices, VPC_indices, MPC_indices], [PSFC_color, DPC_color, STG_color, VPC_color, MPC_color]):
-        for index in indices:
-            # Fill a small rectangle (vertical span) above each channel index
-            # Adjust the 'width' to control the span width of each colored area
-            width = 1  # Adjust this width to your preference
-            plt.axvspan(index, index+1, ymin=0.8, ymax=1, color=color, zorder=1)
-
-
-    # plt.axvspan(1, 2, ymin=0.85, ymax=1, color='red', zorder=1)
+    for indices, color in zip(np.arange(1, 1+data_shape[2]), [PSFC_color, PSFC_color, DPC_color, DPC_color, STG_color, STG_color, VPC_color, VPC_color, MPC_color]):
+        plt.axvspan(indices, indices+1, ymin=0.8, ymax=1, color=color, zorder=1)
 
     print(marker_height/(marker_height+1))
     # # Draw the color markers first
@@ -238,7 +157,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # 在 marker_height 位置添加一条黑线
     plt.axhline(y=marker_height+0.05, color='black', linewidth=0.4)
     plt.axvline(x=1, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-    plt.axvline(x=53, ymin=0, ymax=0.8, color='black', linewidth=0.4)
+    plt.axvline(x=data_shape[2]+1, ymin=0, ymax=0.8, color='black', linewidth=0.4)
     # plt.axvline(x=53, ymin=0, ymax=0.8, color='black', linewidth=0.4)
 
 
@@ -250,7 +169,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
 
     # Create the custom color map
     cmap_effect_size = LinearSegmentedColormap.from_list('CustomColorMap', colors, N=256)
-    im = plt.imshow(all_effect_size, vmin=-0.5, vmax=0.5, cmap=cmap_effect_size, extent=[1,53, 0, marker_height])
+    im = plt.imshow(data, vmin=-0.5, vmax=0.5, cmap=cmap_effect_size, extent=[1,data_shape[2]+1, 0, marker_height])
 
     ax = plt.gca()
 
@@ -258,11 +177,10 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     cbar.ax.set_yticklabels(['-0.5', '-0.25', '0', '0.25', '0.5'], fontsize=12, fontweight='bold')
     modify_char_position(cbar)
 
-
     # Set the ticks and labels as required
-    plt.xticks([ i + 0.5 for i in [1, 26, 52]])
-    plt.gca().set_xticklabels([1, 26, 52], fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
-    plt.yticks([0.5,1.5,2.5], title, fontsize=16, fontweight='bold')
+    plt.xticks([ i + 0.5 for i in [1, data_shape[2]//2, data_shape[2]]])
+    plt.gca().set_xticklabels([1, data_shape[2]//2, data_shape[2]], fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
+    plt.yticks([0.5,1.5,2.5], y_label_name, fontsize=16, fontweight='bold')
 
     # 隐藏上边框
     plt.gca().spines['top'].set_visible(False)
@@ -282,11 +200,24 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     # Add colorbar and other plot settings as required
     # plt.colorbar(shrink=0.2)
 
-    plt.xlim([1, 53.01])
-    # Show the plot
-    using_fdr_flag = 'w_fdr' if using_fdr else 'wo_fdr'
-    plt.savefig(output_fold+f'/{fig_name}_{using_fdr_flag}.png')
+    plt.xlim([1, 0.01+data_shape[2]])
+    
+def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end_index, using_fdr):
+    data_shape = data.shape
+    
+    p_value, effect_size= compute_p_value_effect_size(data, label, task_start_index, task_end_index)
+    
+    print('p_value: ', p_value) 
+    print('effect_size: ', effect_size)
+    
+    fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+    plot_pretreatment_analysis(axes[0], p_value, data_shape, hb_type_name)
+    plot_pretreatment_analysis(axes[1], effect_size, data_shape, hb_type_name)
     plt.show()
+    
+
+    
+
     
 DATA =  np.load('allData/prognosis_mix_hb/pretreatment_response/hb_data.npy')
 LABEL =  np.load('allData/prognosis_mix_hb/pretreatment_response/label.npy')
@@ -301,6 +232,7 @@ if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 # name_of_input = ['pre_treatment', 'post_treatment', 'pre_minus_post_treatment']
 name_of_input = ['Nonresponders vs. Responders']
+nine_region_name = ['L-PSFC', 'R-PSFC', 'L-DPC', 'R-DPC', 'L-STG', 'R-STG', 'L-VPC', 'R-VPC', 'MPC']
 for fig_name in name_of_input:
     print(fig_name)
     if fig_name =='Nonresponders vs. Responders':
@@ -316,6 +248,8 @@ for fig_name in name_of_input:
             data[i] = (data[i] - np.mean(data[i])) / np.std(data[i])
         return data
     # data = individual_normalization(data)
+    
+    data = get_nine_region_data(data)
     
     HbO = np.transpose(data[...,0::2],(0,2,1))
     # HbO = individual_normalization(HbO)
