@@ -92,6 +92,8 @@ class Classifier_CNN():
         self.info = info
         self.callbacks.append(early_stopping)
         self.useCombinationModel = useCombinationModel
+        self.class_weights = {0: 1,  # weight for class 0
+                 1: 5}  # weight for class 1, assuming this is the minority class
         
         # make sure this model can handle situations like (52, 125), (52,125,2) and (52,125,1)
         # input_shape[-1]>10 is to avoid situation of (52, 125, 2)
@@ -188,14 +190,16 @@ class Classifier_CNN():
                 x=[X_train[:, i, :] for i in range(X_train.shape[1])], y=Y_train,
                 validation_data=([X_val[:, i, :]
                                  for i in range(X_val.shape[1])], Y_val),
-                batch_size=self.batch_size, epochs=self.epochs, verbose=self.verbose, callbacks=self.callbacks)  # validation_split=0.2,
+                batch_size=self.batch_size, epochs=self.epochs, verbose=self.verbose, callbacks=self.callbacks,
+                class_weight=self.class_weights)  # validation_split=0.2,
         else:
             # raise Exception("No yet write the code for useCombinationModel == False")
             hist = self.model.fit(
                 x=X_train[:, :, 0], y=Y_train,
                 validation_data=(
                     X_val[:, :, self.hyperparameters['channel']], Y_val),
-                batch_size=self.batch_size, epochs=self.epochs, verbose=False, callbacks=self.callbacks)  # validation_split=0.2,
+                batch_size=self.batch_size, epochs=self.epochs, verbose=False, callbacks=self.callbacks,
+                class_weight=self.class_weights)  # validation_split=0.2,
         duration = time.time() - start_time
 
         # self.model.save(self.output_directory+'last_model.hdf5')

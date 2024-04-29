@@ -337,10 +337,10 @@ class Classifier_Transformer():
         # random.choice([4, 24])  # random.choice([12, 24, 36])
         output_channel = 4  # random.choice([3, 8, 24]) # 24
         # random.choice([64, 256])# 64 #
-        d_model = 64  # 125# # random.choice([64, 128, 256])
+        d_model = 16  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
         # random.choice([4, 12])  # random.randint(10, 12)
-        n_layers = 12  # random.choice([12, 8, 16])
+        n_layers = 6  # random.choice([12, 8, 16])
         FFN_units = 256  # random.choice([64, 128, 256, 512])  # 512, 64, 128,
         n_heads = 4  # 5  # random.choice([4, 8])  # 2
         #   # random.choice(['relu', 'gelu'])
@@ -352,6 +352,9 @@ class Classifier_Transformer():
         num_of_last_dense = 2  # random.randint(0, 3)
         l2_rate = 0.001
         num_class = 2  # 2
+        self.class_weights = {0: 1,  # weight for class 0
+                 1: 5}  # weight for class 1, assuming this is the minority class
+
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers, warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,
@@ -481,7 +484,8 @@ class Classifier_Transformer():
             epochs=self.epochs,
             callbacks=self.callbacks,
             verbose=True,
-            shuffle=True  # Set shuffle to True
+            shuffle=True,  # Set shuffle to True
+            class_weight=self.class_weights
         )
 
         self.model.load_weights(

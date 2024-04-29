@@ -378,8 +378,6 @@ class Classifier_GNN_Transformer():
         stride_size_2 = (1, 2)
         kernel_size = [kernel_size_1, kernel_size_2]
         stride_size = [stride_size_1, stride_size_2]
-        # random.choice([2, 3, 4, 5, 6, 7, 8]) 6,7 are the best
-        # random.choice([4, 24])  # random.choice([12, 24, 36])
         output_channel = 4  # random.choice([3, 8, 24]) # 24
         # random.choice([64, 256])# 64 #
         d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
@@ -401,6 +399,11 @@ class Classifier_GNN_Transformer():
         l1_rate = parameter['l1_rate']
         l2_rate = parameter['l2_rate']
         num_class = 2  # 2
+        
+        self.class_weights = {0: 1,  # weight for class 0
+                 1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
+
+        
         lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers * lr_factor, warmup_step)
@@ -488,10 +491,6 @@ class Classifier_GNN_Transformer():
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
         start_time = time.time()
 
-        class_weights = {0: 1,  # weight for class 0
-                 1: 5}  # weight for class 1, assuming this is the minority class
-
-        self.class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
         hist = self.model.fit(
             x=[X_train, adj_train],
             y=Y_train,
@@ -501,7 +500,7 @@ class Classifier_GNN_Transformer():
             callbacks=self.callbacks,
             verbose=True,
             shuffle=True,  # Set shuffle to True
-            class_weight=self.class_weights_dict 
+            class_weight=self.class_weights 
         )
 
         self.model.load_weights(

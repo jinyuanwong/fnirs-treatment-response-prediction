@@ -12,14 +12,19 @@ def check_have_enough_files(path, model_para):
                 return False
     return True
 
-model = 'gnn_transformer'
+model = 'gnn_transformer' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer)
 validation = 'loocv'
 config = 'pretreatment_response_cv_5_mix_hb_'
 
 msg = 'loocv_v3'
 
-frontal_path = 'results/gnn_transformer/prognosis_mix_hb/pretreatment_response_frontal'
-temporal_path = 'results/gnn_transformer/prognosis_mix_hb/pretreatment_response_temporal'
+frontal_path = f'results/{model}/prognosis_mix_hb/pretreatment_response_frontal'
+temporal_path = f'results/{model}/prognosis_mix_hb/pretreatment_response_temporal'
+
+if not os.path.exists(frontal_path):
+    os.makedirs(frontal_path)
+if not os.path.exists(temporal_path):
+    os.makedirs(temporal_path)
 frontal_itr_count = os.listdir(frontal_path)
 temporal_itr_count = os.listdir(temporal_path)
 frontal_itr_count = [i for i in frontal_itr_count if i[:3] == 'loo']

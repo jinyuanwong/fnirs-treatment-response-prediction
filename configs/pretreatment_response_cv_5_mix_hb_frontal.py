@@ -6,7 +6,7 @@ SPECIFY_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 
 
-PARAMETER['gnn_transformer'] = {
+parameters_cv_5_mix_hb_frontal = {
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
@@ -16,3 +16,6 @@ PARAMETER['gnn_transformer'] = {
         'n_layers': 6,#np.random.choice([4, 8, 12]),
         'epochs': 350
     }
+
+for key, value in parameters_cv_5_mix_hb_frontal.items():
+    PARAMETER['gnn_transformer'][key] = value
