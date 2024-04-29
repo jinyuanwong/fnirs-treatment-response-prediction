@@ -12,34 +12,25 @@ def check_have_enough_files(path, model_para):
                 return False
     return True
 
-model = 'gnn_transformer' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer)
+model = 'cnn_gnn_transformer' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer)
 validation = 'loocv'
-config = 'pretreatment_response_cv_5_mix_hb_'
+config = 'pretreatment_response_cv_5_hbo'
+dataset = 'prognosis'
+task = 'pretreatment_response'
 
-msg = 'loocv_v3'
+all_region_path = f'results/{model}/{dataset}/{task}'
 
-frontal_path = f'results/{model}/prognosis_mix_hb/pretreatment_response_frontal'
-temporal_path = f'results/{model}/prognosis_mix_hb/pretreatment_response_temporal'
+if not os.path.exists(all_region_path):
+    os.makedirs(all_region_path)
 
-if not os.path.exists(frontal_path):
-    os.makedirs(frontal_path)
-if not os.path.exists(temporal_path):
-    os.makedirs(temporal_path)
-frontal_itr_count = os.listdir(frontal_path)
-temporal_itr_count = os.listdir(temporal_path)
-frontal_itr_count = [i for i in frontal_itr_count if i[:3] == 'loo']
-temporal_itr_count = [i for i in temporal_itr_count if i[:3] == 'loo']
-
+all_region_itr_count = os.listdir(all_region_path)
+all_region_itr_count = [i for i in all_region_itr_count if i[:3] == 'loo']
 
 # if the itr amount of temoral is less than frontal, then run the temporal
-if len(temporal_itr_count) <= len(frontal_itr_count):
-    run_region = 'temporal'
-    count = temporal_itr_count
-    run_path = temporal_path
-else:
-    run_region = 'frontal'
-    count = frontal_itr_count
-    run_path = frontal_path
+
+run_region = 'all_region'
+count = all_region_itr_count
+run_path = all_region_path
     
     
 print(count)
@@ -68,9 +59,10 @@ if res:
 else:
     run_itr = f"loocv_v{current_itr}"
 
-config_file = config + run_region
+config_file = config
 
 run_command = f"conda run -n tf python ./LOO_nested_CV_train.py {model} {run_itr} {config_file}"#            bash_code = f"StratifiedKFold_holdout_train.py {model} automl"
 subprocess.run(run_command, shell=True)
 
 # nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_temporal --msg loocv_v3 > /dev/null 2>&1 &
+# python ./LOO_nested_CV_train.py cnn_transformer loocv_v0 pretreatment_response_cv_5_mix_hb

@@ -82,6 +82,16 @@ PARAMETER = {
         'n_layers': 6, #np.random.choice([4, 8, 12]),
         'classweight1': 5,
     },
+    'cnn_gnn_transformer': {
+        'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.01,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6, #np.random.choice([4, 8, 12]),
+        'classweight1': 5,
+    },
     'gnn_transformer_tp_fc_fs': {
         'hb_path': 'merge_feature.npy',# 'merge_feature.npy', # hb_data
         'adj_path': 'adj_matrix.npy',
@@ -176,6 +186,5 @@ PARAMETER = {
     },
     'decisiontree': {
         'hb_path': 'hb_data.npy',
-
     }
 }

@@ -1,11 +1,13 @@
 from configs.config import *
 
 
-INPUT_HB_TYPE = ['prognosis_mix_hb/pretreatment_response_temporal']
+INPUT_HB_TYPE = ['prognosis/pretreatment_response']
 SPECIFY_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 
-parameters_cv_5_mix_hb_temporal = {
+
+
+parameters_cv_5_mix_hb = {
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
         'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
@@ -16,5 +18,6 @@ parameters_cv_5_mix_hb_temporal = {
         'epochs': 350
     }
 
-for key, value in parameters_cv_5_mix_hb_temporal.items():
+for key, value in parameters_cv_5_mix_hb.items():
     PARAMETER['gnn_transformer'][key] = value
+    PARAMETER['cnn_gnn_transformer'][key] = value

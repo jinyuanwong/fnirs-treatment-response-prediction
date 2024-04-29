@@ -18,8 +18,10 @@ import random
 import os
 import pandas as pd
 import math
-from classifiers.layer.embedding_layer import EmbeddingLayer
+from tensorflow.keras.metrics import Recall
 from tensorflow.keras.callbacks import EarlyStopping
+from classifiers.layer.embedding_layer import EmbeddingLayer
+
 # Transformer was based on
 #   Zenghui Wang' Pytorch implementation. https://github.com/wzhlearning/fNIRS-Transformer/blob/main/model.py
 # Adapted to Tensorflow by Jinyuan Wang
@@ -31,6 +33,41 @@ from tensorflow.keras.callbacks import EarlyStopping
 put this function into the utils as well: 
 but remember that do not modify utils so much.
 """
+
+
+@keras.saving.register_keras_serializable()
+class F1ScoreCalculation(keras.metrics.Metric):
+    def __init__(self, name="f1_score", **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.f1_score = self.add_weight(name="ctp", initializer="zeros")
+
+    def update_state(self, Y_true, Y_pred, sample_weight=None):
+        # Cast to float to make sure division will be floating-point operation
+        Y_true = tf.cast(Y_true, tf.float32)
+        Y_pred = tf.cast(Y_pred, tf.float32)
+        
+        # Calculate Precision and Recall for binary classification
+        epsilon = 1e-7  # to avoid division by zero
+        
+        TP = tf.reduce_sum(Y_true * Y_pred)
+        FP = tf.reduce_sum((1 - Y_true) * Y_pred)
+        FN = tf.reduce_sum(Y_true * (1 - Y_pred))
+        
+        precision = TP / (TP + FP + epsilon)
+        recall = TP / (TP + FN + epsilon)
+        
+        # Calculate F1 score
+        f1 = 2 * precision * recall / (precision + recall + epsilon)
+        
+        self.f1_score.assign_add(f1)
+    def result(self):
+        return self.f1_score
+
+    def reset_state(self):
+        # The state of the metric will be reset at the start of each epoch.
+        self.f1_score.assign(0.0)
+
+
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
@@ -172,7 +209,6 @@ class EncoderLayer(layers.Layer):
 
 
 
-
 class Encoder(layers.Layer):
     def __init__(self,
                  n_layers,
@@ -193,11 +229,11 @@ class Encoder(layers.Layer):
         return outputs
 
 
+
 class ClsPositionEncodingLayer(layers.Layer):
-    def __init__(self, input_channel, kenerl_size, strides, d_model, dropout_rate, name="ClsPositionEncodingLayer"):
+    def __init__(self, d_model, dropout_rate, name="ClsPositionEncodingLayer"):
         super(ClsPositionEncodingLayer, self).__init__(name=name)
 
-        patch = (input_channel - kenerl_size[0]) // strides[0] + 1
         self.cls_token_patch = tf.Variable(tf.random.normal((1, 1, d_model)))
         self.pos_embedding = PositionalEncoding()
         self.dropout_patch = layers.Dropout(dropout_rate)
@@ -212,30 +248,37 @@ class ClsPositionEncodingLayer(layers.Layer):
         return outputs
 
 
-"""Previous CLS_Position encoding
+class GCN(tf.keras.Model):
+    def __init__(self,
+                 d_model,
+                 activation='relu'):
+        super(GCN, self).__init__()
 
-class ClsPositionEncodingLayer(layers.Layer):
-    def __init__(self, input_channel, kenerl_size, strides, d_model, dropout_rate):
-        super(ClsPositionEncodingLayer, self).__init__()
+        self.W = layers.Dense(units=d_model)
 
-        patch = (input_channel - kenerl_size[0]) // strides[0] + 1
-        self.cls_token_patch = tf.Variable(tf.random.normal((1, 1, d_model)))
-        self.pos_embedding_patch = tf.Variable(
-            tf.random.normal((1, patch+1, d_model)))
-        self.dropout_patch = layers.Dropout(dropout_rate)
+        if activation == 'relu':
+            self.activation = tf.keras.layers.ReLU()
+        elif activation == 'sigmoid':
+            self.activation = tf.keras.layers.Activation('sigmoid')
+        elif activation == 'tanh':
+            self.activation = tf.keras.layers.Activation('tanh')
+        elif activation == 'prelu':
+            self.activation = tf.keras.layers.Activation('prelu')
+        else:
+            raise ValueError('Provide a valid activation for GNN')
 
-    def call(self, inputs):
-        cls_token_patch_tiled = tf.tile(
-            self.cls_token_patch, [tf.shape(inputs)[0], 1, 1])
-        pos_embedding_path_tiled = tf.tile(self.pos_embedding_patch, [
-            tf.shape(inputs)[0], 1, 1])
+    def normalize_adjacency(self, adj):
+        d = tf.reduce_sum(adj, axis=-1)
+        d_sqrt_inv = tf.pow(d, -0.5)
+        d_sqrt_inv = tf.where(tf.math.is_inf(d_sqrt_inv), 0., d_sqrt_inv)
+        d_mat_inv_sqrt = tf.linalg.diag(d_sqrt_inv)
+        return tf.matmul(tf.matmul(d_mat_inv_sqrt, adj), d_mat_inv_sqrt)
 
-        outputs = tf.concat([cls_token_patch_tiled, inputs], axis=1)
-        outputs = outputs + pos_embedding_path_tiled
-        outputs = self.dropout_patch(outputs)
-        return outputs
-        
-"""
+    def call(self, inputs, adj):
+        adj_normalized = self.normalize_adjacency(adj)
+        inputs_features = self.W(inputs)
+        outputs = tf.linalg.matmul(adj_normalized, inputs_features)
+        return self.activation(outputs)
 
 
 class Transformer(tf.keras.Model):
@@ -269,36 +312,36 @@ class Transformer(tf.keras.Model):
         return output_1
 
 
-class Classifier_Transformer():
+class Classifier_GNN_Transformer():
     def __init__(self, output_directory, callbacks, input_shape, epochs, sweep_config, info):
         # input_shape = (200, 52, 128, 1)
 
         self.output_directory = output_directory
         self.callbacks = callbacks
-        self.epochs = epochs
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
+        params = info['parameter']
+        self.epochs = params['epochs'] if params.get('epochs') else epochs 
+
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
-        self.batch_size = 128
-        kernel_size_1 = (4, 5)  # 2, 3, 4
-        stride_size_1 = (1, 2)
-        kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
-        stride_size_2 = (1, 2)
-        kernel_size = [kernel_size_1, kernel_size_2]
-        stride_size = [stride_size_1, stride_size_2]
-        # random.choice([2, 3, 4, 5, 6, 7, 8]) 6,7 are the best
-        # random.choice([4, 24])  # random.choice([12, 24, 36])
+        self.batch_size = params['batch_size'] if params.get('batch_size') else 128
+
+        kernel_size = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
+        stride_size = (1, 2)
+        
         output_channel = 4  # random.choice([3, 8, 24]) # 24
         # random.choice([64, 256])# 64 #
-        d_model = 16  # 125# # random.choice([64, 128, 256])
+        d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
         # random.choice([4, 12])  # random.randint(10, 12)
-        n_layers = 6  # random.choice([12, 8, 16])
-        FFN_units = 256  # random.choice([64, 128, 256, 512])  # 512, 64, 128,
+        n_layers = params['n_layers'] if params.get('n_layers') else 12  # random.choice([12, 8, 16])
+        gnn_layers = sweep_config['gnn_layers'] if sweep_config else 1  # random.choice([12, 8, 16])
+        
+        FFN_units = sweep_config['FFN_units'] if sweep_config else 256 # random.choice([64, 128, 256, 512])  # 512, 64, 128,
         n_heads = 4  # 5  # random.choice([4, 8])  # 2
         #   # random.choice(['relu', 'gelu'])
         activation = 'gelu'  # random.choice(['relu', 'gelu'])
@@ -307,42 +350,48 @@ class Classifier_Transformer():
         # random.choice([0.98, 0.99, 0.999])
         adam_beta_1, adam_beta_2 = 0.9, 0.999
         num_of_last_dense = 2  # random.randint(0, 3)
-        l2_rate = 0.001
+        parameter = self.info['parameter']
+        l1_rate = parameter['l1_rate']
+        l2_rate = parameter['l2_rate']
         num_class = 2  # 2
+        
         self.class_weights = {0: 1,  # weight for class 0
-                 1: 5}  # weight for class 1, assuming this is the minority class
+                 1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
 
+        
+        lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
-            d_model * FFN_units * n_layers, warmup_step)
+            d_model * FFN_units * n_layers * lr_factor, warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,
                                               beta_1=adam_beta_1,
                                               beta_2=adam_beta_2,
                                               epsilon=1e-9)
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
-
-        # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-        #
+        input_adj = tf.keras.Input(shape=(input_shape[1], input_shape[1]))
+        inputs = tf.keras.Input(shape=input_shape[1:])
         if input_shape[-1] != 1 and input_shape[-1] > 10:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
             inputs = tf.keras.Input(shape=input_shape[1:])
+        
         num_branches = inputs.shape[-1]
-        outputs = []  #
-        for i in range(num_branches):
+        outputs = []
+        for i in range(num_branches*2):
             output = EmbeddingLayer(
-                d_model, output_channel, kernel_size[0], stride_size[0], l2_rate, name=f'cnn_embedding_{i+1}')(inputs[..., i:i+1])
+                d_model, output_channel, kernel_size, stride_size, l2_rate, name=f'cnn_embedding_{i+1}')(inputs[..., i//2:i//2+1])
 
-            output = ClsPositionEncodingLayer(
-                input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i+1}')(output)
-            # Append the output to the 'outputs' list.
+            output = GCN(d_model=d_model)(output, input_adj)
+            
+            for i in range(1,gnn_layers):
+                output = GCN(d_model=d_model)(output, input_adj)
+            output = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i}')(output)
             output = Transformer(dropout_rate,
                                 n_layers,
                                 FFN_units,
                                 n_heads,
                                 activation)(output)
             outputs.append(output)
-
         outputs = tf.concat(outputs, axis=1)  #
 
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
@@ -351,23 +400,22 @@ class Classifier_Transformer():
         for i in range(num_of_last_dense):
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
-                                   kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
+                                   kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        model = tf.keras.Model(inputs=[inputs, input_adj], outputs=outputs)
         model.summary()
+
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',
-                      metrics=['accuracy', tf.keras.metrics.F1Score(
-                          name='f1_score', average='weighted')])
+                      loss='categorical_crossentropy',#categorical_crossentropy
+                      metrics=['accuracy']) # , Recall(name='sensitivity')
+        
+
+
         self.model = model
 
         self.hyperparameters = {
             "Test": 'Adding CLS and using Traditional Position encoding (10000)and CNN encoding',
             "batch_size": self.batch_size,
-            "kernel_size_1": kernel_size_1,
-            "stride_size_1": stride_size_1,
-            "kernel_size_2": kernel_size_2,
-            "stride_size_2": stride_size_2,
             "kernel_size": kernel_size,
             "stride_size": stride_size,
             "output_channel": output_channel,
@@ -386,30 +434,32 @@ class Classifier_Transformer():
         }
         print(f'hyperparameters: {self.hyperparameters}')
 
-    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
+    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
         start_time = time.time()
+
         hist = self.model.fit(
-            x=X_train,
+            x=[X_train, adj_train],
             y=Y_train,
-            validation_data=(X_val, Y_val),
+            validation_data=([X_val, adj_val], Y_val),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=self.callbacks,
             verbose=True,
             shuffle=True,  # Set shuffle to True
-            class_weight=self.class_weights
+            class_weight=self.class_weights 
         )
 
         self.model.load_weights(
             self.output_directory + 'checkpoint')
-        Y_pred = self.model.predict(X_test)
+        Y_pred = self.model.predict([X_test, adj_test])
         self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
-        save_validation_acc(self.output_directory, np.argmax(self.model.predict(
-            X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None
@@ -426,4 +476,3 @@ class Classifier_Transformer():
 
     def predict(self):
         pass
-# model = Transformer('transformer', None, None, (5, 52, 128, 1), 1)

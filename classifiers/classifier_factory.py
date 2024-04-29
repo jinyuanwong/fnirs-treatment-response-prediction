@@ -14,6 +14,9 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
     if classifier_name == 'gnn_transformer':  # Time-CNN
         from classifiers import gnn_transformer
         return gnn_transformer.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+    if classifier_name == 'cnn_gnn_transformer':  # Time-CNN
+        from classifiers import cnn_gnn_transformer
+        return cnn_gnn_transformer.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
     if classifier_name == 'gnn_transformer_with_cli_demo':  # Time-CNN
         from classifiers import gnn_transformer_with_cli_demo
         return gnn_transformer_with_cli_demo.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
@@ -66,4 +69,4 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
         from classifiers import decisiontree
         return decisiontree.Classifier_DecisionTree(output_directory, callbacks, input_shape, epochs, sweep_config, info)
     else:
-        raise Exception('Your error message here')
+        raise Exception(f'Your error message here, you did not register model {classifier_name} in classifier_factory.py!')
