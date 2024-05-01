@@ -94,15 +94,21 @@ def get_nine_region_data(data):
         nine_region_data[:,i,:] = region_data
     return nine_region_data
 
+
+
 def modify_char_position(cbar):
-    
     cbar_pos = cbar.ax.get_position()
 
-    # 修改位置信息以将高度减少一半
-    new_height = cbar_pos.height  / 7 * 5
-    new_y = cbar_pos.y0 + cbar_pos.height/7 #+ new_height  # 更新y位置以使颜色条保持居中
+    # Increase the height by a factor of 1.5
+    new_height = cbar_pos.height * 1.5
+    
+    # Update the y-position to keep the color bar centered
+    new_y = cbar_pos.y0 - cbar_pos.height / 2.888
+    
 
+    # Set the new position of the color bar
     cbar.ax.set_position([cbar_pos.x0, new_y, cbar_pos.width, new_height])
+
 
 def compute_p_value_effect_size(data, label, task_start_index, task_end_index):
     data_shape = data.shape
@@ -142,77 +148,91 @@ def compute_p_value_effect_size(data, label, task_start_index, task_end_index):
         all_effect_size[:,channel] = channel_effect_size
         
     return all_p, all_effect_size
+def correct_using_fdr(all_p):
+    fdr_p = np.zeros(all_p.shape)
+    for i in range(all_p.shape[0]):
+        tmp = all_p[i]
+        _, adjusted_all_p, _, _ = multipletests(tmp, alpha=0.05, method='fdr_bh')
+        fdr_p[i] = adjusted_all_p
+    all_p = fdr_p
+    return all_p
 
-def plot_pretreatment_analysis(ax, data, data_shape, hb_type_name):
-    plt.title('Nonresponders vs. Responders (Effect size)', fontsize=20, fontweight='bold')
+def add_bordert_to_ax(ax, data):
+    import matplotlib.patches as patches
+    # Create a border around the Axes object
+    print('data shape -> ', data.shape)
+    rect = patches.Rectangle((1, 0), data.shape[1], 3, linewidth=1, edgecolor='black', facecolor='none')
+    ax.add_patch(rect)
+    
+    # Customize gridlines
+    print('data.shape', data.shape)
+    for i in range(1, data.shape[1]+1):
+        ax.axvline(i, color='gray', lw=1, ymax=(data.shape[0]/(data.shape[0]+0.5)))
+    for i in range(1, data.shape[0]+1):
+        ax.axhline(i, color='gray', lw=1)
+def plot_pretreatment_analysis(ax, data, data_shape, hb_type_name, regions_name, type='p_value', using_fdr=False, fig_name=None):
     y_label_name = ['Task activation of '+hb_type_name, 'Mean of '+hb_type_name, 'Task change of '+hb_type_name]
 
     for indices, color in zip(np.arange(1, 1+data_shape[2]), [PSFC_color, PSFC_color, DPC_color, DPC_color, STG_color, STG_color, VPC_color, VPC_color, MPC_color]):
-        plt.axvspan(indices, indices+1, ymin=0.8, ymax=1, color=color, zorder=1)
+        ax.axvspan(indices, indices+1, ymin=0.9, ymax=1, color=color, zorder=1)
+    
+    marker_height = data.shape[0]
 
-    print(marker_height/(marker_height+1))
-    # # Draw the color markers first
-    # plt.fill_between(x=np.arange(25, 53), y1=marker_height+0.25, y2=marker_height+1, color='purple', label='Rear Brain')
-
-    # 在 marker_height 位置添加一条黑线
-    plt.axhline(y=marker_height+0.05, color='black', linewidth=0.4)
-    plt.axvline(x=1, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-    plt.axvline(x=data_shape[2]+1, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-    # plt.axvline(x=53, ymin=0, ymax=0.8, color='black', linewidth=0.4)
-
-
-    # Adjust the y-axis limits to accommodate the markers
-    plt.ylim([0, marker_height+1])
-
-
-    colors = ['#448196', 'white', '#c45c3d']
-
-    # Create the custom color map
-    cmap_effect_size = LinearSegmentedColormap.from_list('CustomColorMap', colors, N=256)
-    im = plt.imshow(data, vmin=-0.5, vmax=0.5, cmap=cmap_effect_size, extent=[1,data_shape[2]+1, 0, marker_height])
-
-    ax = plt.gca()
-
-    cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[-0.5, -0.25, 0, 0.25, 0.5])
-    cbar.ax.set_yticklabels(['-0.5', '-0.25', '0', '0.25', '0.5'], fontsize=12, fontweight='bold')
+    ax.set_ylim([0, marker_height+0.5])
+    print(f'data.shape -> {data.shape}')
+    if type == 'effect_size':
+        colors = ['#448196', 'white', '#c45c3d']
+        cmap_effect_size = LinearSegmentedColormap.from_list('CustomColorMap', colors, N=256)
+        ax.set_title('Nonresponders vs. Responders (Effect size)', fontsize=20, fontweight='bold')
+        im = ax.imshow(data, vmin=-1, vmax=1, cmap=cmap_effect_size, extent=[1, data_shape[2]+1, 0, marker_height])
+        cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[-1, -0.5, 0, 0.5, 1])
+        cbar.ax.set_yticklabels(['-1', '-0.5', '0', '0.5', '1'], fontsize=12, fontweight='bold')
+    else:
+        if using_fdr: 
+            p_value_name = 'FDR corrected P-value'
+            data = correct_using_fdr(data)
+        else:
+            p_value_name = 'P-value'
+        colors = ['red','white']
+        cmap = LinearSegmentedColormap.from_list('RedToWhite', colors, N=256)
+        ax.set_title(f'Nonresponders vs. Responders ({p_value_name})', fontsize=20, fontweight='bold')
+        im = ax.imshow(data, norm=LogNorm(vmin=0.001, vmax=0.05), cmap=cmap, extent=[1,data_shape[2]+1, 0, marker_height])
+        cbar = plt.colorbar(im, ax=ax, fraction=0.01, pad=0.02, ticks=[0.001, 0.01, 0.05])
+        cbar.ax.set_yticklabels(['0.001', '0.01', '0.05'], fontsize=12, fontweight='bold')
+        
     modify_char_position(cbar)
+    
 
-    # Set the ticks and labels as required
-    plt.xticks([ i + 0.5 for i in [1, data_shape[2]//2, data_shape[2]]])
-    plt.gca().set_xticklabels([1, data_shape[2]//2, data_shape[2]], fontsize=15, fontweight='bold')  # Correcting labels to display 1 to 52
-    plt.yticks([0.5,1.5,2.5], y_label_name, fontsize=16, fontweight='bold')
+    ax.set_xticks([ i + 0.5 for i in range(1, 1+data_shape[2])])
+    ax.set_xticklabels(regions_name, fontsize=12, fontweight='bold', rotation=45) # add_x_label_name_to_ax
+    
+    ax.set_yticks([0.5,1.5,2.5])
+    ax.set_yticklabels(y_label_name, fontsize=16, fontweight='bold')
+    add_bordert_to_ax(ax, data)
 
-    # 隐藏上边框
-    plt.gca().spines['top'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
-    plt.gca().spines['left'].set_visible(False)
-
-    plt.gca().spines['right'].set_visible(False)
-
-
-    # 为其他三个边框设置线宽，颜色
-    for spine_position, spine in plt.gca().spines.items():
+    for spine_position, spine in ax.spines.items():
         if spine_position in ['left', 'right', 'bottom']:
             spine.set_linewidth(0.4)
             spine.set_color('black')
-            
-            
-    # Add colorbar and other plot settings as required
-    # plt.colorbar(shrink=0.2)
 
-    plt.xlim([1, 0.01+data_shape[2]])
+    ax.set_xlim([0.99, 1.01 + data_shape[2]])
     
-def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end_index, using_fdr):
+def show_hb_type(data, label, output_fold, hb_type_name, nine_region_name, fig_name, task_start_index, task_end_index, using_fdr):
     data_shape = data.shape
     
     p_value, effect_size= compute_p_value_effect_size(data, label, task_start_index, task_end_index)
+
+    fig, axes = plt.subplots(2, 1, figsize=(13, 10))
+    fig.subplots_adjust(hspace=0.5)
+    plot_pretreatment_analysis(axes[0], p_value, data_shape, hb_type_name, nine_region_name, type='p value', using_fdr=using_fdr, fig_name=fig_name)
+    plot_pretreatment_analysis(axes[1], effect_size, data_shape, hb_type_name, nine_region_name, type='effect_size', using_fdr=using_fdr, fig_name=fig_name)
     
-    print('p_value: ', p_value) 
-    print('effect_size: ', effect_size)
-    
-    fig, axes = plt.subplots(2, 1, figsize=(12, 12))
-    plot_pretreatment_analysis(axes[0], p_value, data_shape, hb_type_name)
-    plot_pretreatment_analysis(axes[1], effect_size, data_shape, hb_type_name)
+    using_fdr_flag = 'w_fdr' if using_fdr else 'wo_fdr'
+    plt.savefig(output_fold+f'/{fig_name}_{using_fdr_flag}.png')
     plt.show()
     
 
@@ -232,7 +252,6 @@ if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 # name_of_input = ['pre_treatment', 'post_treatment', 'pre_minus_post_treatment']
 name_of_input = ['Nonresponders vs. Responders']
-nine_region_name = ['L-PSFC', 'R-PSFC', 'L-DPC', 'R-DPC', 'L-STG', 'R-STG', 'L-VPC', 'R-VPC', 'MPC']
 for fig_name in name_of_input:
     print(fig_name)
     if fig_name =='Nonresponders vs. Responders':
@@ -250,6 +269,8 @@ for fig_name in name_of_input:
     # data = individual_normalization(data)
     
     data = get_nine_region_data(data)
+    
+    nine_region_name = ['L-PSFC', 'R-PSFC', 'L-DPC', 'R-DPC', 'L-STG', 'R-STG', 'L-VPC', 'R-VPC', 'MPC']
     
     HbO = np.transpose(data[...,0::2],(0,2,1))
     # HbO = individual_normalization(HbO)
@@ -271,19 +292,19 @@ for fig_name in name_of_input:
     plt.subplot(1,2,2)
     plt.plot(np.mean(nonresponder_hbr, axis=(0,2)), label=f"Nonresponders {nonresponder_hbr.shape[0]}")
     plt.plot(np.mean(responder_hbr, axis=(0,2)), label=f"Responders {responder_hbr.shape[0]}")
-    
     plt.legend()
     plt.title('Average HbO and HbR of Responders and Nonresponders')
     plt.savefig(output_fold+'/Nonresponders vs. Responders.png')
+    plt.show()
     
     for using_fdr in [True, False]:
        
         # For pre - treatment HAMD reduction 50 - HbO 
-        show_hb_type(HbO, label, 'HbO', fig_name + '_HbO' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
+        show_hb_type(HbO, label, output_fold, 'HbO', nine_region_name, fig_name + '_HbO' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
         # For pre - treatment HAMD reduction 50 - HbR
-        show_hb_type(HbR, label, 'HbR', fig_name + '_HbR' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
+        show_hb_type(HbR, label, output_fold, 'HbR', nine_region_name, fig_name + '_HbR' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
         # For pre - treatment HAMD reduction 50 - HbT 
-        show_hb_type(HbT, label, 'HbT', fig_name + '_HbT' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
+        show_hb_type(HbT, label, output_fold, 'HbT', nine_region_name, fig_name + '_HbT' + '_subject' + str(data.shape[0]), 100, 700, using_fdr)
 
     
 # for data, label in zip([pre_data, pre_post_data], [pre_label, pre_post_label]):

@@ -1081,3 +1081,100 @@ def read_demographic(excel_path, subject_ids, sheet_name='Summary T0T8_fNIRS Ana
 
     res = np.array(res)
     return res
+
+
+def get_nine_region_data(data):
+    def get_channel_index_of_region(ch_name):
+        return np.array([int(ch_name[1:])-1 for ch_name in ch_name])
+
+    # Posterior superior frontal cortex
+    # PSFC_ch = ['C9', 'C10', 'C20', 'C21', 'C1', 'C2', 'C11', 'C12'] # 
+    left_PSFC_location = ['C9', 'C10', 'C20', 'C21']
+    right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
+
+    # Dorsolateral prefrontal cortex
+    # DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+    left_DPC_location = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29']
+    right_DPC_location = ['C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+
+    #Superior temporal gyrus
+    # STG_ch = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44', 'C30', 'C31', 'C41', 'C42', 'C51', 'Cnum_of_region'] #
+    left_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
+    right_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+
+    # Ventrolateral prefrontal cortex
+    # VPC_ch = ['C34', 'C35', 'C45', 'C46','C39', 'C40', 'C49', 'C50'] # 
+    left_VPC_location = ['C34', 'C35', 'C45', 'C46']
+    right_VPC_location = ['C39', 'C40', 'C49', 'C50']
+
+    # Medial prefrontal cortex
+    MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
+    
+
+    all_region_location = [left_PSFC_location, right_PSFC_location, left_DPC_location, right_DPC_location, left_STG_location, right_STG_location, left_VPC_location, right_VPC_location, MPC_location]
+    all_region_location = [get_channel_index_of_region(i) for i in all_region_location]
+    print(len(all_region_location))
+    print(all_region_location)
+
+
+    nine_region_data = np.zeros((data.shape[0], len(all_region_location), data.shape[2]))
+
+    for i, region_ch in enumerate(all_region_location):
+        region_data = data[:,region_ch,:]
+        region_data = np.mean(region_data, axis=1)
+        nine_region_data[:,i,:] = region_data
+    return nine_region_data
+
+
+def get_channel_to_region_dict():
+    channel_to_dict = {}
+    left_PSFC_location = ['C9', 'C10', 'C20', 'C21']
+    for i in left_PSFC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'left_PSFC'
+        
+    right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
+    for i in right_PSFC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'right_PSFC'
+        
+    # Dorsolateral prefrontal cortex
+    # DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+    left_DPC_location = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29']
+    for i in left_DPC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'left_DPC'
+        
+    right_DPC_location = ['C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
+    for i in right_DPC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'right_DPC'
+
+    #Superior temporal gyrus
+    # STG_ch = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44', 'C30', 'C31', 'C41', 'C42', 'C51', 'Cnum_of_region'] #
+    left_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
+    for i in left_STG_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'left_STG'
+    right_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+    for i in right_STG_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'right_STG'
+
+    # Ventrolateral prefrontal cortex
+    # VPC_ch = ['C34', 'C35', 'C45', 'C46','C39', 'C40', 'C49', 'C50'] # 
+    left_VPC_location = ['C34', 'C35', 'C45', 'C46']
+    for i in left_VPC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'left_VPC'
+    right_VPC_location = ['C39', 'C40', 'C49', 'C50']
+    for i in right_VPC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'right_VPC'
+
+    # Medial prefrontal cortex
+    MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
+    for i in MPC_location:
+        ch = int(i[1:])
+        channel_to_dict[ch] = 'MPC'
+    return channel_to_dict
