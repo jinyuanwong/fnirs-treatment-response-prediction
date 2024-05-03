@@ -1099,13 +1099,13 @@ def get_nine_region_data(data):
 
     #Superior temporal gyrus
     # STG_ch = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44', 'C30', 'C31', 'C41', 'C42', 'C51', 'Cnum_of_region'] #
-    left_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
-    right_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+    left_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+    right_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
 
     # Ventrolateral prefrontal cortex
     # VPC_ch = ['C34', 'C35', 'C45', 'C46','C39', 'C40', 'C49', 'C50'] # 
-    left_VPC_location = ['C34', 'C35', 'C45', 'C46']
-    right_VPC_location = ['C39', 'C40', 'C49', 'C50']
+    left_VPC_location = ['C39', 'C40', 'C49', 'C50']
+    right_VPC_location = ['C34', 'C35', 'C45', 'C46']
 
     # Medial prefrontal cortex
     MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
@@ -1152,22 +1152,23 @@ def get_channel_to_region_dict():
 
     #Superior temporal gyrus
     # STG_ch = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44', 'C30', 'C31', 'C41', 'C42', 'C51', 'Cnum_of_region'] #
-    left_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
+
+    left_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
     for i in left_STG_location:
         ch = int(i[1:])
         channel_to_dict[ch] = 'left_STG'
-    right_STG_location = ['C30', 'C31', 'C41', 'C42', 'C51', 'C52']
+    
+    right_STG_location = ['C22', 'C23', 'C32', 'C33', 'C43', 'C44']
     for i in right_STG_location:
         ch = int(i[1:])
         channel_to_dict[ch] = 'right_STG'
-
     # Ventrolateral prefrontal cortex
     # VPC_ch = ['C34', 'C35', 'C45', 'C46','C39', 'C40', 'C49', 'C50'] # 
-    left_VPC_location = ['C34', 'C35', 'C45', 'C46']
+    left_VPC_location = ['C39', 'C40', 'C49', 'C50'] 
     for i in left_VPC_location:
         ch = int(i[1:])
         channel_to_dict[ch] = 'left_VPC'
-    right_VPC_location = ['C39', 'C40', 'C49', 'C50']
+    right_VPC_location = ['C34', 'C35', 'C45', 'C46']
     for i in right_VPC_location:
         ch = int(i[1:])
         channel_to_dict[ch] = 'right_VPC'
