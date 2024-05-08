@@ -89,6 +89,9 @@ def read_demographic(fold_path):
     demographic_data = np.load(fold_path + '/demographic.npy', allow_pickle=True)
     return demographic_data
 
+def read_dose_information(fold_path):
+    dose_information = np.load(fold_path + '/dose_information.npy', allow_pickle=True)
+    return dose_information
 
 # clinical_data = np.load(fold_path + '/baseline_clinical_data.npy', allow_pickle=True)
 # demographic_data = np.load(fold_path + '/demografic_data.npy', allow_pickle=True)
