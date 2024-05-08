@@ -14,6 +14,9 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
     if classifier_name == 'gnn_transformer':  # Time-CNN
         from classifiers import gnn_transformer
         return gnn_transformer.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+    if classifier_name == 'mlp':  # Time-CNN
+        from classifiers import mlp
+        return mlp.Classifier_MLP(output_directory, callbacks, input_shape, epochs, sweep_config, info)
     if classifier_name == 'cnn_gnn_transformer':  # Time-CNN
         from classifiers import cnn_gnn_transformer
         return cnn_gnn_transformer.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
