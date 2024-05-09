@@ -53,7 +53,8 @@ class TrainModel():
 
         epochs = self.epochs
         using_adj = self.parameter.get('adj_path')
-
+        using_cli_demo = self.parameter.get('cli_demo_path')
+        
         for archive in self.all_archive:
             hbo_fold_path = default_hb_fold_path + archive
             fnirs_data_path = preprocessed_hb_fold_path + \
@@ -63,7 +64,11 @@ class TrainModel():
                 # case - not using adj
                 # case using adj include GNN, GNN-Transformer, ....
                 if using_adj:
-                    data, label, adj = simply_read_data_fnirs(
+                    if using_cli_demo:
+                        data, label, adj, cli_demo = simply_read_data_fnirs(
+                            fnirs_data_path, model_name, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
+                    else:
+                        data, label, adj = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, self.adj_path)
                 else:
                     data, label = simply_read_data_fnirs(
@@ -81,8 +86,12 @@ class TrainModel():
                 for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
                     for k in range(num_of_k_fold):
                         if using_adj:
-                            X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
-                                data, label, k, num_of_k_fold, current_loo, adj)
+                            if using_cli_demo:
+                                X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test  = stratified_LOO_nested_CV(
+                                    data, label, k, num_of_k_fold, current_loo, adj, cli_demo)
+                            else:
+                                X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_LOO_nested_CV(
+                                    data, label, k, num_of_k_fold, current_loo, adj)
                         else:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_LOO_nested_CV(
                                 data, label, k, num_of_k_fold, current_loo)
@@ -134,7 +143,11 @@ class TrainModel():
                             classifier_name, output_directory, callbacks, input_shape, epochs, info, self.sweep_config)
 
                         if using_adj:
-                            model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+                            if using_cli_demo:
+                                model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test)
+                            else:
+                                model.fit(X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test)
+  
                         else:
                             model.fit(X_train, Y_train, X_val,
                                     Y_val, X_test, Y_test)

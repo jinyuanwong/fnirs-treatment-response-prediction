@@ -114,13 +114,13 @@ PARAMETER = {
     },
     'mlp':{
         'hb_path': 'merge_psychiatry_demo_dose_data.npy',# 'merge_feature.npy', # hb_data
-        'lr_v': 0.01,
+        'lr_v': 1e4,
         'l1_rate': 0.1,# should be 0.01
         'l2_rate': 0.1,# should be 0.001
         'd_model': 16,#np.random.choice([16, 32, 64]),
-        'batch_size': 32,#np.random.choice([4, 8, 16, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6, #np.random.choice([4, 8, 12]),
-        'classweight1': 4,
+        'classweight1': 5,
     },
     'gnn_transformer_with_cli_demo':{
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
@@ -130,7 +130,7 @@ PARAMETER = {
         'd_model': 16,#np.random.choice([16, 32, 64]),
         'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6,#np.random.choice([4, 8, 12]),
-        'cli_demo_shape': [18],
+        'cli_demo_shape': [17],
         'cli_demo_path': 'nor_demo_cli_merge_data.npy',
     },
     'graphformer': {

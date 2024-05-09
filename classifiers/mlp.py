@@ -409,9 +409,9 @@ class Classifier_MLP():
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         model.summary()
-        seesaw_loss = SeeSawLoss(num_classes=num_class)
+        # seesaw_loss = SeeSawLoss(num_classes=num_class)
         model.compile(optimizer=optimizer,
-                      loss=seesaw_loss,#categorical_crossentropy
+                      loss='categorical_crossentropy',#categorical_crossentropy
                       metrics=['accuracy']) # , Recall(name='sensitivity')
         
 
