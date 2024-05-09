@@ -4,6 +4,7 @@ from configs.config import *
 INPUT_HB_TYPE = ['prognosis_mix_hb/pretreatment_response']
 SPECIFY_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
+MAX_EPOCHS = 2000
 
 
 

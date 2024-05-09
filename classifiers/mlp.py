@@ -20,7 +20,7 @@ import pandas as pd
 import math
 from tensorflow.keras.metrics import Recall
 from tensorflow.keras.callbacks import EarlyStopping
-
+from classifiers.loss.seesaw_loss import SeeSawLoss
 # Transformer was based on
 #   Zenghui Wang' Pytorch implementation. https://github.com/wzhlearning/fNIRS-Transformer/blob/main/model.py
 # Adapted to Tensorflow by Jinyuan Wang
@@ -386,9 +386,9 @@ class Classifier_MLP():
         
         self.class_weights = {0: 1,  # weight for class 0
                  1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
-
+        dense_layers = [16,32,32,16] #256,512,1024,512,256,256,
         
-        learning_rate = CustomSchedule(parameter.lr, warmup_step)
+        learning_rate = CustomSchedule(parameter['lr_v'], warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,
                                               beta_1=adam_beta_1,
                                               beta_2=adam_beta_2,
@@ -398,20 +398,20 @@ class Classifier_MLP():
         inputs = tf.keras.Input(shape=input_shape[1:])
         outputs = tf.keras.layers.Flatten()(inputs)
         
-        outputs = layers.Dense(parameter.dense_layers[0],
+        outputs = layers.Dense(dense_layers[0],
 								activation=activation,
 								kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         
-        for i in parameter.dense_layers[1:]:
+        for i in dense_layers[1:]:
             outputs = layers.Dense(i,
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         model.summary()
-
+        seesaw_loss = SeeSawLoss(num_classes=num_class)
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',#categorical_crossentropy
+                      loss=seesaw_loss,#categorical_crossentropy
                       metrics=['accuracy']) # , Recall(name='sensitivity')
         
 
@@ -432,13 +432,13 @@ class Classifier_MLP():
         }
         print(f'hyperparameters: {self.hyperparameters}')
 
-    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
+    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
 
         hist = self.model.fit(
-            x=[X_train, adj_train],
+            x=X_train,
             y=Y_train,
-            validation_data=([X_val, adj_val], Y_val),
+            validation_data=(X_val, Y_val),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=self.callbacks,
@@ -449,14 +449,14 @@ class Classifier_MLP():
 
         self.model.load_weights(
             self.output_directory + 'checkpoint')
-        Y_pred = self.model.predict([X_test, adj_test])
+        Y_pred = self.model.predict(X_test)
         self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
         
-        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
 
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
             # save learning rate as well

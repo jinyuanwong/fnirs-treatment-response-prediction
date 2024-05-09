@@ -42,11 +42,12 @@ class Classifier_XGBoost():
             'max_depth': np.random.choice([3, 4, 5, 6, 7, 8, 9, 10]),                  # maximum depth of trees
             'learning_rate': np.random.choice([0.01, 0.05, 0.1, 0.2, 0.3]),            # learning rate
             'early_stopping_rounds': np.random.choice([10, 20, 30, 40, 50]),     # early stoping
-            'n_estimators': np.random.choice([50, 100, 150, 200, 250, 300, 400, 500])
+            'n_estimators': np.random.choice([50, 100, 150, 200, 250, 300, 400, 500]),
+            'scale_pos_weight': 1e6,
         }
         self.params = params
         self.model = XGBClassifier(
-            objective=params['objective'], max_depth=params['max_depth'], learning_rate=params['learning_rate'], n_estimators=params['n_estimators'])
+            objective=params['objective'], max_depth=params['max_depth'], learning_rate=params['learning_rate'], n_estimators=params['n_estimators'], scale_pos_weight=params['scale_pos_weight'])
 
         self.hyperparameters = params
         print(f'hyperparameters: {self.hyperparameters}')

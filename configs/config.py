@@ -14,7 +14,7 @@ MAX_EPOCHS = 1000
 # left_to_do SVM_ZHIFEI, RSFC_DUAN, NMF_ZHONG
 MODELS_NEED_PREPROCESS_DATA = ['chao_cfnn',
                                'wang_alex', 
-                               'zhu_xgboost', 
+                            #    'zhu_xgboost', 
                                'yu_gnn',
                                'li_svm',
                                'decisiontree']
@@ -114,14 +114,13 @@ PARAMETER = {
     },
     'mlp':{
         'hb_path': 'merge_psychiatry_demo_dose_data.npy',# 'merge_feature.npy', # hb_data
-        'lr': 0.001,
-        'l1_rate': 0.01,# should be 0.01
-        'l2_rate': 0.01,# should be 0.001
+        'lr_v': 0.01,
+        'l1_rate': 0.1,# should be 0.01
+        'l2_rate': 0.1,# should be 0.001
         'd_model': 16,#np.random.choice([16, 32, 64]),
-        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'batch_size': 32,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6, #np.random.choice([4, 8, 12]),
-        'classweight1': 5,
-        'dense_layers': [64,256,512,256,64]
+        'classweight1': 4,
     },
     'gnn_transformer_with_cli_demo':{
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
@@ -167,7 +166,7 @@ PARAMETER = {
         'hb_path': 'dgi_data.npy',
     },
     'zhu_xgboost': {
-        'hb_path': 'data.npy',
+        'hb_path': 'merge_psychiatry_demo_dose_data.npy',
     },
     'fusion_xgboost': {
         'hb_path': 'fusion_data.npy',
