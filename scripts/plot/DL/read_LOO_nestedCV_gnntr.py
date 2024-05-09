@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # 'pre_treatment_hamd_reduction_50' or 'pre_post_treatment_hamd_reduction_50'
 
     validation_method = 'LOO_nested_CV'  # 'LOOCV' or 'k_fold' LOO_nested_CV
-    based_best_metric = 'accuracy' # 'sensitivity' or 'f1_score' or 'accuracy'
+    based_best_metric = 'f1_score' # 'sensitivity' or 'f1_score' or 'accuracy'
     ALL_BEST_ITR = []
     ALL_TOTAL_ITERATION = []
     ALL_Y_pred_in_test = []
