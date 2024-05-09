@@ -335,47 +335,43 @@ def get_best_hyperparameters_skf_inside_loocv_monitoring_recall_bacc_objective(X
 
 
         # Leave-One-Out CV
-        # for train_index, test_index in loo.split(X):
-        #     X_train_fold, X_test_fold = X[train_index], X[test_index]
-        #     y_train_fold, y_test_fold = y[train_index], y[test_index]            
-        #     clf_fold = clone(clf)
-        #     clf_fold.fit(X_train_fold, y_train_fold)
-        #     preds = clf_fold.predict_proba(X_test_fold)[:,1]
-        #     # Stratified 5-Fold CV
-        #     for train_index, val_index in skf.split(X_train_fold, y_train_fold):
-        #         inner_X_train_fold, X_val_fold = X_train_fold[train_index], X_train_fold[val_index]
-        #         inner_y_train_fold, y_val_fold = y_train_fold[train_index], y_train_fold[val_index]
-                
-        #         clf_fold = clone(clf)
-        #         clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
-        #         preds = clf_fold.predict_proba(X_val_fold)[:,1]
-        #         fold_recall = f1_score(y_val_fold, preds>0.5)
-        #         recall_scores_skf.append(fold_recall)
-        #         balanced_accuracy_scores_skf.append(balanced_accuracy_score(y_val_fold, preds>0.5))
-            
-
-        for train_index, test_index in skf.split(X, y):
-            inner_X_train_fold, X_val_fold = X[train_index], X[test_index]
-            inner_y_train_fold, y_val_fold = y[train_index], y[test_index]
+        for train_index, test_index in loo.split(X):
+            X_train_fold, X_test_fold = X[train_index], X[test_index]
+            y_train_fold, y_test_fold = y[train_index], y[test_index]            
             clf_fold = clone(clf)
-            clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
-            preds = clf_fold.predict_proba(X_val_fold)[:,1]
-            fold_f1 = f1_score(y_val_fold, preds>0.5)
-            fold_recall = recall_score(y_val_fold, preds>0.5)
-            recall_scores_skf.append(fold_recall)
-            f1_scores_skf.append(fold_f1)
-            balanced_accuracy_scores_skf.append(balanced_accuracy_score(y_val_fold, preds>0.5))
+            clf_fold.fit(X_train_fold, y_train_fold)
+            preds = clf_fold.predict_proba(X_test_fold)[:, 1]
+            # Stratified 5-Fold CV
+            for train_index, val_index in skf.split(X_train_fold, y_train_fold):
+                inner_X_train_fold, X_val_fold = X_train_fold[train_index], X_train_fold[val_index]
+                inner_y_train_fold, y_val_fold = y_train_fold[train_index], y_train_fold[val_index]
+                
+                clf_fold = clone(clf)
+                clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
+                preds = clf_fold.predict_proba(X_val_fold)[:,1]
+                fold_f1 = f1_score(y_val_fold, preds>0.5)
+                fold_recall = recall_score(y_val_fold, preds>0.5)
+                recall_scores_skf.append(fold_recall)
+                f1_scores_skf.append(fold_f1)
+                balanced_accuracy_scores_skf.append(balanced_accuracy_score(y_val_fold, preds>0.5))
+            
+        # for train_index, test_index in skf.split(X, y):
+        #     inner_X_train_fold, X_val_fold = X[train_index], X[test_index]
+        #     inner_y_train_fold, y_val_fold = y[train_index], y[test_index]
+        #     clf_fold = clone(clf)
+        #     clf_fold.fit(inner_X_train_fold, inner_y_train_fold)
+        #     preds = clf_fold.predict_proba(X_val_fold)[:,1]
+        #     fold_f1 = f1_score(y_val_fold, preds>0.5)
+        #     fold_recall = recall_score(y_val_fold, preds>0.5)
+        #     recall_scores_skf.append(fold_recall)
+        #     f1_scores_skf.append(fold_f1)
+        #     balanced_accuracy_scores_skf.append(balanced_accuracy_score(y_val_fold, preds>0.5))
         
-        print('recall_scores_skf:', np.mean(recall_scores_skf))
-        print('f1_scores_skf:', np.mean(f1_scores_skf))
-        print('balanced_accuracy_scores_skf:', np.mean(balanced_accuracy_scores_skf))
+
         mean_recall_skf = np.mean(recall_scores_skf) * 0.1
         mean_f1_skf = np.mean(f1_scores_skf) * 0.4
-        
         mean_bacc_skf = np.mean(balanced_accuracy_scores_skf) * 0.4
-
         combined_recall = mean_recall_skf + mean_bacc_skf + mean_f1_skf
-
         return {'loss': -combined_recall, 'status': STATUS_OK}
 
 

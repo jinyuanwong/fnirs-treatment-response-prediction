@@ -40,8 +40,12 @@ from scripts.fusion_model.fusion_model_utils import read_pychiatry
 from scripts.fusion_model.fusion_model_utils import read_HAMD_score
 from scripts.fusion_model.fusion_model_utils import read_demographic
 from scripts.fusion_model.fusion_model_utils import plot_avg_auc
-from scripts.fusion_model.fusion_model_utils import train_xgboost_shuffle_feature 
+from scripts.fusion_model.fusion_model_utils import train_xgboost_shuffle_feature, train_xgboost_shuffle_feature_objective
 from scripts.fusion_model.fusion_model_utils import save_shap
+from scripts.fusion_model.fusion_model_utils import read_dose_information
+import time
+
+
 import time
 start_time = time.time()
 
@@ -53,12 +57,36 @@ base_T2_SDS_CGI = read_base_T2_SDS_CGI(fold_path)
 pyschiatry = read_pychiatry(fold_path)
 HAMD_score = read_HAMD_score(fold_path)
 demographic = read_demographic(fold_path)
+dose = read_dose_information(fold_path)
+
+
 
 pro_base_T2_SDS_CGI = process_with_nan_using_imputation_zscore(base_T2_SDS_CGI)
 pro_pyschiatry = process_with_nan_using_imputation_zscore(pyschiatry)
-pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:]), axis=1) # must remove the -3rd column, because its existen will cause nan value of that column
+pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :-3], pro_pyschiatry[:, -2:]), axis=1) # must remove the -3rd column, because its existen will cause nan value of that column which is On antidpressant(s) ONLY
+# pro_pyschiatry = np.concatenate((pro_pyschiatry[:, :1], pro_pyschiatry[:, 2:]), axis=1) # delete Current psychiatric comorbidities — Binary because already have Current psychiatric comorbidities — Coded
 pro_HAMD_score = process_with_nan_using_imputation_zscore(HAMD_score)
 pro_demographic = process_with_nan_using_imputation_zscore(demographic)
+pro_dose = process_with_nan_using_imputation_zscore(dose)
+
+# # show dose information 
+# fig, axs = plt.subplots(1, 2, figsize=(8, 12))
+# img1 = axs[0].imshow(dose)
+# img2 = axs[1].imshow(pro_dose)
+# for ax in axs:
+#     ax.set_aspect('auto')
+
+# cbar1 = fig.colorbar(img1, ax=axs[0])  # Add color bar for the first image
+# cbar2 = fig.colorbar(img2, ax=axs[1])  # Add color bar for the second image
+
+# plt.show()
+
+# for i in range(dose.shape[0]):
+#     print(f'dose -> {dose[i]}')
+#     print(f'process -> {pro_dose[i]}')
+    
+
+
 
 
 fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
@@ -66,23 +94,30 @@ fnirs_feature = derive_average_MMDR_score(MMDR_path, K_FOLD=K_FOLD)
 Y = np.load(fold_path + '/label.npy', allow_pickle=True)
 
 # repeat to see if seed is working 
-data_name = 'fNIRS_demo_metrics'    
-X_data = np.concatenate((pro_demographic, fnirs_feature), axis=1)
+data_name = 'fnirs_dose_metrics'
+X_data = np.concatenate((pro_pyschiatry[:, :9], pro_demographic, pro_dose[:, 1:2], fnirs_feature), axis=1)
+print("X_data.shape: ", X_data.shape)
 
-shuffle_all_shaps = train_xgboost_shuffle_feature(X_data, 
+
+shuffle_all_shaps = train_xgboost_shuffle_feature_objective(X_data, 
                                                   Y, 
                                                   model_name='XGBoost',
-                                                  num_shuffle=10, 
-                                                  random_seed=1024,
+                                                  num_shuffle=10,  #10
+                                                  random_seed=1025,
                                                   title=f"Treatment Response Prediction (fNIRS + demographic and psychiatric feature) ", 
                                                   is_plotting_avg_auc=True, 
                                                   is_shuffling=True, 
-                                                  is_computing_shap=True,
-                                                  best_params_xgboost=True,
-                                                  num_evals=150,
+                                                  is_computing_shap=False,
+                                                  best_params_xgboost=None,
+                                                  num_evals=150,#150
                                                   loocv_metrics_save_file_name= data_name + '.npy')
+# save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
 
-save_shap(shuffle_all_shaps, X_data, output_fold='results/SHAP', name='shap_values_'+data_name+'.npy')
+# End timing
+end_time = time.time()
 
+# Calculate total time taken
+total_time = end_time - start_time
+print(f"The program took {total_time} seconds to run.")
 
-
+# nohup python scripts/fusion_model/fusion_fnirs_demo_dose_his.py > results/fnirs_demo_dose_his.log 2>&1 &
