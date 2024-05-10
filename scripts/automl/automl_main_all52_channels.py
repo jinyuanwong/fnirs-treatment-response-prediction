@@ -15,7 +15,7 @@ def check_have_enough_files(path, model_para):
 model = 'gnn_transformer_with_cli_demo' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
 config = 'pretreatment_response_cv_5_mix_hb'
-dataset = 'prognosis'
+dataset = 'prognosis_mix_hb'
 task = 'pretreatment_response'
 
 all_region_path = f'results/{model}/{dataset}/{task}'
@@ -24,6 +24,7 @@ if not os.path.exists(all_region_path):
     os.makedirs(all_region_path)
 
 all_region_itr_count = os.listdir(all_region_path)
+print('all_region_itr_count', all_region_itr_count)
 all_region_itr_count = [i for i in all_region_itr_count if i[:3] == 'loo']
 
 # if the itr amount of temoral is less than frontal, then run the temporal
@@ -58,7 +59,6 @@ if res:
     run_itr = f"loocv_v{current_itr+1}"
 else:
     run_itr = f"loocv_v{current_itr}"
-
 config_file = config
 
 run_command = f"conda run -n tf python ./LOO_nested_CV_train.py {model} {run_itr} {config_file}"#            bash_code = f"StratifiedKFold_holdout_train.py {model} automl"

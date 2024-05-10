@@ -116,8 +116,8 @@ def get_val_metrics_and_test_accuracies(model,
             read_fold = f"{val_fold_path}/LOO_{loo}/stratified_nested_{num_of_cv_folds}_CV_fold-{cv_fold}/"
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
-
             res_metrics, y_pred, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
+            print('y_pred', y_pred)
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
             ALL_Y_pred_in_test.append(y_pred)
@@ -153,7 +153,6 @@ def modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_a
     # --- 
     
     # --- previous -- slightly higher accuracy because of mean value will value some examples: true label = 1 but it is classified as 0.9999, 0.0001 in one fold in CV but other has a value like [0.4, 0.6] ... 
-    
     ALL_Y_pred_in_test[:,1] += value_add_to_sensitivity
     y_pred_in_test_argmax = np.argmax(ALL_Y_pred_in_test, axis=1)
     y_pred_in_test_argmax = y_pred_in_test_argmax.reshape(-1, K_FOLD)
@@ -283,7 +282,7 @@ if __name__ == '__main__':
     
     y_test = np.load(y_test_path + '/label.npy')
     if SUBJECTALL is not None: y_test = y_test[SUBJECTALL]
-    if model != 'fusion_catboost':
+    if model != 'fusion_catboost' and model != 'gnn_transformer_with_cli_demo':
         print('ALL_Y_pred_in_test -> ', np.array(ALL_Y_pred_in_test).shape)
         save_y_pred(ALL_Y_pred_in_test, val_fold_path, specify_itr)
         y_pred_in_test_argmax = modify_y_pred_by_giving_more_weight_to_1(ALL_Y_pred_in_test, K_FOLD, value_add_to_sensitivity=value_add_to_sensitivity_value)
