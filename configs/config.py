@@ -114,13 +114,13 @@ PARAMETER = {
     },
     'mlp':{
         'hb_path': 'merge_psychiatry_demo_dose_data.npy',# 'merge_feature.npy', # hb_data
-        'lr_v': 1e4,
+        'lr_v': 1e1,
         'l1_rate': 0.1,# should be 0.01
         'l2_rate': 0.1,# should be 0.001
         'd_model': 16,#np.random.choice([16, 32, 64]),
         'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6, #np.random.choice([4, 8, 12]),
-        'classweight1': 5,
+        'classweight1': 2,
     },
     'gnn_transformer_with_cli_demo':{
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data

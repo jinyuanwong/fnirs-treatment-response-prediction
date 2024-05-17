@@ -47,12 +47,13 @@ class TrainModel():
         self.sweep_config = sweep_config
         self.hb_path = self.parameter.get('hb_path')
         self.adj_path = self.parameter.get('adj_path')
+        
 
     def begin(self, info):
 
         epochs = self.epochs
         using_adj = self.parameter.get('adj_path')
-
+        using_cli_demo = self.parameter.get('cli_demo_path')
         for archive in self.all_archive:
             hbo_fold_path = self.config.DEFAULT_HB_FOLD_PATH + archive
             fnirs_data_path = self.config.PREPROCESSED_HB_FOLD_PATH + \
@@ -62,8 +63,13 @@ class TrainModel():
                 # case - not using adj
                 # case using adj include GNN, GNN-Transformer, ....
                 if using_adj:
-                    data, label, adj = simply_read_data_fnirs(
-                        fnirs_data_path, self.model_name, self.hb_path, self.adj_path)
+                    if using_cli_demo: 
+                        data, label, adj, cli_demo = simply_read_data_fnirs(
+                        fnirs_data_path, self.model_name, self.hb_path, self.adj_path, using_cli_demo)
+                        self.cli_demo = cli_demo
+                    else:
+                        data, label, adj = simply_read_data_fnirs(
+                            fnirs_data_path, self.model_name, self.hb_path, self.adj_path)
                     self.data, self.label, self.adj = data, label, adj
                 else:
                     data, label = simply_read_data_fnirs(

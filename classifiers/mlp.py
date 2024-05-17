@@ -386,7 +386,7 @@ class Classifier_MLP():
         
         self.class_weights = {0: 1,  # weight for class 0
                  1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
-        dense_layers = [16,32,32,16] #256,512,1024,512,256,256,
+        dense_layers = [8, 32, 64, 32, 8]# [256,512,1024,512,256,256] # 16,32,32,16] #
         
         learning_rate = CustomSchedule(parameter['lr_v'], warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,

@@ -117,7 +117,6 @@ def get_val_metrics_and_test_accuracies(model,
             read_val_path = read_fold + "val_acc.txt"
             read_test_path = read_fold + "test_acc.txt"
             res_metrics, y_pred, val_best_itr, total_itr = read_metrics_txt_best_itr(read_val_path, MAX_ITR, based_best_metric=based_best_metric)
-            print('y_pred', y_pred)
             ALL_BEST_ITR.append(val_best_itr)
             ALL_TOTAL_ITERATION.append(total_itr)
             ALL_Y_pred_in_test.append(y_pred)
