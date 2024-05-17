@@ -33,6 +33,42 @@ put this function into the utils as well:
 but remember that do not modify utils so much.
 """
 
+
+@keras.saving.register_keras_serializable()
+class F1ScoreCalculation(keras.metrics.Metric):
+    def __init__(self, name="f1_score", **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.f1_score = self.add_weight(name="ctp", initializer="zeros")
+
+    def update_state(self, Y_true, Y_pred, sample_weight=None):
+        # Cast to float to make sure division will be floating-point operation
+        Y_true = tf.cast(Y_true, tf.float32)
+        Y_pred = tf.cast(Y_pred, tf.float32)
+        
+        # Calculate Precision and Recall for binary classification
+        epsilon = 1e-7  # to avoid division by zero
+        
+        TP = tf.reduce_sum(Y_true * Y_pred)
+        FP = tf.reduce_sum((1 - Y_true) * Y_pred)
+        FN = tf.reduce_sum(Y_true * (1 - Y_pred))
+        
+        precision = TP / (TP + FP + epsilon)
+        recall = TP / (TP + FN + epsilon)
+        
+        # Calculate F1 score
+        f1 = 2 * precision * recall / (precision + recall + epsilon)
+        
+        self.f1_score.assign_add(f1)
+    def result(self):
+        return self.f1_score
+
+    def reset_state(self):
+        # The state of the metric will be reset at the start of each epoch.
+        self.f1_score.assign(0.0)
+
+
+
+
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
         super(CustomSchedule, self).__init__()
@@ -325,43 +361,45 @@ class Classifier_GNN_Transformer():
 
         self.output_directory = output_directory
         self.callbacks = callbacks
+        self.epochs = epochs
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         params = info['parameter']
-        self.epochs = params['epochs'] if params.get('epochs') else epochs 
-
         self.callbacks.append(early_stopping)
+        # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128
-        kernel_size_1 = (4, 5)  
+        kernel_size_1 = (4, 5)  # 2, 3, 4
         stride_size_1 = (1, 2)
-        kernel_size_2 = (1, 5)  
+        kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
         stride_size_2 = (1, 2)
         kernel_size = [kernel_size_1, kernel_size_2]
         stride_size = [stride_size_1, stride_size_2]
-        output_channel = 4  
-        d_model = params['d_model'] if params.get('d_model') else 64  
+        # random.choice([2, 3, 4, 5, 6, 7, 8]) 6,7 are the best
+        # random.choice([4, 24])  # random.choice([12, 24, 36])
+        output_channel = 4  # random.choice([3, 8, 24]) # 24
+        # random.choice([64, 256])# 64 #
+        d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
-        n_layers = params['n_layers'] if params.get('n_layers') else 12  
-        gnn_layers = sweep_config['gnn_layers'] if sweep_config else 1  
+        # random.choice([4, 12])  # random.randint(10, 12)
+        n_layers = params['n_layers'] if params.get('n_layers') else 12  # random.choice([12, 8, 16])
+        gnn_layers = sweep_config['gnn_layers'] if sweep_config else 1  # random.choice([12, 8, 16])
         
-        FFN_units = sweep_config['FFN_units'] if sweep_config else 256
-        n_heads = 4  
-        activation = 'gelu'  
+        FFN_units = sweep_config['FFN_units'] if sweep_config else 256 # random.choice([64, 128, 256, 512])  # 512, 64, 128,
+        n_heads = 4  # 5  # random.choice([4, 8])  # 2
+        #   # random.choice(['relu', 'gelu'])
+        activation = 'gelu'  # random.choice(['relu', 'gelu'])
+        # warmup_step random.choice([100,200,300,400,500,1000,2000])
         warmup_step = 200
+        # random.choice([0.98, 0.99, 0.999])
         adam_beta_1, adam_beta_2 = 0.9, 0.999
         num_of_last_dense = 2  # random.randint(0, 3)
         parameter = self.info['parameter']
         l1_rate = parameter['l1_rate']
         l2_rate = parameter['l2_rate']
         num_class = 2  # 2
-        
-        self.class_weights = {0: 1,  # weight for class 0
-                 1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
-
-        
         lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers * lr_factor, warmup_step)
@@ -372,16 +410,22 @@ class Classifier_GNN_Transformer():
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
         input_adj = tf.keras.Input(shape=(input_shape[1], input_shape[1]))
-        inputs = tf.keras.Input(shape=input_shape[1:])
-        if input_shape[-1] != 1 and input_shape[-1] > 10:
-            inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
-        else:
-            inputs = tf.keras.Input(shape=input_shape[1:])
         
-        num_branches = inputs.shape[-1]
+        inputs_time_point = tf.keras.Input(shape=input_shape[1:])
+        
+        if input_shape[-1] != 1 and input_shape[-1] > 10:
+            inputs_time_point = tf.keras.Input(shape=(input_shape[1:]+[1]))
+        else:
+            inputs_time_point = tf.keras.Input(shape=input_shape[1:])
+        
+        
+        inputs_cli_demo = tf.keras.Input(shape=(params['cli_demo_shape']))
+        
+                
+        num_branches = inputs_time_point.shape[-1]
         outputs = []
         for i in range(num_branches*2):
-            output = GCN(d_model=d_model)(inputs[...,i//2], input_adj)
+            output = GCN(d_model=d_model)(inputs_time_point[...,i//2], input_adj)
             for i in range(1,gnn_layers):
                 output = GCN(d_model=d_model)(output, input_adj)
             output = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i}')(output)
@@ -401,8 +445,9 @@ class Classifier_GNN_Transformer():
             outputs.append(output)
         outputs = tf.concat(outputs, axis=1)  #
 
-
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
+        
+        outputs = tf.concat([outputs, inputs_cli_demo], axis=1)
 
         "Doing this in here is to get the layer[-2] feature"
         for i in range(num_of_last_dense):
@@ -410,7 +455,7 @@ class Classifier_GNN_Transformer():
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
-        model = tf.keras.Model(inputs=[inputs, input_adj], outputs=outputs)
+        model = tf.keras.Model(inputs=[inputs_time_point, input_adj, inputs_cli_demo], outputs=outputs)
         model.summary()
 
         model.compile(optimizer=optimizer,
@@ -446,31 +491,34 @@ class Classifier_GNN_Transformer():
         }
         print(f'hyperparameters: {self.hyperparameters}')
 
-    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
+    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test):
         start_time = time.time()
 
+        class_weights = {0: 1,  # weight for class 0
+                 1: 5}  # weight for class 1, assuming this is the minority class
+
+        self.class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
         hist = self.model.fit(
-            x=[X_train, adj_train],
+            x=[X_train, adj_train, cli_demo_train],
             y=Y_train,
-            validation_data=([X_val, adj_val], Y_val),
+            validation_data=([X_val, adj_val, cli_demo_val], Y_val),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=self.callbacks,
             verbose=True,
             shuffle=True,  # Set shuffle to True
-            class_weight=self.class_weights 
+            class_weight=self.class_weights_dict 
         )
 
         self.model.load_weights(
             self.output_directory + 'checkpoint')
-        Y_pred = self.model.predict([X_test, adj_test])
-        self.info['Y_pred_in_test'] = Y_pred
+        Y_pred = self.model.predict([X_test, adj_test, cli_demo_test])
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
         
-        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val, cli_demo_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
 
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
             # save learning rate as well

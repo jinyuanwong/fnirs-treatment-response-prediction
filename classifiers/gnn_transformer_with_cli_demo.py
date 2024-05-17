@@ -426,9 +426,20 @@ class Classifier_GNN_Transformer():
         outputs = []
         for i in range(num_branches*2):
             output = GCN(d_model=d_model)(inputs_time_point[...,i//2], input_adj)
+            
             for i in range(1,gnn_layers):
                 output = GCN(d_model=d_model)(output, input_adj)
+            
+            output_cli = inputs_cli_demo
+            for dense_units in params['cli_dense_units']:
+                output_cli = layers.Dense(dense_units, activation=activation)(output_cli)
+            # Reshape output_cli to (batch, 1, 16)
+            output_cli = tf.expand_dims(output_cli, axis=1)
+
+            # Concatenate with the other tensor 'output'
+            output = tf.concat([output, output_cli], axis=1)
             output = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i}')(output)
+            
             output = Transformer(input_shape,
                                 num_class,
                                 dropout_rate,

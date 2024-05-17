@@ -29,7 +29,7 @@ from sklearn.model_selection import LeaveOneOut
 def get_params_info(params):
     return_string = ''
     for key, value in params.items():
-        if key not in ['hb_path', 'adj_path', 'cli_demo_path', 'cli_demo_shape']:
+        if key not in ['hb_path', 'adj_path', 'cli_demo_path', 'cli_demo_shape', 'cli_dense_units']:
             if return_string != '':
                 return_string += '_'
             return_string += f"{key}_{value}"

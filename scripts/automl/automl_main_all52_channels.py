@@ -66,3 +66,4 @@ subprocess.run(run_command, shell=True)
 
 # nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_temporal --msg loocv_v3 > /dev/null 2>&1 &
 # python ./LOO_nested_CV_train.py cnn_transformer loocv_v0 pretreatment_response_cv_5_mix_hb
+# 
