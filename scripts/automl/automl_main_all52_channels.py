@@ -14,7 +14,7 @@ def check_have_enough_files(path, model_para):
 
 model = 'gnn_transformer_with_cli_demo' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
-config = 'pretreatment_response_cv_5_mix_hb'
+config = 'pretreatment_response_cv_5_mix_hb_epoch_300'
 dataset = 'prognosis_mix_hb'
 task = 'pretreatment_response'
 
@@ -65,5 +65,5 @@ run_command = f"conda run -n tf python ./LOO_nested_CV_train.py {model} {run_itr
 subprocess.run(run_command, shell=True)
 
 # nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_temporal --msg loocv_v3 > /dev/null 2>&1 &
-# python ./LOO_nested_CV_train.py cnn_transformer loocv_v0 pretreatment_response_cv_5_mix_hb
-# 
+# python ./LOO_nested_CV_train.py gnn_transformer_with_cli_deo loocv_v0 pretreatment_response_cv_5_mix_hb
+# python ./LOO_nested_CV_train.py gnn_transformer_with_cli_demo loocv_v0 pretreatment_response_cv_5_mix_hb_epoch_300

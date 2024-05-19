@@ -399,7 +399,7 @@ class Classifier_GNN_Transformer():
         parameter = self.info['parameter']
         l1_rate = parameter['l1_rate']
         l2_rate = parameter['l2_rate']
-        num_class = 2  # 2
+        num_class = parameter['num_class']  # 2
         lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers * lr_factor, warmup_step)
@@ -465,7 +465,10 @@ class Classifier_GNN_Transformer():
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
-        outputs = layers.Dense(num_class, activation='softmax')(outputs)
+        if num_class == 2 :
+            outputs = layers.Dense(num_class, activation='softmax')(outputs)
+        elif num_class == 1:
+            outputs = layers.Dense(num_class)(outputs)
         model = tf.keras.Model(inputs=[inputs_time_point, input_adj, inputs_cli_demo], outputs=outputs)
         model.summary()
 

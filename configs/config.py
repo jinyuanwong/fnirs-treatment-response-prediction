@@ -133,6 +133,7 @@ PARAMETER = {
         'cli_demo_shape': [17],
         'cli_dense_units': [32, 32, 16],
         'cli_demo_path': 'nor_demo_cli_merge_data.npy',
+        'num_class': 2,
     },
     'graphformer': {
         'hb_path': 'data.npy',
