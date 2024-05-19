@@ -368,6 +368,10 @@ def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info):
         return True
     return False
 
+def save_validation_pred_regression(output_directory, info):
+    save_data_to_file(output_directory + 'val_acc.txt', [], info)
+    
+
 
 def normalize_individual(data):
     # Iterate over each subject | optimized instead of using for
@@ -484,7 +488,7 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
         return X_train, X_test, Y_train, Y_test
 
 
-def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None, cli_demo_path=None):
+def simply_read_data_fnirs(file_name, model_name, label_path, hb_path, adj_path=None, cli_demo_path=None):
 
     data = np.load(file_name + '/' + hb_path)
 
@@ -495,8 +499,10 @@ def simply_read_data_fnirs(file_name, model_name, hb_path, adj_path=None, cli_de
     #     if data.shape[2] == 52:
     #         data = np.transpose(data, (0, 2, 1, 3))
 
-    label = np.load(file_name + '/label.npy')
-    label = onehotEncode(label.astype(int))
+    label = np.load(file_name + '/' + label_path)
+    if label_path == 'label.npy':
+        label = onehotEncode(label.astype(int))
+
 
     if model_name == 'comb_cnn':
         label = label.astype('float32')
@@ -671,7 +677,18 @@ def stratified_k_fold_cross_validation_with_holdout_with_cli_demo(data, label, c
 
 def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=None, cli_demo=None):
     total_amount = data.shape[0] 
-    label_not_onehot = np.argmax(label, axis=1)
+    if len(np.unique(label)) > 2: 
+        label_not_onehot = label.copy()
+        median_label = np.median(label_not_onehot)
+        bigger_median = label_not_onehot >= median_label
+        smaller_median = label_not_onehot < median_label
+        label_not_onehot[bigger_median] = 1
+        label_not_onehot[smaller_median] = 0
+    else:
+        label_not_onehot = np.argmax(label, axis=1)
+    print('label:', label)
+    print('np.unique(label)', np.unique(label))
+    print('label_not_onehot:', label_not_onehot)
     
     test_index = np.array([current_loo])
     train_val_index = [i for i in range(total_amount) if i != current_loo]
@@ -696,7 +713,7 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
     train_index = np.concatenate([train_index_1, train_index_0])
     
     train_index = tf.cast(train_index, dtype=tf.int32)
-    print('train_index', train_index)
+    
     X_train = data[train_index]
     X_val = data[val_index]
     X_test = data[test_index]
@@ -824,6 +841,19 @@ def save_logs(model, output_directory, result_name, hist, y_pred, y_true, durati
     hist_df_metrics = calculate_metrics(
         y_true, y_pred, duration, y_true_onehot, y_pred_onehot)
     hist_df_metrics.to_csv(output_directory + 'df_metrics.csv', index=False)
+
+def save_logs_regression(model, output_directory, hist, is_saving_checkpoint=False):
+    # save best model of all:
+
+    if is_saving_checkpoint:
+        model.save_weights(output_directory + 'fold-best-checkpoint')
+    else:
+        pass
+        # save_model(model, output_directory + 'fold-best-model.keras')
+    
+    hist_df = pd.DataFrame(hist.history)
+    hist_df.to_csv(output_directory + 'history.csv', index=False)
+
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):

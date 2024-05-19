@@ -48,6 +48,7 @@ class TrainModel():
         self.sweep_config = sweep_config
         self.hb_path = self.parameter.get('hb_path')
         self.adj_path = self.parameter.get('adj_path')
+        self.label_path = self.parameter.get('label_path', 'label.npy')
 
     def begin(self):
 
@@ -66,10 +67,10 @@ class TrainModel():
                 if using_adj:
                     if using_cli_demo:
                         data, label, adj, cli_demo = simply_read_data_fnirs(
-                            fnirs_data_path, model_name, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
+                            fnirs_data_path, model_name, self.label_path, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
                     else:
                         data, label, adj = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, self.adj_path)
+                        fnirs_data_path, model_name, self.label_path, self.hb_path, self.adj_path)
                 else:
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.hb_path, None)
@@ -82,7 +83,7 @@ class TrainModel():
                 params = info['parameter']
                 msg = info['message'] + get_params_info(params)
                 loo_array = get_sorted_loo_array(model_name, msg, data.shape[0], DATASET=archive, K_FOLD=num_of_k_fold)
-                print('loo_array', loo_array)
+                
                 for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
                     for k in range(num_of_k_fold):
                         if using_adj:
@@ -95,11 +96,6 @@ class TrainModel():
                         else:
                             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_LOO_nested_CV(
                                 data, label, k, num_of_k_fold, current_loo)
-                        print(f'X_train: {X_train.shape}')
-                        print(f'X_val: {X_val.shape}')
-                        print(f'X_test: {X_test.shape}')
-                        print(f"total sample size is {X_train.shape[0] + X_val.shape[0] + X_test.shape[0]}")
-                        
                         # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                         archive + \

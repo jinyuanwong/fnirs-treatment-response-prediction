@@ -6,15 +6,15 @@ def check_have_enough_files(path, model_para):
     res_path = os.path.join(path, model_para)
     for loo in range(64):
         for k in range(5):
-            flag_path = res_path + f'/LOO_nested_CV/LOO_{loo}/stratified_nested_5_CV_fold-{k}/test_acc.txt'
+            flag_path = res_path + f'/LOO_nested_CV/LOO_{loo}/stratified_nested_5_CV_fold-{k}/val_acc.txt'
             if not os.path.exists(flag_path):
                 print(f"Missing {flag_path}")
                 return False
     return True
 
-model = 'gnn_transformer_with_cli_demo' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
+model = 'gnn_transformer_regression' # gnn_transformer , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
-config = 'pretreatment_response_cv_5_mix_hb_epoch_300'
+config = 'pretreatment_response_cv_5_mix_hb_epoch_350_regression'
 dataset = 'prognosis_mix_hb'
 task = 'pretreatment_response'
 
