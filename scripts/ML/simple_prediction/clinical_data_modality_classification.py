@@ -32,7 +32,7 @@ def classification(data, labels):
     classifiers = {
         "SVM": SVC(),
         "Decision Tree": DecisionTreeClassifier(),
-        "XGBoost": XGBClassifier(),
+        "XGBoost": XGBClassifier(scale_pos_weight=1e6),
         "Random Forest": RandomForestClassifier()
     }
 
@@ -58,7 +58,7 @@ def classification(data, labels):
             sensitivity = recall_score(y_test, predictions)
             tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
             specificity = tn / (tn + fp)
-            
+            accuracy = (sensitivity + specificity) / 2
             # Store metrics
             model_performance[name]['roc_auc'].append(roc_auc)
             model_performance[name]['accuracy'].append(accuracy)
@@ -72,16 +72,28 @@ def classification(data, labels):
     for name, metrics in model_performance.items():
         averages = {metric: np.mean(scores) for metric, scores in metrics.items()}
         print(f"{name} - " + ", ".join(f"Average {metric.capitalize()}: {avg:.4f}" for metric, avg in averages.items()))
+        
+        # Add result to the table
+        result_table.append([name, averages['roc_auc'], averages['accuracy'], averages['sensitivity'], averages['specificity']])
+        
+    # Print the results in Markdown table format
+    print("\n## Model Performance")
+    print("| Classifier | Average ROC AUC | Average Accuracy | Average Sensitivity | Average Specificity |")
+    print("|------------|-----------------|------------------|---------------------|---------------------|")
+    for row in result_table:
+        print(f"| {row[0]} | {row[1]:.4f} | {row[2]:.4f} | {row[3]:.4f} | {row[4]:.4f} |")
+
 
 if __name__ == "__main__":
-    
+    result_table = []
     # change the working directory to the main folder
     set_path()
     
     # load the data 
-    # data, labels = load_data()
+    data, labels = load_data()
+    print('data shape', data.shape)
     
-    # classification(data, labels)
+    classification(data, labels)
     
     
     

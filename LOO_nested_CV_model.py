@@ -47,6 +47,7 @@ class TrainModel():
         self.sweep_config = sweep_config
         self.hb_path = self.parameter.get('hb_path')
         self.adj_path = self.parameter.get('adj_path')
+        self.label_path = self.parameter.get('label_path', 'label.npy')
         
 
     def begin(self, info):
@@ -65,11 +66,11 @@ class TrainModel():
                 if using_adj:
                     if using_cli_demo: 
                         data, label, adj, cli_demo = simply_read_data_fnirs(
-                        fnirs_data_path, self.model_name, self.hb_path, self.adj_path, using_cli_demo)
+                        fnirs_data_path, self.model_name, self.label_path, self.hb_path, self.adj_path, using_cli_demo)
                         self.cli_demo = cli_demo
                     else:
                         data, label, adj = simply_read_data_fnirs(
-                            fnirs_data_path, self.model_name, self.hb_path, self.adj_path)
+                            fnirs_data_path, self.model_name, self.label_path, self.hb_path, self.adj_path)
                     self.data, self.label, self.adj = data, label, adj
                 else:
                     data, label = simply_read_data_fnirs(
