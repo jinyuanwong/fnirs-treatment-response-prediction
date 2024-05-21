@@ -9,6 +9,10 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score, recall_score, confusion_matrix
+from fine_tune_model import get_class_weight_dict
+from fine_tune_model import tune_svm, tune_knn, tune_gradient_boosting, tune_adaboost, tune_xgboost
+
+from sklearn.utils.class_weight import compute_class_weight
 def set_path():
     if sys.platform == 'darwin':
         print("Current system is macOS")
@@ -27,14 +31,40 @@ def load_data():
     labels = np.load(label_pth)
     return data, labels
 
+def add_cgi(data):
+    cgi_path = 'allData/prognosis_mix_hb/pretreatment_response/nor_T2_SDS_CGI.npy'
+    cgi = np.load(cgi_path)
+    data = np.concatenate((data, cgi[:, :-2]), axis=1)
+    return data
+
+def add_mddr(data):
+    mddr_path = 'allData/prognosis_mix_hb/pretreatment_response/MDDR/MDDR_derived_from_load_evaluate.npy'
+    mddr = np.load(mddr_path)
+    mddr = mddr[..., -1]
+    mddr = np.transpose(mddr, (1, 0))
+    data = np.concatenate((data, mddr), axis=1)
+    return data
+    
+def get_class_weight_dict(labels):
+
+    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(labels), y=labels)
+    class_weight_dict= {i : class_weights[i] for i in range(len(class_weights))}
+    print('class_weight_dict', class_weight_dict)
+    # class_weight_dict[1] *= 10
+    return class_weight_dict
+
+
 def classification(data, labels):
     # Define the classifiers
     classifiers = {
-        "SVM": SVC(),
-        "Decision Tree": DecisionTreeClassifier(),
-        "XGBoost": XGBClassifier(scale_pos_weight=1e6),
-        "Random Forest": RandomForestClassifier()
-    }
+        "SVM": tune_svm(data, labels), # SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto'),
+        "Decision Tree": DecisionTreeClassifier(class_weight=get_class_weight_dict(labels)),
+        "XGBoost": tune_xgboost(data, labels), #XGBClassifier(scale_pos_weight=1e6),
+        "Random Forest": RandomForestClassifier(class_weight=get_class_weight_dict(labels)),
+        "Gradient Boosting": tune_gradient_boosting(data, labels),
+        "AdaBoost": tune_adaboost(data, labels),
+        # "KNN": tune_knn(data, labels)
+        }
 
     # Define the cross-validation strategy
     cv = StratifiedKFold(n_splits=5)
@@ -51,7 +81,6 @@ def classification(data, labels):
         for name, clf in classifiers.items():
             clf.fit(X_train, y_train)
             predictions = clf.predict(X_test)
-            
             # Calculate metrics
             roc_auc = roc_auc_score(y_test, predictions)
             accuracy = accuracy_score(y_test, predictions)
@@ -65,13 +94,13 @@ def classification(data, labels):
             model_performance[name]['sensitivity'].append(sensitivity)
             model_performance[name]['specificity'].append(specificity)
             
-            print(f"{name} - ROC AUC: {roc_auc}, Accuracy: {accuracy}, Sensitivity: {sensitivity}, Specificity: {specificity}")
+            # print(f"{name} - ROC AUC: {roc_auc}, Accuracy: {accuracy}, Sensitivity: {sensitivity}, Specificity: {specificity}")
             
     # Calculate and print average performance metrics
     print("\nAverage performance:")
     for name, metrics in model_performance.items():
         averages = {metric: np.mean(scores) for metric, scores in metrics.items()}
-        print(f"{name} - " + ", ".join(f"Average {metric.capitalize()}: {avg:.4f}" for metric, avg in averages.items()))
+        # print(f"{name} - " + ", ".join(f"Average {metric.capitalize()}: {avg:.4f}" for metric, avg in averages.items()))
         
         # Add result to the table
         result_table.append([name, averages['roc_auc'], averages['accuracy'], averages['sensitivity'], averages['specificity']])
@@ -91,6 +120,9 @@ if __name__ == "__main__":
     
     # load the data 
     data, labels = load_data()
+    # data = add_cgi(data)
+    # data = add_mddr(data)
+
     print('data shape', data.shape)
     
     classification(data, labels)
