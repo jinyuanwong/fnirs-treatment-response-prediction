@@ -99,7 +99,7 @@ if __name__ == "__main__":
     # load the data 
     data, labels = load_data()
     # data = add_cgi(data)
-    data = add_mddr(data)
+    # data = add_mddr(data)
 
     print('data shape', data.shape)
     
