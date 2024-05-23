@@ -97,6 +97,12 @@ label_hamd = []
 demografic_data = []
 baseline_clinical_data = []
 
+medi_dose_path = 'allData/medicine_info.xlsx'
+medi_dose_data = pd.read_excel(medi_dose_path, sheet_name='Sheet1')
+dose_information = []
+empty_subject_dose = [0]*7
+
+
 for hb in ['_Oxy.csv', '_Deoxy.csv']:
     tmp = 0
     all_subject = []
@@ -137,6 +143,13 @@ for sub_index, subject in enumerate(all_subject):
     clinical = cgi_sgs_data[cgi_sgs_data['Subject ID'] == subject].iloc[:, 1:7]
     baseline_clinical_data.append(clinical.values)    
     
+    medi_dose_subjects = medi_dose_data['Subject ID'].values
+    if subject not in medi_dose_subjects:
+        dose_information.append(empty_subject_dose)
+    else:
+        sub_dose_info = medi_dose_data[medi_dose_data['Subject ID'] == subject].iloc[:,3:10].values.tolist()[0]
+        dose_information.append(sub_dose_info)
+        
     all_involve_subject.append(subject)
     hbo_hbr = np.zeros((1251, 52, 2))
     for hb_index, hb in enumerate(['_Oxy.csv', '_Deoxy.csv']):
@@ -146,10 +159,12 @@ for sub_index, subject in enumerate(all_subject):
         hbo_hbr[...,hb_index] = base_hb
     mdd_subject_base.append(hbo_hbr)
     
+    
 mdd_subject_base = np.array(mdd_subject_base)
 label_hamd = np.array(label_hamd)
 demografic_data = np.squeeze(np.array(demografic_data))
 baseline_clinical_data = np.squeeze(np.array(baseline_clinical_data))
+dose_information = np.array(dose_information)
 
 # check if there is any replicated subject, becasue there might be two files with same subject names
 
@@ -177,6 +192,8 @@ mdd_subject_base = np.delete(mdd_subject_base, replicated_indices, axis=0)
 label_hamd = np.delete(label_hamd, replicated_indices, axis=0)
 demografic_data = np.delete(demografic_data, replicated_indices, axis=0)
 baseline_clinical_data = np.delete(baseline_clinical_data, replicated_indices, axis=0)
+dose_information = np.delete(dose_information, replicated_indices, axis=0)
+
 
 print(f'test-baseline_clinical_data -> {baseline_clinical_data.shape}')
 print(f'test-label_hamd -> {label_hamd.shape}')
@@ -189,6 +206,8 @@ print(f'mdd_subject_base -> {mdd_subject_base.shape}')
 print(f'label_hamd -> {label_hamd.shape}')
 print(f'demografic_data -> {demografic_data.shape}')
 print(f'baseline_clinical_data -> {baseline_clinical_data.shape}')
+print(f'dose_information -> {dose_information.shape}')
+
 print('all_involve_subject', all_involve_subject)
 
 # calculate remission 
@@ -244,3 +263,4 @@ np.save(output_path + '/PSYCHIATRY_HISTORY.npy', PSYCHIATRY_HISTORY)
 np.save(output_path + '/CLINICAL_HISTORY.npy', CLINICAL_HISTORY)
 np.save(output_path + '/demographic.npy', demographic)
 np.save(output_path + '/hamd_timeline.npy', filter_values_hamd_timeline)
+np.save(output_path + '/dose_information.npy', dose_information)

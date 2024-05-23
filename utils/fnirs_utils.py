@@ -13,6 +13,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import time
 import os
+import sys 
 from scipy.signal import welch
 import pywt
 from scipy.stats import kurtosis
@@ -26,7 +27,17 @@ from sklearn.model_selection import cross_validate, StratifiedKFold
 import random
 from sklearn.metrics import roc_auc_score
 
-
+def set_path():
+    if sys.platform == 'darwin':
+        print("Current system is macOS")
+        main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
+    elif sys.platform == 'linux':
+        print("Current system is Ubuntu")
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
+    else:
+        print("Current system is neither macOS nor Ubuntu")
+    os.chdir(main_fold_path)
+    
 def test_hello_world():
     print("Hello world")
 def train_model_using_loocv(data, label, model):
