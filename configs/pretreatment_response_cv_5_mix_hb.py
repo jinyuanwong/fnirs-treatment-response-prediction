@@ -4,7 +4,7 @@ from configs.config import *
 INPUT_HB_TYPE = ['prognosis_mix_hb/pretreatment_response']
 SPECIFY_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
-MAX_EPOCHS = 750
+MAX_EPOCHS = 1000
 
 
 
@@ -16,7 +16,7 @@ parameters_cv_5_mix_hb = {
         'd_model': 16,#np.random.choice([16, 32, 64]),
         'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6,#np.random.choice([4, 8, 12]),
-        'epochs': 350
+        'epochs': 1000
     }
 
 for key, value in parameters_cv_5_mix_hb.items():

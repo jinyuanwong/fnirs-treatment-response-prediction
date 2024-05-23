@@ -2,8 +2,21 @@
 
 import sys
 import glob
-sys.path.append('/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction')
-
+import os 
+# path of data 
+def set_path():
+    if sys.platform == 'darwin':
+        print("Current system is macOS")
+        main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
+    elif sys.platform == 'linux':
+        print("Current system is Ubuntu")
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
+        
+    else:
+        print("Current system is neither macOS nor Ubuntu")
+    sys.path.append(main_fold_path)
+    os.chdir(main_fold_path)
+set_path()
 import time
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ReduceLROnPlateau
@@ -74,10 +87,10 @@ def check_replicate_subject(all_subject):
     return replicated_indices[0::2]
 
 
-follow_up_fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/RawData'
+follow_up_fold = 'allData/RawData'
 T8_path = follow_up_fold + '/T8_fnirs/Session 2_VFT'
 base_patient_path = follow_up_fold + '/Baseline_fnirs/Patients'
-cli_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
+cli_path = 'allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
 
 cgi_sgs_data = pd.read_excel(cli_path, sheet_name='SDS_CGI_All Timepoints')
 
@@ -202,14 +215,14 @@ adj = generate_fnirs_adj().toarray()
 adj = np.tile(adj, (number_of_subjects, 1, 1))
 print("adj_matrix shape: ", adj.shape)
 
-output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis_mix_hb/posttreatment_response'
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
+# output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis_mix_hb/posttreatment_response'
+# if not os.path.exists(output_path):
+#     os.makedirs(output_path)
     
-np.save(output_path + '/hb_data.npy', hb_data)
-np.save(output_path + '/label_hamd.npy', label_hamd)
-np.save(output_path + '/label.npy', label_response)
-np.save(output_path + '/label_response.npy', label_response)
-np.save(output_path + '/demografic_data.npy', demografic_data)
-np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
-np.save(output_path + '/adj_matrix.npy', adj)
+# np.save(output_path + '/hb_data.npy', hb_data)
+# np.save(output_path + '/label_hamd.npy', label_hamd)
+# np.save(output_path + '/label.npy', label_response)
+# np.save(output_path + '/label_response.npy', label_response)
+# np.save(output_path + '/demografic_data.npy', demografic_data)
+# np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)
+# np.save(output_path + '/adj_matrix.npy', adj)

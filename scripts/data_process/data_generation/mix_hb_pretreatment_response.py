@@ -2,8 +2,21 @@
 
 import sys
 import glob
-sys.path.append('/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction')
-
+import os 
+# path of data 
+def set_path():
+    if sys.platform == 'darwin':
+        print("Current system is macOS")
+        main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
+    elif sys.platform == 'linux':
+        print("Current system is Ubuntu")
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
+        
+    else:
+        print("Current system is neither macOS nor Ubuntu")
+    sys.path.append(main_fold_path)
+    os.chdir(main_fold_path)
+set_path()
 import time
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ReduceLROnPlateau
@@ -74,10 +87,10 @@ def check_replicate_subject(all_subject):
     return replicated_indices[0::2]
 
 
-follow_up_fold = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/RawData'
+follow_up_fold = 'allData/RawData'
 T8_path = follow_up_fold + '/T8_fnirs/Session 2_VFT'
 base_patient_path = follow_up_fold + '/Baseline_fnirs/Patients'
-cli_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
+cli_path = 'allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
 
 cgi_sgs_data = pd.read_excel(cli_path, sheet_name='SDS_CGI_All Timepoints')
 
@@ -124,12 +137,10 @@ for sub_index, subject in enumerate(all_subject):
     label_hamd.append(sub_label)
     
     demographic = excel_data[excel_data['Subject ID'] == subject].iloc[:, 2:13]
-    demografic_data.append(demographic)
+    demografic_data.append(demographic.values)
     
     clinical = cgi_sgs_data[cgi_sgs_data['Subject ID'] == subject].iloc[:, 1:7]
-    baseline_clinical_data.append(clinical)
-    
-
+    baseline_clinical_data.append(clinical.values)    
     
     all_involve_subject.append(subject)
     hbo_hbr = np.zeros((1251, 52, 2))
@@ -145,12 +156,13 @@ label_hamd = np.array(label_hamd)
 demografic_data = np.squeeze(np.array(demografic_data))
 baseline_clinical_data = np.squeeze(np.array(baseline_clinical_data))
 
-
-
 # check if there is any replicated subject, becasue there might be two files with same subject names
-replicated_indices = check_replicate_subject(all_subject)
-print(f'return replicated_indices {replicated_indices}')
+
 all_involve_subject = np.array(all_involve_subject)
+replicated_indices = check_replicate_subject(all_involve_subject)
+print(f'return replicated_indices {replicated_indices}')
+print(f" before delete of all_involve_subject -> {all_involve_subject}") 
+print(' the subject you will delete', all_involve_subject[replicated_indices[0]])
 all_involve_subject = np.delete(all_involve_subject, replicated_indices, axis=0)
 
 HAMD_ALL_HISTORY = read_HAMD_ALL_HISTORY(cli_path, all_involve_subject)
@@ -164,12 +176,15 @@ print('PSYCHIATRY_HISTORY.shape', PSYCHIATRY_HISTORY.shape)
 print('CLINICAL_HISTORY.shape', CLINICAL_HISTORY.shape)
 print('demographic', demographic.shape)
 
+# print(f" before delete of demografic_data -> {demografic_data}") 
 # delete the replicated subject
 mdd_subject_base = np.delete(mdd_subject_base, replicated_indices, axis=0)
 label_hamd = np.delete(label_hamd, replicated_indices, axis=0)
 demografic_data = np.delete(demografic_data, replicated_indices, axis=0)
 baseline_clinical_data = np.delete(baseline_clinical_data, replicated_indices, axis=0)
 
+print(f'test-baseline_clinical_data -> {baseline_clinical_data.shape}')
+print(f'test-label_hamd -> {label_hamd.shape}')
 
 # baseline HAMD will be added into the baseline_clinical_data 
 baseline_clinical_data = np.concatenate((baseline_clinical_data, label_hamd[:, 0:1]), axis=1)
@@ -207,7 +222,7 @@ adj = np.tile(adj, (number_of_subjects, 1, 1))
 print("adj_matrix shape: ", adj.shape)
 
 
-output_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/prognosis_mix_hb/pretreatment_response'
+output_path = 'allData/prognosis_mix_hb/pretreatment_response'
 if not os.path.exists(output_path):
     os.makedirs(output_path)
     
