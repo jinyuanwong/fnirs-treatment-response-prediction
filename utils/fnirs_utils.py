@@ -1179,3 +1179,21 @@ def get_channel_to_region_dict():
         ch = int(i[1:])
         channel_to_dict[ch] = 'MPC'
     return channel_to_dict
+
+
+def impute_nan_data(data):
+    input = data.copy()
+    from sklearn.experimental import enable_iterative_imputer
+    # Now you can import IterativeImputer
+    from sklearn.impute import IterativeImputer
+
+
+    # Create an instance of IterativeImputer
+    imputer = IterativeImputer()
+
+    # Fit the imputer on the clinical_data ndarray
+    imputer.fit(input)
+
+    # Transform the clinical_data ndarray by imputing the NaN values
+    imputed_data = imputer.transform(input)
+    return imputed_data

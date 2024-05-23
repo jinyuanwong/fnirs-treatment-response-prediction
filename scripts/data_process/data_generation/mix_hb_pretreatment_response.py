@@ -91,14 +91,9 @@ follow_up_fold = 'allData/RawData'
 T8_path = follow_up_fold + '/T8_fnirs/Session 2_VFT'
 base_patient_path = follow_up_fold + '/Baseline_fnirs/Patients'
 cli_path = 'allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
-
 cgi_sgs_data = pd.read_excel(cli_path, sheet_name='SDS_CGI_All Timepoints')
-
-
 excel_data = pd.read_excel(cli_path, sheet_name='Summary T0T8_fNIRS Analysis')
 label_hamd = []
-
-
 demografic_data = []
 baseline_clinical_data = []
 
@@ -219,8 +214,18 @@ hb_data = mdd_subject_base
 number_of_subjects = hb_data.shape[0]
 adj = generate_fnirs_adj().toarray()
 adj = np.tile(adj, (number_of_subjects, 1, 1))
-print("adj_matrix shape: ", adj.shape)
 
+# generate hamd time line 
+hamd_timeline = pd.read_excel(cli_path, sheet_name='TimelineHAMD')
+hamd_timeline_data = {}
+for i in range(9):
+    name = hamd_timeline.values[0, i]
+    value = hamd_timeline.values[1:, i]
+    hamd_timeline_data[name] = value
+hamd_timeline_data = pd.DataFrame(hamd_timeline_data)
+filter_values_hamd_timeline = hamd_timeline_data[hamd_timeline_data['Subject ID'].isin(all_involve_subject)]
+filter_values_hamd_timeline = filter_values_hamd_timeline.values 
+filter_values_hamd_timeline = filter_values_hamd_timeline[:, 1:]
 
 output_path = 'allData/prognosis_mix_hb/pretreatment_response'
 if not os.path.exists(output_path):
@@ -238,3 +243,4 @@ np.save(output_path + '/HAMD_ALL_HISTORY.npy', HAMD_ALL_HISTORY)
 np.save(output_path + '/PSYCHIATRY_HISTORY.npy', PSYCHIATRY_HISTORY)
 np.save(output_path + '/CLINICAL_HISTORY.npy', CLINICAL_HISTORY)
 np.save(output_path + '/demographic.npy', demographic)
+np.save(output_path + '/hamd_timeline.npy', filter_values_hamd_timeline)

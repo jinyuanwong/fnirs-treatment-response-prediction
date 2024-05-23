@@ -16,7 +16,7 @@ print(f"Chi2 statistic: {chi2}, p-value: {p}")
 print("Expected frequencies:", expected)
 
 # Read the Excel file
-demography_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
+demography_path = 'allData/fNIRS x MDD Data_Demographics_Clinical.xlsx'
 
 total_num_of_people = 72
 
