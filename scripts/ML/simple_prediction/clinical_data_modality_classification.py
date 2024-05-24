@@ -36,7 +36,7 @@ def choose_modality(modality):
     return data, labels, save_fold
 
 
-def train():
+def train(num_of_repeat):
 
     modalities = ['clinical + fnirs',
                   'clinical + MDDR', 'clinical + fnirs + MDDR']
@@ -46,7 +46,7 @@ def train():
         # Shuffle the data and labels
         random_seed = 42
         result = {}
-        num_of_repeat = 10
+        # num_of_repeat = 1
         for i in range(num_of_repeat):
             np.random.seed(random_seed)
             shuffled_indices = np.random.permutation(len(data))
@@ -67,6 +67,7 @@ def train():
 def evaluate_model(path):
     result = np.load(path, allow_pickle=True)
     result = result.item()
+    TOTAL_REPETITION = len(result)
     # for key, value in result.items():
     #     print(key)
     #     print(value)
@@ -83,9 +84,9 @@ def evaluate_model(path):
         for metric in metrics:
 
             avg_inner_result[classifier][metric] = [
-                result[i]['inner_result'][classifier][metric] for i in range(10)]
+                result[i]['inner_result'][classifier][metric] for i in range(TOTAL_REPETITION)]
             avg_external_result[classifier][metric] = [
-                result[i]['external_result'][classifier][metric] for i in range(10)]
+                result[i]['external_result'][classifier][metric] for i in range(TOTAL_REPETITION)]
 
     print("\n## Inner Cross-Validation Performance")
     print("| Classifier | Average bAcc | Average Sensitivity | Average Specificity | Average F1 Score |")
@@ -117,6 +118,6 @@ if __name__ == "__main__":
     # change the working directory to the main folder
     set_path()
 
-    # train()
+    # train(num_of_repeat=10)
 
     evaluate()

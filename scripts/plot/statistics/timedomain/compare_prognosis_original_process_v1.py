@@ -285,6 +285,7 @@ def show_hb_type(data, label, hb_type_name, fig_name, task_start_index, task_end
     plt.xlim([1, 53.01])
     # Show the plot
     using_fdr_flag = 'w_fdr' if using_fdr else 'wo_fdr'
+    print('fig is saved in ', output_fold+f'/{fig_name}_{using_fdr_flag}.png')
     plt.savefig(output_fold+f'/{fig_name}_{using_fdr_flag}.png')
     plt.show()
     

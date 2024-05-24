@@ -232,6 +232,7 @@ def show_hb_type(data, label, output_fold, hb_type_name, nine_region_name, fig_n
     plot_pretreatment_analysis(axes[1], effect_size, data_shape, hb_type_name, nine_region_name, type='effect_size', using_fdr=using_fdr, fig_name=fig_name)
     
     using_fdr_flag = 'w_fdr' if using_fdr else 'wo_fdr'
+    print('fig is saved in ', output_fold+f'/{fig_name}_{using_fdr_flag}.png')
     plt.savefig(output_fold+f'/{fig_name}_{using_fdr_flag}.png')
     plt.show()
     
@@ -251,13 +252,10 @@ import os
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 # name_of_input = ['pre_treatment', 'post_treatment', 'pre_minus_post_treatment']
-name_of_input = ['Nonresponders vs. Responders']
+name_of_input = ['Nonresponders vs. Responders (nine regions)']
 for fig_name in name_of_input:
-    print(fig_name)
-    if fig_name =='Nonresponders vs. Responders':
-        print('entering - 1')
-        data = DATA
-        label = LABEL
+    data = DATA
+    label = LABEL
 
 
 
