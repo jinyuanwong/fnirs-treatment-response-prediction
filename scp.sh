@@ -17,5 +17,5 @@ rsync -avz --progress ./allData $s5:~/Documents/fnirs/treatment_response/fnirs-d
 scp jy@100.122.67.5:/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData/fNIRSxMDDData_Demographics_Clinical.xlsx /Users/shanxiafeng/Desktop/csc/
 
 
-rsync -avz --progress $s5:~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData ./allData 
+rsync -avz --progress $s5:~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData /Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/
 rsync
