@@ -401,6 +401,8 @@ class Classifier_GNN_Transformer():
         l2_rate = parameter['l2_rate']
         num_class = parameter['num_class']  # 2
         lr_factor = self.info['parameter']['lr_factor'] if self.info['parameter'].get('lr_factor') else 1
+        self.class_weights_dict = {0: 1,  # weight for class 0
+                 1: parameter['classweight1']}  # weight for class 1, assuming this is the minority class
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers * lr_factor, warmup_step)
         optimizer = tf.keras.optimizers.AdamW(learning_rate,
@@ -508,10 +510,6 @@ class Classifier_GNN_Transformer():
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test, cli_demo_train, cli_demo_val, cli_demo_test):
         start_time = time.time()
 
-        class_weights = {0: 1,  # weight for class 0
-                 1: 5}  # weight for class 1, assuming this is the minority class
-
-        self.class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
         hist = self.model.fit(
             x=[X_train, adj_train, cli_demo_train],
             y=Y_train,
