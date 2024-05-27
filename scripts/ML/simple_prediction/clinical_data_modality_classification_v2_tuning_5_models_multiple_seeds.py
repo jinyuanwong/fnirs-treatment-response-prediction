@@ -2,8 +2,8 @@ import numpy as np
 import os
 from fine_tune_model import define_classifier_for_classification
 from validation_method import stratified_5_fold_classification, nested_cross_validation_classification, loocv_classification
-from utils_simple_prediction import add_task_change_data, load_data_for_classification, add_cgi, add_mddr, set_path, load_task_change_data
-
+from utils_simple_prediction import add_task_change_data, load_data_for_classification, add_cgi, add_mddr, set_path, load_task_change_data, save_model_seed
+import time
 
 def classification(data, labels):
     # Define the classifiers
@@ -26,14 +26,6 @@ def choose_modality(modality):
     elif modality == 'clinical + fnirs':
         save_fold = 'results/ML_results/simple_prediction/clinical_data_and_fnirs_modality_classification/'
         data = add_task_change_data(data)
-    elif modality == 'clinical + MDDR':
-        save_fold = 'results/ML_results/simple_prediction/clinical_data_and_mddr_modality_classification/'
-        data = add_mddr(data)
-    elif modality == 'clinical + fnirs + MDDR':
-        save_fold = 'results/ML_results/simple_prediction/clinical_data_and_fnirs_mddr_modality_classification/'
-        data = add_task_change_data(data)
-        data = add_mddr(data)
-
     if not os.path.exists(save_fold):
         os.makedirs(save_fold)
     return data, labels, save_fold
@@ -41,17 +33,16 @@ def choose_modality(modality):
 
 def train(num_of_repeat, random_seed = 42):
 
-    modalities = ['fnirs only']#['clinical + fnirs',
-                  #'clinical + MDDR', 'clinical + fnirs + MDDR']
-    for modality in modalities:
-        data, labels, save_fold = choose_modality(modality)
+    modalities = ['clinical only', 'fnirs only', 'clinical + fnirs'] # ['fnirs only'] #
+    for i in range(num_of_repeat):
+        for modality in modalities:
+            random_seed += 1
+            data, labels, save_fold = choose_modality(modality)
 
-        # Shuffle the data and labels
-        
-        result = {}
-        # num_of_repeat = 1
-        for i in range(num_of_repeat):
-            random_seed += i
+            # Shuffle the data and labels
+            # result = {}
+            # num_of_repeat = 1
+
             np.random.seed(random_seed)
             shuffled_indices = np.random.permutation(len(data))
             shuffle_data = data[shuffled_indices]
@@ -60,12 +51,14 @@ def train(num_of_repeat, random_seed = 42):
             inner_result, external_result = classification(
                 shuffle_data, shuffle_labels)
 
-            result[i] = {
+            save_result = { # result[i] = 
                 'inner_result': inner_result,
                 'external_result': external_result
             }
+            
+            save_model_seed(save_fold, random_seed, save_result)
 
-        np.save(save_fold + 'ten_repeat_nested_cv.npy', result)
+        # np.save(save_fold + 'ten_repeat_nested_cv.npy', result)
 
 
 def evaluate_model(path):
@@ -121,7 +114,7 @@ def evaluate():
 if __name__ == "__main__":
     # change the working directory to the main folder
     set_path()
+    time_seed = int(time.time())
+    train(num_of_repeat=5, random_seed=time_seed) # random_seed=42
 
-    train(num_of_repeat=5, random_seed=1024) # random_seed=42
-
-    evaluate()
+    # evaluate()

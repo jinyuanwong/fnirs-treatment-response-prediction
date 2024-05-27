@@ -130,7 +130,7 @@ PARAMETER = {
         'd_model': 16,#np.random.choice([16, 32, 64]),
         'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
         'n_layers': 6,#np.random.choice([4, 8, 12]),
-        'cli_demo_shape': [18],
+        'cli_demo_shape': [17],
         'cli_dense_units': [32, 32, 16],
         'cli_demo_path': 'nor_demo_cli_merge_data.npy',
         'num_class': 2,

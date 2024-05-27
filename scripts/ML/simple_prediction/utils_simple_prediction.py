@@ -1,6 +1,9 @@
 import numpy as np 
 import os
 import sys 
+import pandas as pd
+import json
+
 def set_path():
     if sys.platform == 'darwin':
         print("Current system is macOS")
@@ -18,6 +21,7 @@ def load_data_for_classification():
     data = np.load(data_pth)
     labels = np.load(label_pth)
     return data, labels
+
 
 def add_cgi(data):
     cgi_path = 'allData/prognosis_mix_hb/pretreatment_response/nor_T2_SDS_CGI.npy'
@@ -54,3 +58,55 @@ def load_data():
     labels = np.load(label_pth)
     labels = change_hamd_to_percent(labels)
     return data, labels
+
+def save_into_csv(csv_filename, arr):
+    headers = ["random_seed", "validation_acc", "validation_sen", "validation_spe", "validation_auc",
+           "test_acc", "test_sen", "test_spe", "test_auc"]
+    df = pd.DataFrame([arr], columns=headers)
+    file_exists = os.path.isfile(csv_filename)
+    if not file_exists:
+        # If file does not exist, write data with headers   
+        df.to_csv(csv_filename, index=False, mode='w')
+        print(f"Data saved to {csv_filename} with headers.")
+    else:
+        # If file exists, append data without headers
+        df.to_csv(csv_filename, index=False, mode='a', header=False)
+        print(f"Data appended to {csv_filename} without headers.")
+        
+
+# Function to save results
+def save_results_pred(model_name, seed, y_pred, y_pred_prob, filename):
+    # Load existing results if the file exists
+    try:
+        with open(filename, 'r') as file:
+            results = json.load(file)
+    except FileNotFoundError:
+        results = {}
+
+    # Create an entry for the current model and seed
+    key = f"{model_name}_seed_{seed}"
+    results[key] = {
+        'y_pred': y_pred.tolist(),  # Convert to list for JSON serialization
+        'y_pred_prob': y_pred_prob.tolist()  # Convert to list for JSON serialization
+    }
+
+    # Save the updated results back to the file
+    with open(filename, 'w') as file:
+        json.dump(results, file, indent=4)
+
+        
+def save_model_seed(save_fold, random_seed, save_result):
+
+    model_name = [i for i in save_result['inner_result']]
+    for model in model_name:
+        val_result = [round(val, 4) for key, val in save_result['inner_result'][model].items()]
+        test_result = [round(val, 4) for key, val in save_result['external_result'][model].items() if key[-4:] != 'test']
+        val_test_arr = [random_seed] +  val_result + test_result
+        save_path = save_fold + model + '.csv'
+        
+        y_pred = save_result['external_result'][model]['y_pred_test']
+        y_pred_prob = save_result['external_result'][model]['y_true_test']
+
+        save_results_pred(model, random_seed, y_pred, y_pred_prob, save_fold + model + '_pred.json')
+        
+        save_into_csv(save_path, val_test_arr)
