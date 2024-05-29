@@ -26,6 +26,9 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
     if classifier_name == 'gnn_transformer_with_cli_demo':  # Time-CNN
         from classifiers import gnn_transformer_with_cli_demo
         return gnn_transformer_with_cli_demo.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
+    if classifier_name == 'gnn_transformer_with_cli_demo_v1':  # Time-CNN
+        from classifiers import gnn_transformer_with_cli_demo_v1
+        return gnn_transformer_with_cli_demo_v1.Classifier_GNN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)
     if classifier_name == 'gin_transformer':  # Time-CNN
         from classifiers import gin_transformer
         return gin_transformer.Classifier_GIN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)

@@ -215,8 +215,12 @@ label_response = np.zeros(label_hamd.shape[0])
 for i, val in enumerate(label_hamd):
     if (val[1] - val[0]) / val[0] <= -0.5:
         label_response[i] = 1
-        # print('label_responder[i] -> ', label_responder[i])
-        # print('val -> ',val)
+        
+label_partial_response = np.zeros(label_hamd.shape[0])
+for i, val in enumerate(label_hamd):
+    if (val[1] - val[0]) / val[0] <= -0.25:
+        label_partial_response[i] = 1      
+        
 print(label_response)
 count = np.count_nonzero(label_response == 1)
 print(f" number of remission subject in pretreatment -> {count}")
@@ -253,6 +257,7 @@ if not os.path.exists(output_path):
 np.save(output_path + '/hb_data.npy', hb_data)
 np.save(output_path + '/label_hamd.npy', label_hamd)
 np.save(output_path + '/label_response.npy', label_response)
+np.save(output_path + '/label_partial_response.npy', label_partial_response)
 np.save(output_path + '/label.npy', label_response)
 np.save(output_path + '/demografic_data.npy', demografic_data) # demografic is 2-13 (2-9 is demographic, 10-13 is clinical)
 np.save(output_path + '/baseline_clinical_data.npy', baseline_clinical_data)

@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, LeaveOneOut
 
-from sklearn.metrics import recall_score, roc_auc_score, accuracy_score, confusion_matrix, make_scorer, f1_score
+from sklearn.metrics import recall_score, roc_curve, roc_auc_score, accuracy_score, confusion_matrix, make_scorer, f1_score, auc
 
 
 def calculate_metrics(y_true, y_pred, y_pred_prob):
@@ -111,7 +111,15 @@ def loocv_classification(data, labels, classifiers):
         print(f"| {row[0]} | {row[1]:.4f} | {row[2]:.4f} | {row[3]:.4f} | {row[4]:.4f} |")
 
 
+def calculate_threshold_of_prediction(y_true, y_pred_prob):
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred_prob)
+    # Find the optimal threshold
+    optimal_idx = np.argmax(tpr - fpr)
+    optimal_threshold = thresholds[optimal_idx]
+    return optimal_threshold
 
+def pred_using_threshold(y_pred_prob, threshold):
+    return (y_pred_prob >= threshold).astype(int)
 
 def nested_cross_validation_classification(data, labels, classifiers):
     outer_cv = LeaveOneOut()
@@ -138,15 +146,19 @@ def nested_cross_validation_classification(data, labels, classifiers):
                 y_inner_train, y_inner_test = y_train[inner_train_index], y_train[inner_test_index]
                 clf.fit(X_inner_train, y_inner_train)
                 y_pred_prob = clf.predict_proba(X_inner_test)[:, 1]
+                # optimal_threshold = calculate_threshold_of_prediction(y_inner_test, y_pred_prob)
+                # y_pred = pred_using_threshold(y_pred_prob, optimal_threshold)
                 y_pred = clf.predict(X_inner_test)
                 inner_metrics = calculate_metrics(y_inner_test, y_pred, y_pred_prob)
 
                 for metric, score in inner_metrics.items():
                     inner_scores[metric].append(score)
-
                 outer_prediction = clf.predict(X_test)[0]
                 outer_prediction_prob = clf.predict_proba(X_test)[0]
-                all_outer_predictions[name].append(outer_prediction)
+                # outer_prediction = (outer_prediction_prob[1] > optimal_threshold).astype(int)
+                
+                ## do not modify the order of the following two lines
+                all_outer_predictions[name].append(outer_prediction) # 
                 all_outer_predictions[name].append(outer_prediction_prob[1])
                 
             inner_averages = {metric: np.mean(scores) for metric, scores in inner_scores.items()}

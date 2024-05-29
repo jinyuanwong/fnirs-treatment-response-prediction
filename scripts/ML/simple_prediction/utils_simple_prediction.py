@@ -22,6 +22,11 @@ def load_data_for_classification():
     labels = np.load(label_pth)
     return data, labels
 
+def load_data_for_partial_response_prediction():
+    label_pth = 'allData/prognosis_mix_hb/pretreatment_response/label_partial_response.npy'
+    labels = np.load(label_pth)
+    return labels
+
 
 def add_cgi(data):
     cgi_path = 'allData/prognosis_mix_hb/pretreatment_response/nor_T2_SDS_CGI.npy'

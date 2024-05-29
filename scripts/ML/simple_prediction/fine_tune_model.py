@@ -10,8 +10,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 from sklearn.naive_bayes import GaussianNB
-
-
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearDiscriminantAnalysis
+from sklearn.linear_model import SGDClassifier
 CV = StratifiedKFold(n_splits=5)
 # CV = LeaveOneOut() # StratifiedKFold(n_splits=5)
 # 
@@ -24,9 +24,11 @@ def get_class_weight_dict(labels):
 
     class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(labels), y=labels)
     class_weight_dict= {i : class_weights[i] for i in range(len(class_weights))}
+    
+    print("Class weights: ", class_weight_dict)
     return class_weight_dict
 
-def tune_random_forest(data, labels):
+def tune_random_forest(data, labels, weight_0=None):
     # Define the parameter grid for RandomForestClassifier
     param_grid = {
         'n_estimators': [100, 200, 300],
@@ -37,9 +39,13 @@ def tune_random_forest(data, labels):
     }
 
     # Compute class weights
-
+    if weight_0 is not None:
+        class_weight_dict = {0: weight_0, 1: 1 - weight_0}
+    else:
+        class_weight_dict = {0: 1 - 0.99999999, 1: 0.99999999}
+        
     # Create the GridSearchCV object
-    grid_search = GridSearchCV(RandomForestClassifier(class_weight=get_class_weight_dict(labels)), 
+    grid_search = GridSearchCV(RandomForestClassifier(class_weight=class_weight_dict), 
                                param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=20)
 
     # Fit the model
@@ -92,7 +98,9 @@ def tune_svm(data, labels):
     # Create a StratifiedKFold object
 
     # Create the SVC object
-    class_weight_dict = get_class_weight_dict(labels)
+    # class_weight_dict = get_class_weight_dict(labels)
+    weight_1 = 0.925
+    class_weight_dict = {0: 1 - weight_1, 1: weight_1}
     svc = SVC(class_weight=class_weight_dict)
 
     # Create the GridSearchCV object
@@ -138,29 +146,6 @@ def tune_svr(data, labels):
     # Return the best estimator
     return grid_search.best_estimator_
 
-
-def tune_gradient_boosting(data, labels):
-    param_grid = {
-        'n_estimators': [100, 200, 300],
-        'learning_rate': [0.01, 0.1, 0.2],
-        'max_depth': [3, 5, 7]
-    }
-    grid_search = GridSearchCV(GradientBoostingClassifier(), param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=12)
-    grid_search.fit(data, labels)
-    print("Best parameters for Gradient Boosting: ", grid_search.best_params_)
-    return grid_search.best_estimator_
-
-def tune_adaboost(data, labels):
-    param_grid = {
-        'n_estimators': [50, 100, 200, 500],
-        'learning_rate': [0.01, 0.1, 1]
-    }
-    grid_search = GridSearchCV(AdaBoostClassifier(), param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=12)
-    grid_search.fit(data, labels)
-    print("Best parameters for AdaBoost: ", grid_search.best_params_)
-    return grid_search.best_estimator_
-
-
 def tune_knn(data, labels):
     param_grid = {
         'n_neighbors': [3, 5, 7, 9],
@@ -175,10 +160,7 @@ def tune_knn(data, labels):
 
 def tune_mlp(data, labels):
     # Define the parameter grid for MLPClassifier
-    
-    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(labels), y=labels)
-    class_weights_dict = {i: class_weights[i] for i in range(len(class_weights))}
-    
+    class_weights = {0: 0.2, 1: 0.8}
     param_grid = {
         'hidden_layer_sizes': [(32, 32, 16), (64, 64, 32)],
         'activation': ['relu'],
@@ -188,6 +170,7 @@ def tune_mlp(data, labels):
     # param_grid = {'activation': ['relu'], 'hidden_layer_sizes': [(32, 32, 16)], 'learning_rate_init': [0.1], 'solver': ['adam']}
     # Create the GridSearchCV object
     grid_search = GridSearchCV(MLPClassifier(max_iter=2000), param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=15)
+
 
     # Fit the model
     grid_search.fit(data, labels)
@@ -200,17 +183,18 @@ def tune_mlp(data, labels):
     return grid_search.best_estimator_
 
 
-def tune_gaussian_nb(data, labels):
+def tune_gaussian_nb(data, labels, weight_0=None):
     # Define the parameter grid
     param_grid = {
         'var_smoothing': np.logspace(-9, 0, 10)
     }
-    
-    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(labels), y=labels)
-    class_prior = class_weights / class_weights.sum()  # Normalize to get prior probabilities
-    
+    if weight_0 is None:
+        weight_0 = 0.98
+        class_prior = [weight_0, 1-weight_0]  # Increase the prior probability of the negative class
+    else:
+        class_prior = [weight_0, 1-weight_0]
     # Create the GaussianNB model
-    gnb = GaussianNB() # priors=class_prior
+    gnb = GaussianNB(priors=class_prior) # priors=class_prior
     
     # Define the GridSearchCV
     grid_search = GridSearchCV(estimator=gnb, param_grid=param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=20)
@@ -225,16 +209,140 @@ def tune_gaussian_nb(data, labels):
     # Return the best estimator
     return grid_search.best_estimator_
 
-def define_classifier_for_classification(data, labels):
+def tune_qda(data, labels, weight_0=None):
+    # Define the parameter grid
+    param_grid = {
+        'reg_param': np.linspace(0, 1, 10)
+    }
 
+    # Define class weights
+
+    # Compute sample weights
+    # sample_weights = compute_sample_weight(class_weight=class_weights, y=labels)
+    if weight_0 is  not None:
+        priors_ = [weight_0, 1-weight_0]
+    else:
+        weight_0 = 0.8
+        priors_ = [weight_0, 1-weight_0]
+    qda = QuadraticDiscriminantAnalysis(priors=priors_)
+
+
+    # Define the GridSearchCV
+    grid_search = GridSearchCV(estimator=qda, param_grid=param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=12)
+
+    # Fit the model with sample weights
+    grid_search.fit(data, labels)
+
+    # Print the best parameters and score
+    print("Best parameters for QDA: ", grid_search.best_params_)
+    print("Best cross-validation score: ", grid_search.best_score_)
+
+    # Return the best estimator
+    return grid_search.best_estimator_
+
+def tune_lda(data, labels, weight_0=None):
+    # Define the parameter grid
+    param_grid = {
+        'solver': ['svd', 'lsqr', 'eigen'],
+        'shrinkage': [None, 'auto', 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]  # Only applicable if solver is 'lsqr' or 'eigen'
+    }
+
+    # Define class weights
+    if weight_0 is not None:
+        class_weights = [weight_0, 1-weight_0]
+
+    else:
+        class_weights = [0.8, 0.2]
+
+
+    # Create the LDA model
+    lda = LinearDiscriminantAnalysis(priors=class_weights)
+
+
+    # Define the GridSearchCV
+    grid_search = GridSearchCV(estimator=lda, param_grid=param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=12)
+
+    # Fit the model with sample weights
+    grid_search.fit(data, labels)
+
+    # Print the best parameters and score
+    print("Best parameters for LDA: ", grid_search.best_params_)
+    print("Best cross-validation score: ", grid_search.best_score_)
+
+    # Return the best estimator
+    return grid_search.best_estimator_
+
+
+def tune_sgd_classifier(data, labels, weight_0=None):
+    # Define the parameter grid for SGDClassifier
+    param_grid = {
+        'loss': ['log_loss'],  # Using log loss to enable predict_proba
+        'penalty': ['l2', 'l1', 'elasticnet'],
+        'alpha': [0.0001, 0.001, 0.01, 0.1, 1.0],
+        'max_iter': [1000, 2000, 3000],
+        'tol': [1e-4, 1e-3, 1e-2]
+    }
+
+    # Define class weights
+    if weight_0 is not None:
+        class_weight_dict = {0:weight_0, 1:1-weight_0}
+
+    else:
+        class_weight_dict = {0:0.2, 1:0.8}
+
+
+    # Create the GridSearchCV object
+    grid_search = GridSearchCV(SGDClassifier(class_weight=class_weight_dict), 
+                               param_grid, scoring=scoring_scorer, cv=5, verbose=1, n_jobs=20)
+
+    # Fit the model
+    grid_search.fit(data, labels)
+
+    # Print the best parameters and the corresponding score
+    print("Best parameters for SGD Classifier: ", grid_search.best_params_)
+    print("Best Accuracy score: ", grid_search.best_score_)
+
+    # Return the best estimator
+    return grid_search.best_estimator_
+
+def define_classifier_for_classification_for_response(data, labels, weight_0=None):
+    if weight_0 is not None:
+        weight_0_name = str(weight_0).replace('.', '_')
+    else:
+        weight_0_name = ''
     # Define the classifiers dictionary including the Voting Classifier
     classifiers = {
+        # "MLP": tune_mlp(data, labels),
+        # "KNN": tune_knn(data, labels),
         "SVM": tune_svm(data, labels),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
         "XGBoost": tune_xgboost(data, labels),#XGBClassifier(scale_pos_weight=1e6),
         "Naive Bayes": tune_gaussian_nb(data, labels),
-        "MLP": tune_mlp(data, labels),
-        "KNN": tune_knn(data, labels),
-        "Random Forest": tune_random_forest(data, labels)
+        "Random Forest": tune_random_forest(data, labels),
+        "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
+        "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0=0.5),
+        "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0=0.2),
+    }
+    
+    return classifiers
+
+
+def define_classifier_for_classification_for_partial_response(data, labels, weight_0=None):
+    if weight_0 is not None:
+        weight_0_name = str(weight_0).replace('.', '_')
+    else:
+        weight_0_name = ''
+    # Define the classifiers dictionary including the Voting Classifier
+    classifiers = {
+        # "MLP": tune_mlp(data, labels),
+        # "KNN": tune_knn(data, labels),
+        # "SVM": tune_svm(data, labels),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
+        # "XGBoost": tune_xgboost(data, labels),#XGBClassifier(scale_pos_weight=1e6),
+        # "Naive Bayes"+weight_0_name: tune_gaussian_nb(data, labels, weight_0=weight_0),
+        "Random Forest"+weight_0_name: tune_random_forest(data, labels, weight_0),
+        # "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0=0.5),
+        # "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0=0.52),
+        # "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
+        
     }
     
     return classifiers

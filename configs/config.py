@@ -136,6 +136,20 @@ PARAMETER = {
         'num_class': 2,
         'classweight1': 5,
     },
+    'gnn_transformer_with_cli_demo_v1':{
+        'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
+        'adj_path': 'adj_matrix.npy',
+        'l1_rate': 0.01,# should be 0.01
+        'l2_rate': 0.001,# should be 0.001
+        'd_model': 16,#np.random.choice([16, 32, 64]),
+        'batch_size': 64,#np.random.choice([4, 8, 16, 64]),
+        'n_layers': 6,#np.random.choice([4, 8, 12]),
+        'cli_demo_shape': [17],
+        'cli_dense_units': [32, 32, 16],
+        'cli_demo_path': 'nor_demo_cli_merge_data.npy',
+        'num_class': 2,
+        'classweight1': 5,
+    },    
     'graphformer': {
         'hb_path': 'data.npy',
         'adj_path': 'adj_matrix.npy',
