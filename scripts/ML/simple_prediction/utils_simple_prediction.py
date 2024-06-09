@@ -39,13 +39,32 @@ def add_mddr(data):
     mddr = np.load(mddr_path)
     mddr = mddr[..., -1]
     mddr = np.transpose(mddr, (1, 0))
+    mddr = mddr.mean(axis=1)[..., np.newaxis]
     data = np.concatenate((data, mddr), axis=1)
     return data
 
 
-def load_task_change_data():
-    data_pth = 'allData/prognosis_mix_hb/pretreatment_response/task_change_hb.npy'
+def load_task_change_data(region_name='nine_regions'):
+    data_pth = 'allData/prognosis_mix_hb/pretreatment_response/task_change_hb_{}.npy'.format(region_name)
     data = np.load(data_pth)
+    return data
+
+def load_mean_fnirs_data(region_name='nine_regions'):
+    data_pth = 'allData/prognosis_mix_hb/pretreatment_response/mean_hb_{}.npy'.format(region_name)
+    data = np.load(data_pth)
+    return data
+
+
+
+def load_fnirs_feature_data(region_name = 'nine_regions'):
+    if region_name == 'nine_regions':
+        # data = task_change_nine_regions = load_task_change_data()[..., 2]
+        data = mean_nine_regions = load_mean_fnirs_data(region_name)[..., 2]
+        # data = np.concatenate((task_change_nine_regions, mean_nine_regions), axis=1)
+    if region_name == 'five_regions':
+        task_change_five_regions = load_task_change_data(region_name)[..., 2]
+        mean_five_regions = load_mean_fnirs_data(region_name)[..., 2]
+        data = np.concatenate((task_change_five_regions, mean_five_regions), axis=1)
     return data
 
 def add_task_change_data(data, index=2):
@@ -80,7 +99,7 @@ def save_into_csv(csv_filename, arr):
         
 
 # Function to save results
-def save_results_pred(model_name, seed, y_pred, y_pred_prob, filename):
+def save_results_pred(model_name, seed, y_pred, y_true, shap_values, filename):
     # Load existing results if the file exists
     try:
         with open(filename, 'r') as file:
@@ -92,7 +111,8 @@ def save_results_pred(model_name, seed, y_pred, y_pred_prob, filename):
     key = f"{model_name}_seed_{seed}"
     results[key] = {
         'y_pred': y_pred.tolist(),  # Convert to list for JSON serialization
-        'y_pred_prob': y_pred_prob.tolist()  # Convert to list for JSON serialization
+        'y_true': y_true.tolist(),  # Convert to list for JSON serialization
+        'shap': shap_values.tolist()
     }
 
     # Save the updated results back to the file
@@ -110,8 +130,11 @@ def save_model_seed(save_fold, random_seed, save_result):
         save_path = save_fold + model + '.csv'
         
         y_pred = save_result['external_result'][model]['y_pred_test']
-        y_pred_prob = save_result['external_result'][model]['y_true_test']
-
-        save_results_pred(model, random_seed, y_pred, y_pred_prob, save_fold + model + '_pred.json')
+        y_true = save_result['external_result'][model]['y_true_test']
+        if save_result['external_result'][model].get('shap_values_test') is not None:
+            shap_values = save_result['external_result'][model]['shap_values_test']
+        else:
+            shap_values = np.array([])
+        save_results_pred(model, random_seed, y_pred, y_true, shap_values, save_fold + model + '_pred.json')
         
         save_into_csv(save_path, val_test_arr)

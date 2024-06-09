@@ -12,9 +12,9 @@ def check_have_enough_files(path, model_para):
                 return False
     return True
 
-model = 'gnn_transformer' # gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
+model = 'gnn_transformer_with_task_change_v2' # gnn_transformer_with_cli_demo_v1 gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
-config = 'pretreatment_response_cv_5_mix_hb'
+config = 'pretreatment_response_cv_5_mix_hb_epoch_500'
 dataset = 'prognosis_mix_hb'
 task = 'pretreatment_response'
 
@@ -25,7 +25,7 @@ if not os.path.exists(all_region_path):
 
 all_region_itr_count = os.listdir(all_region_path)
 print('all_region_itr_count', all_region_itr_count)
-all_region_itr_count = [i for i in all_region_itr_count if i[:3] == 'loo']
+all_region_itr_count = [i for i in all_region_itr_count if i[:3] == 'loo' and i[-len(config):] == config]
 
 # if the itr amount of temoral is less than frontal, then run the temporal
 
@@ -37,16 +37,16 @@ run_path = all_region_path
 print(count)
 # current itr is  
 current_itr = len(count)-1
-print(f"len(count): {current_itr}")
+print(f"Now will try to see all the result of loocv_v{current_itr}")
 
 # if no loocv_v0 .... no need to check just run loocv_v0
 if current_itr != -1:
     # check if the itr_{current_itr} have all LOO_63 and 5 fold
     for i in count:
         if not i[7:9].isdigit():
-            itr = int(i[7])
+            itr = int(i[7]) # loocv_v [7]
         else:
-            itr = int(i[7:9])
+            itr = int(i[7:9]) # loocv_v [7][8]
         if itr == current_itr:
             print(i)
             cuurent_itr_para = i

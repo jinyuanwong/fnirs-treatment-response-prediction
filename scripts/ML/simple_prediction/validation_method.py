@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, LeaveOneOut
-
+import shap
 from sklearn.metrics import recall_score, roc_curve, roc_auc_score, accuracy_score, confusion_matrix, make_scorer, f1_score, auc
 
 
@@ -121,20 +121,50 @@ def calculate_threshold_of_prediction(y_true, y_pred_prob):
 def pred_using_threshold(y_pred_prob, threshold):
     return (y_pred_prob >= threshold).astype(int)
 
+def customize_shap_explainer(name, model, X_train):
+    explainer_type = None
+    if name == 'XGBoost':
+        return shap.TreeExplainer(model)
+    elif name == 'Random Forest':
+        return shap.TreeExplainer(model)
+    elif name == 'Naive Bayes':
+        return shap.KernelExplainer(model.predict_proba, X_train)
+    elif name == 'Discriminant Analysis(LDA)':
+        return shap.LinearExplainer(model, X_train)
+    elif name == 'SGDClassifier':
+        return shap.LinearExplainer(model, X_train)
+    elif name == 'SVM':
+        return shap.KernelExplainer(model.predict_proba, X_train)
+    else:
+        raise ValueError(f"Unsupported model name: {name}")
+
+def compuate_shap_values(model_name, model, X_train, X_test):
+    explainer = customize_shap_explainer(model_name, model, X_train)
+    shap_values = explainer.shap_values(X_test)
+    
+    if model_name in ['Naive Bayes', 'SVM']:
+        shap_values = shap_values[1][0]
+    elif model_name in ['Discriminant Analysis(LDA)', 'SGDClassifier']:
+        shap_values = shap_values[0]
+    elif model_name in ['XGBoost', 'Random Forest']:
+        shap_values = shap_values[0]
+    else:
+        raise ValueError(f"Unsupported model name for return in SHAP: {model_name}")
+    return shap_values
+
 def nested_cross_validation_classification(data, labels, classifiers):
     outer_cv = LeaveOneOut()
     outer_metrics = ['balanced accuracy', 'sensitivity', 'specificity', 'auc']
     outer_performance = {name: {metric: [] for metric in outer_metrics} for name in classifiers}
     inner_performance = {name: {metric: [] for metric in outer_metrics} for name in classifiers}
-    all_true_labels = []
-    all_outer_predictions = {name: [] for name in classifiers}
-    result_table = []
-
+    all_outer_predictions = {name: {'pred':[], 'pred_prob':[]} for name in classifiers} # pred is using clf.predict, pred_prob is using clf.predict_proba
+    shap_values = {name: [] for name in classifiers}
     num_k_folds = 5
+
     for train_index, test_index in outer_cv.split(data):
+        # print('test_index', test_index)
         X_train, X_test = data[train_index], data[test_index]
         y_train, y_test = labels[train_index], labels[test_index]
-        all_true_labels.append(y_test[0])
 
         inner_cv = StratifiedKFold(n_splits=num_k_folds)
         
@@ -158,29 +188,34 @@ def nested_cross_validation_classification(data, labels, classifiers):
                 # outer_prediction = (outer_prediction_prob[1] > optimal_threshold).astype(int)
                 
                 ## do not modify the order of the following two lines
-                all_outer_predictions[name].append(outer_prediction) # 
-                all_outer_predictions[name].append(outer_prediction_prob[1])
-                
+                all_outer_predictions[name]['pred'].append(outer_prediction) # 
+                all_outer_predictions[name]['pred_prob'].append(outer_prediction_prob[1])
+                shap_value = compuate_shap_values(name, clf, X_inner_train, X_test)
+                print('shap_value', shap_value)
+                # shap_value = shap_value[0] # [1] is the class of interest, [0] means only have one sample
+                shap_values[name].append(shap_value)
+
             inner_averages = {metric: np.mean(scores) for metric, scores in inner_scores.items()}
             for metric, avg in inner_averages.items():
                 inner_performance[name][metric].append(avg)
     
-    all_true_labels = np.array(all_true_labels)
     
     for name, predictions in all_outer_predictions.items():
         predictions = np.array(predictions)
-        pred = predictions[::2]
-        pred_prob = predictions[1::2]
-        print(f"pred -> {pred}")
-        print(f"pred_prob -> {pred_prob}")
+        pred = all_outer_predictions[name]['pred']
+        pred_prob = all_outer_predictions[name]['pred_prob']
         pred = averaging_multiple_folds_result_into_one(pred, num_k_folds)
         pred_prob = averaging_multiple_folds_result_into_one(pred_prob, num_k_folds, is_prob=True)
         
-        outer_metrics = calculate_metrics(all_true_labels, pred, pred_prob)
+        shap_values_test = np.reshape(np.array(shap_values[name]), (64, 5, data.shape[1])).mean(axis=1)
+
+        
+        outer_metrics = calculate_metrics(labels, pred, pred_prob)
 
         outer_performance[name] = outer_metrics
-        outer_performance[name]['y_pred_test'] = pred_prob
-        outer_performance[name]['y_true_test'] = all_true_labels
+        outer_performance[name]['y_pred_test'] = pred_prob 
+        outer_performance[name]['y_true_test'] = labels
+        outer_performance[name]['shap_values_test'] = shap_values_test
 
     # print("\n## Inner Cross-Validation Performance")
     # print("| Classifier | Average bAcc | Average Sensitivity | Average Specificity | Average AUC |")

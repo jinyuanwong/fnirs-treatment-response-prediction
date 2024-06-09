@@ -318,7 +318,7 @@ def define_classifier_for_classification_for_response(data, labels, weight_0=Non
         "XGBoost": tune_xgboost(data, labels),#XGBClassifier(scale_pos_weight=1e6),
         "Naive Bayes": tune_gaussian_nb(data, labels),
         "Random Forest": tune_random_forest(data, labels),
-        "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
+        # "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
         "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0=0.5),
         "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0=0.2),
     }

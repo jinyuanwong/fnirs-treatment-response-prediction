@@ -1121,7 +1121,6 @@ def get_nine_region_data(data):
     # Medial prefrontal cortex
     MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
     
-
     all_region_location = [left_PSFC_location, right_PSFC_location, left_DPC_location, right_DPC_location, left_STG_location, right_STG_location, left_VPC_location, right_VPC_location, MPC_location]
     all_region_location = [get_channel_index_of_region(i) for i in all_region_location]
     print(len(all_region_location))

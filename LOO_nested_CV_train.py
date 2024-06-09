@@ -81,7 +81,7 @@ class TrainModel():
                     num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
 
                 params = info['parameter']
-                msg = info['message'] + get_params_info(params)
+                msg = info['message'] + config_name #get_params_info(params)
                 loo_array = get_sorted_loo_array(model_name, msg, data.shape[0], DATASET=archive, K_FOLD=num_of_k_fold)
                 
                 for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
@@ -390,6 +390,7 @@ if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
     config_file_name = 'configs.' + arg[3]
+    config_name = arg[3]
     config = importlib.import_module(config_file_name)
     preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
     default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
