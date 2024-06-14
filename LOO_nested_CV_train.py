@@ -73,7 +73,7 @@ class TrainModel():
                         fnirs_data_path, model_name, self.label_path, self.hb_path, self.adj_path)
                 else:
                     data, label = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, None)
+                        fnirs_data_path, model_name, self.label_path, self.hb_path, None)
                 if SPECIFY_FOLD: 
                     num_of_k_fold = SPECIFY_FOLD
                 else:

@@ -9,6 +9,7 @@ STRATIFIED_CV_TOTAL_TRAININING_TIME = 20
 IS_USING_WANDB = False
 
 MAX_EPOCHS = 1000
+HOLD_OUT_DIV = 3 # for pretreatment
 
 
 # left_to_do SVM_ZHIFEI, RSFC_DUAN, NMF_ZHONG
@@ -24,6 +25,7 @@ PREPROCESSED_HB_FOLD_PATH = './allData/prognosis/pretreatment_benchmarks/'
 
 # DEFAULT_HB_FOLD_PATH = './allData/Output_npy/twoDoctor/' # for MDD classification, original diagnosis
 DEFAULT_HB_FOLD_PATH = './allData/' # for ./allData/prognosis/ diagnosis
+
 
 
 MONITOR_METRIC = 'accuracy'  #  'accuracy' or 'sensitivity' or 'f1_score'
@@ -196,7 +198,7 @@ PARAMETER = {
         'adj_path': 'neighbour_matrix.npy',
     },
     'transformer': {
-        'hb_path': 'data.npy',
+        'hb_path': 'hb_data.npy',
     },
     'mgn_transformer': {
         'hb_path': 'data.npy',

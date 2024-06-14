@@ -74,7 +74,7 @@ class TrainModel():
                     self.data, self.label, self.adj = data, label, adj
                 else:
                     data, label = simply_read_data_fnirs(
-                        fnirs_data_path, self.model_name, self.hb_path, None)
+                        fnirs_data_path, self.model_name, self.label_path, self.hb_path, None)
                     self.data, self.label = data, label
                 num_of_k_fold = self.config.SPECIFY_FOLD
                 params = info['parameter']

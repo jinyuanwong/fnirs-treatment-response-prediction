@@ -344,24 +344,20 @@ def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
     past_metrice = read_past_value(output_directory, check_metrice)
     current_metrice = read_current_value(Y_pred, Y_true, check_metrice)
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
-    save_data_to_file(output_directory + 'test_acc.txt', hist_df_metrics, info)
-    print(f'current saved file: {output_directory}' + 'test_acc.txt')
-    print(type(current_metrice))
-    print(f"Current {check_metrice}: {current_metrice}")
-
+    
     if current_metrice >= past_metrice:
         return True
     return False
 
 
-def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info):
+def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, save_file_name='val_acc.txt'):
     print(f'Y_pred: {Y_pred}')
     print(f'Y_true: {Y_true}')
     past_metrice = read_past_value(output_directory, check_metrice)
     current_metrice = read_current_value(Y_pred, Y_true, check_metrice)
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
-    save_data_to_file(output_directory + 'val_acc.txt', hist_df_metrics, info)
-    print(f'current saved file: {output_directory}' + 'val_acc.txt')
+    save_data_to_file(output_directory + save_file_name, hist_df_metrics, info)
+    print(f'current saved file: {output_directory}' + save_file_name)
     print(f"Current {check_metrice}: {current_metrice}")
 
     if current_metrice > past_metrice:
@@ -572,15 +568,14 @@ def shuffle_data_demo_label(data, label, demo, seed):
     data, demo, label = zip(*combined)
     return np.array(data), np.array(demo), np.array(label) 
 
-def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42):
+def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
     total_amount = data.shape[0] 
     data, label = shuffle_data_label(data, label, seed)
     label_not_onehot = np.argmax(label, axis=1)
     pos = data[label_not_onehot==1]
     neg = data[label_not_onehot==0]
-    
-    holdout_pos_num = pos.shape[0] // 3
-    holdout_neg_num = neg.shape[0] // 3
+    holdout_pos_num = pos.shape[0] // hold_out_div
+    holdout_neg_num = neg.shape[0] // hold_out_div
     
     X_test = np.concatenate((pos[:holdout_pos_num], neg[:holdout_neg_num]), axis=0)
     Y_test = np.concatenate((np.ones(holdout_pos_num), np.zeros(holdout_neg_num)), axis=0)
@@ -829,6 +824,8 @@ def save_logs(model, output_directory, result_name, hist, y_pred, y_true, durati
                 file.write(f"    {key} = {value} \n")
             file.write("}")
     print(f"save_checkpoiont - output_directory: {is_saving_checkpoint} {output_directory}")
+
+    # saving checkpoint should not be working because we want the result to be more objective (!!!in test or validation should be careful!!!)
     if is_saving_checkpoint:
         model.save_weights(output_directory + 'fold-best-checkpoint')
     else:

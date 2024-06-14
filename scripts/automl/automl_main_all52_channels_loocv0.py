@@ -12,9 +12,9 @@ def check_have_enough_files(path, model_para):
                 return False
     return True
 
-model = 'gnn_transformer' # gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
+model = 'mamba' # gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
-config = 'pretreatment_response_cv_5_mix_hb'
+config = 'pretreatment_response_mamba'
 dataset = 'prognosis_mix_hb'
 task = 'pretreatment_response'
 
