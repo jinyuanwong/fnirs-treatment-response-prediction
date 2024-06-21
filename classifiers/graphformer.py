@@ -148,15 +148,18 @@ class Classifier_Graph_Transformer():
         self.model.load_weights(
             self.output_directory + 'checkpoint')
         Y_pred = self.model.predict([X_test, adj_test])
+        self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
+        Y_val_pred = np.argmax(self.model.predict([X_val, adj_val]), axis=1)
+        Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
-
         save_validation_acc(self.output_directory, np.argmax(self.model.predict(
             [X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
-
-        if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_test, adj_test]), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
+                            save_file_name='test_acc.txt')
+        if check_if_save_model(self.output_directory, Y_val_pred, Y_val_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None
             save_logs(self.model, self.output_directory, None,

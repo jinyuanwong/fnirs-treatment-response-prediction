@@ -26,6 +26,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn import preprocessing
 from sklearn.model_selection import LeaveOneOut
 
+import shutil
+
+import math 
 def get_params_info(params):
     return_string = ''
     for key, value in params.items():
@@ -293,6 +296,12 @@ def generate_fnirs_adj():
             matrix[i, i-10] = 1
             matrix[i, i-1] = 1
     return matrix
+
+def generate_fnirs_adj_tf():
+    sp_matrix = generate_fnirs_adj()
+    matrix_arr = sp_matrix.toarray()
+    tf_matrix = tf.convert_to_tensor(matrix_arr, dtype=tf.float32)
+    return tf_matrix
 
 
 def generate_adj_for_mvg(connect_file_path='./allData/Output_npy/twoDoctor/HbO-All-HC-MDD/multiview_adj_matrix5.npy'):
@@ -869,7 +878,11 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def get_config(self):
         return {"d_model": self.d_model, "warmup_steps": self.warmup_steps}
 
-
+def sinusoidal_lr(epoch, lr):
+    base_lr = 1e-5
+    amplitude = 1e-5
+    new_lr = base_lr + amplitude * math.sin(2 * math.pi * epoch / 50)
+    return new_lr
 
 def train_model_using_loocv(data, label, model):
     loo = LeaveOneOut()
@@ -918,3 +931,22 @@ def get_metrics(y_true, y_pred):
     f1 = f1_score(y_true, y_pred)
 
     return accuracy, sensitivity, specificity, f1
+
+
+def save_current_file_to_folder(current_file_path, destination_folder):
+    try:
+
+        os.makedirs(destination_folder, exist_ok=True)
+        
+        # Define the destination path
+        destination_path = os.path.join(destination_folder, 'used_' + os.path.basename(current_file_path))
+        
+        # Debugging: Print the destination path
+        # print(f"Destination path: {destination_path}")
+        
+        # Copy the current file to the destination folder
+        shutil.copy(current_file_path, destination_path)
+        
+        print(f"File copied to: {destination_path}")
+    except Exception as e:
+        print(f"An error occurred: {e} when save_current_file_to_folder")

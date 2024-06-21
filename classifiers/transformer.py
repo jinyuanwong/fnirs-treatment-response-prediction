@@ -321,9 +321,10 @@ class Classifier_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
+        params = info['parameter']
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
-        self.batch_size = sweep_config['batch_size'] if sweep_config else 128
+        self.batch_size = params['batch_size']  # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         kernel_size_1 = (4, 5)  # 2, 3, 4
         stride_size_1 = (1, 2)
         kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
@@ -360,14 +361,15 @@ class Classifier_Transformer():
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
         inputs = tf.keras.Input(shape=input_shape[1:])
+        inputs_dense = layers.Dense(d_model, activation=activation)(inputs)
 
         # output_1 = layers.Dense(d_model, activation=activation)(inputs)
         # output_2 = layers.Dense(d_model, activation=activation)(inputs)
 
         output_1 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=input_shape[2], dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(inputs)
+            input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_1')(inputs_dense)
         output_2 = ClsPositionEncodingLayer(
-            input_channel=input_shape[1], kenerl_size=kernel_size[1], strides=stride_size[1], d_model=input_shape[2], dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(inputs)
+            input_channel=input_shape[1], kenerl_size=kernel_size[1], strides=stride_size[1], d_model=d_model, dropout_rate=dropout_rate, name='CLS_pos_encoding_2')(inputs_dense)
 
         output_1 = Transformer(input_shape,
                                num_class,
@@ -457,11 +459,15 @@ class Classifier_Transformer():
         self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
+        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
+        Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
-        save_validation_acc(self.output_directory, np.argmax(
-            self.model.predict(X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
-        if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(
+            X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_test), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
+                            save_file_name='test_acc.txt')
+        if check_if_save_model(self.output_directory, Y_val_pred, Y_val_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None
             save_logs(self.model, self.output_directory, None,

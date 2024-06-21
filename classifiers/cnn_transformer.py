@@ -281,9 +281,10 @@ class Classifier_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
+        params = info['parameter']
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
-        self.batch_size = 128
+        self.batch_size = params['batch_size']
         kernel_size_1 = (4, 5)  # 2, 3, 4
         stride_size_1 = (1, 2)
         kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
@@ -294,12 +295,12 @@ class Classifier_Transformer():
         # random.choice([4, 24])  # random.choice([12, 24, 36])
         output_channel = 4  # random.choice([3, 8, 24]) # 24
         # random.choice([64, 256])# 64 #
-        d_model = 16  # 125# # random.choice([64, 128, 256])
+        d_model = params['d_model']  # 125# # random.choice([64, 128, 256])
         dropout_rate = 0.4
         # random.choice([4, 12])  # random.randint(10, 12)
         n_layers = 6  # random.choice([12, 8, 16])
         FFN_units = 256  # random.choice([64, 128, 256, 512])  # 512, 64, 128,
-        n_heads = 4  # 5  # random.choice([4, 8])  # 2
+        n_heads = params['n_heads']  # 5  # random.choice([4, 8])  # 2
         #   # random.choice(['relu', 'gelu'])
         activation = 'gelu'  # random.choice(['relu', 'gelu'])
         # warmup_step random.choice([100,200,300,400,500,1000,2000])
@@ -310,7 +311,7 @@ class Classifier_Transformer():
         l2_rate = 0.001
         num_class = 2  # 2
         self.class_weights = {0: 1,  # weight for class 0
-                 1: 5}  # weight for class 1, assuming this is the minority class
+                 1: params['classweight1']}  # weight for class 1, assuming this is the minority class
 
         learning_rate = CustomSchedule(
             d_model * FFN_units * n_layers, warmup_step)
@@ -406,11 +407,16 @@ class Classifier_Transformer():
         self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
+        
+        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
+        Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
         save_validation_acc(self.output_directory, np.argmax(self.model.predict(
             X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
-        if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_test), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
+                            save_file_name='test_acc.txt')
+        if check_if_save_model(self.output_directory, Y_val_pred, Y_val_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None
             save_logs(self.model, self.output_directory, None,

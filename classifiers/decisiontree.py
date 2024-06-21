@@ -39,19 +39,20 @@ class Classifier_DecisionTree():
         # Fit the model
         hist = self.model.fit(X_train, Y_train)
 
-        # Predictions
         Y_pred = self.model.predict(X_test)
-        # For decision trees, Y_pred is already the predicted classes; no need for np.argmax
-        Y_true = Y_test  # Assuming Y_test is already in the correct format
-
-        duration = time.time() - start_time
-        # Save logs, handle validations, etc., similarly as before but adjusted for Decision Tree specifics
+        self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
+        
+        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
+        Y_val_true = np.argmax(Y_val, axis=1)
 
-        save_validation_acc(self.output_directory, np.argmax(
-            self.model.predict(X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
-        if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
+        duration = time.time() - start_time
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(
+            X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_test), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
+                            save_file_name='test_acc.txt')
+        if check_if_save_model(self.output_directory, Y_val_pred, Y_val_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
             # Can ignore the result name which has beend set as None
             save_logs(self.model, self.output_directory, None,

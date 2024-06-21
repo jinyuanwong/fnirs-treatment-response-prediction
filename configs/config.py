@@ -63,6 +63,11 @@ PARAMETER = {
     },
     'cnn_transformer': {
         'hb_path': 'hb_data.npy',
+        'd_model': 64,
+        'batch_size': 32,
+        'n_heads': 2,
+        'classweight1': 1,
+
     },
     'pre_post_cnn_transformer': {
         'hb_path': 'data.npy',
@@ -199,6 +204,7 @@ PARAMETER = {
     },
     'transformer': {
         'hb_path': 'hb_data.npy',
+        'batch_size': 4,
     },
     'mgn_transformer': {
         'hb_path': 'data.npy',
