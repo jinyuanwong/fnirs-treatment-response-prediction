@@ -68,7 +68,7 @@ class Classifier_CNN():
         self.output_directory = output_directory
         hyperparameters = {
             'padding': 'same',
-            'batch_size': 256,
+            'batch_size': 8,
             'lr': 1e-2,
             'kernel_size': [8, 3],
             'pool_size': [3, 3],
@@ -161,12 +161,12 @@ class Classifier_CNN():
                 seed=random.randint(0, 1000)))(z)
             z = kl.Dense(2, activation="softmax")(z)
             model = km.Model(inputs=[i.input for i in all_m], outputs=z)
-            # model.summary()
+            # 
         else:
             m0 = self.CNN(kl.Input(input_shape))
             m = kl.Dense(2, activation='softmax', name='LastLayer')(m0.output)
             model = km.Model(inputs=m0.input, outputs=m)
-
+        model.summary()
         model.compile(
             optimizer=ko.Adam(self.lr),
             loss='categorical_crossentropy',
