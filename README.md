@@ -11,6 +11,9 @@ pip install tensorflow-addons==0.20.0 tensorflow[and-cuda]==2.12.0
 pip install PyWavelets==1.4.1 xgboost==2.0.1 scipy==1.9.1
 pip install statsmodels==0.14.1 hyperopt==0.2.7 shap==0.43.0
 pip install chord==6.0.1 pingouin==0.5.4
+pip install einops==0.8.0
+pip install datasets==2.19.2
+pip install dataclasses==0.6
 ```
 
 ---
