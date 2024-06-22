@@ -92,7 +92,7 @@ class TrainModel():
                             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                                 data, label, k, num_of_k_fold, seed=current_time)
                         print('shape of X_train: {} , X_val: {} , X_test: {}'.format(X_train.shape, X_val.shape, X_test.shape))
-                        params = info['parameter']
+                        self.params = params = info['parameter']
                         msg = info['message'] + get_params_info(params)
                         if len(msg)<=1:
                             raise ValueError('The message is empty')

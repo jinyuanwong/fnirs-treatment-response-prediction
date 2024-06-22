@@ -1,31 +1,41 @@
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras import layers
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
+import math
 
 import numpy as np
 import time
 from utils.utils_mine import *
 from utils.utils import *
+from utils.utils_mine import generate_fnirs_adj_tf
+
 from classifiers.model.mamba import ResidualBlock
+
+from classifiers.layer.transformers import Transformer_Encoder
+from classifiers.layer.rmsnorm import RMSNorm
+from classifiers.model.jamba import Transformer_layer, Attention_MoE_layer, Mamba_layer, Mamba_MoE_layer
 from classifiers.layer.mamba import MambaBlock
+from classifiers.layer.gnn import GNN
+from classifiers.layer.attention import ChannelAttentionLayer
+from classifiers.layer.rmsnorm import RMSNorm
+from classifiers.layer.conv1d import conv1d_layer
 
-
-class Classifier_Mamba():
+class Classifier_Jamba():
     def __init__(self, output_directory, callbacks, input_shape, epochs, sweep_config, info):
 
         self.output_directory = output_directory
         self.callbacks = callbacks
         self.epochs = epochs
 
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
         args = self.params['args']
 
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
-        self.callbacks.append(early_stopping)
+        
+        self.callbacks.append(args.earlystopping)
         self.batch_size = args.batch_size
 
         num_class = 2  # 2
@@ -35,18 +45,46 @@ class Classifier_Mamba():
         #     inputs_time_point = tf.keras.Input(shape=(input_shape[1:]+[1]))
         # else:
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
+        adj = generate_fnirs_adj_tf() 
+        inputs = inputs_time_point
         
-        # inputs_time_point = tf.keras.Input(shape=input_shape[1:])
-        x = MambaBlock(args)(inputs_time_point)
-        # layers.Dense(args.model_internal_dim, activation=tf.nn.gelu)(inputs_time_point)
-        for i in range(args.num_layers):
-            x = ResidualBlock(args, name=f"Residual_{i}")(x)
-            x = layers.Dropout(args.dropout_rate)(x) # for regularization
+        conv1d_x = conv1d_layer(args)(inputs)
+        
+        inputs = RMSNorm()(inputs)
+        
+        outputs = []
+        
+        # multimodal
+        for _ in range(x.shape[-1]):
+            x = MambaBlock(args)(inputs)
+            x = Mamba_layer(args)(x)
+            x = Mamba_MoE_layer(args)(x)   
+            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+            outputs.append(x)
+            
+        outputs = tf.stack(outputs, axis=-1)
+        
+        outputs = Transformer_layer(
+                                FFN_units=args.model_internal_dim,
+                                n_heads=args.n_heads,
+                                dropout_rate=args.dropout_rate,
+                                activation=tf.nn.gelu,
+                                )(outputs)
 
-
-        x = layers.LayerNormalization(epsilon=1e-5)(x) # normalization layer
-        if not args.use_lm_head: 
+        # x = Attention_MoE_layer(
+        #                     FFN_units=args.model_internal_dim,
+        #                     n_heads=args.n_heads,
+        #                     dropout_rate=args.dropout_rate,
+        #                     activation=tf.nn.gelu,
+        #                     n_experts = args.n_experts,
+        #                     )(x)
+        
+        # x = tf.concat([x, conv1d_x], axis=-1)
+        if args.global_pooling: 
+            x = layers.GlobalAveragePooling1D()(x)
+        else:
             x = layers.Flatten()(x)
+        
         x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu)(x)
         
         outputs = layers.Dense(num_class, activation=args.final_activation)(x)
@@ -56,7 +94,8 @@ class Classifier_Mamba():
         optimizer = tf.keras.optimizers.AdamW(args.learning_rate,
                                         beta_1=args.beta_1,
                                         beta_2=args.beta_2,
-                                        epsilon=args.epsilon)
+                                        epsilon=args.epsilon,
+                                        clipnorm=args.clipnorm)
         
         model.compile(optimizer=optimizer,
                       loss=args.loss,#categorical_crossentropy
@@ -112,5 +151,6 @@ class Classifier_Mamba():
         if self.params.get('config_file_path') is not None:
             save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
+        
     def predict(self):
         pass

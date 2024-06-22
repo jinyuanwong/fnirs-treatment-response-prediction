@@ -1,17 +1,19 @@
 
 from configs.config import *
-import os
 from configs.models_args.jamba_args import Jamba_ModelArgs_extend_from_Mamba
+import os
 
-INPUT_HB_TYPE = ['diagnosis514']
-SPECIFY_FOLD = 10
+INPUT_HB_TYPE = ['prognosis_mix_hb/pretreatment_response']
+SPECIFY_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
-MAX_EPOCHS = 3500
-HOLD_OUT_DIV = 10
+MAX_EPOCHS = 1000
+# HOLD_OUT_DIV = 10
+
 
 args = Jamba_ModelArgs_extend_from_Mamba(
             batch_size=64,
-            patiences=300,
+            classweight1 = 200,
+            patiences=200,
             lr_begin = 1e7, # 1e7 -> 1e5
             model_input_dims=128,
             model_states=64,# 64 -> 128
@@ -30,9 +32,6 @@ PARAMETER['jamba'] = {
     'args': args,
     'config_file_path': os.path.abspath(__file__),
 }
-
-
-
 
 # refer https://towardsdatascience.com/mamba-ssm-theory-and-implementation-in-keras-and-tensorflow-32d6d4b32546
 # PARAMETER['mamba'] = {

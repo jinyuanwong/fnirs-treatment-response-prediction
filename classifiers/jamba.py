@@ -29,7 +29,7 @@ class Classifier_Jamba():
         self.epochs = epochs
 
         self.info = info
-        self.params = info['parameter']
+        self.params = params = info['parameter']
         args = self.params['args']
 
         self.class_weights_dict = {0: 1, 1: args.classweight1}
@@ -131,7 +131,7 @@ class Classifier_Jamba():
             save_logs(self.model, self.output_directory, None,
                       hist, Y_pred, Y_true, duration,
                       lr=True,
-                      is_saving_checkpoint=True,
+                      is_saving_checkpoint=False,
                       hyperparameters=None,
                       y_true_onehot=Y_test,
                       y_pred_onehot=tf.one_hot(Y_pred, depth=2).numpy()
@@ -139,7 +139,9 @@ class Classifier_Jamba():
 
         print(f'Training time is {duration}')
         save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
-        save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
+
         
     def predict(self):
         pass

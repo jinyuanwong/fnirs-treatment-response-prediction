@@ -367,7 +367,7 @@ class Classifier_GNN_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        params = info['parameter']
+        self.params = params = info['parameter']
         self.callbacks.append(early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128
@@ -533,6 +533,9 @@ class Classifier_GNN_Transformer():
                       )
 
         print(f'Training time is {duration}')
+        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

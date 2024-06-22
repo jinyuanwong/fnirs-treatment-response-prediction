@@ -14,6 +14,7 @@ import numpy as np
 """
 Mamba: https://towardsdatascience.com/mamba-ssm-theory-and-implementation-in-keras-and-tensorflow-32d6d4b32546
 """
+
 def selective_scan(u, delta, A, B, C, D):
     # A_bar = exp(△A)
     dA = tf.einsum('bld,dn -> bldn', delta, A)

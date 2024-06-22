@@ -367,7 +367,7 @@ class Classifier_GNN_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        params = info['parameter']
+        self.params = params = info['parameter']
         classweight1 = params['classweight1'] if params.get('classweight1') is not None else 5
         self.last_transformer_dense_units = params['last_transformer_dense_units']
         self.class_weights_dict = {0: 1, 1: classweight1}
@@ -536,6 +536,9 @@ class Classifier_GNN_Transformer():
                       )
 
         print(f'Training time is {duration}')
+        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

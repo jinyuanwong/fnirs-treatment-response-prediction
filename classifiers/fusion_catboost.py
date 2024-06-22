@@ -25,7 +25,7 @@ class Classifier_XGBoost():
         self.info = info
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        self.params = info['parameter']
+        self.params = params = info['parameter']
         self.model = CatBoostClassifier(iterations=self.params['iterations'], learning_rate=self.params['learning_rate'], depth=self.params['depth'], verbose=0)
         self.hyperparameters = self.params
         print(f'hyperparameters: {self.hyperparameters}')
@@ -57,6 +57,9 @@ class Classifier_XGBoost():
                       pass_history=True
                       )
         print(f'Training time is {duration}')
+        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

@@ -77,7 +77,7 @@ class TrainModel():
                         fnirs_data_path, self.model_name, self.label_path, self.hb_path, None)
                     self.data, self.label = data, label
                 num_of_k_fold = self.config.SPECIFY_FOLD
-                params = info['parameter']
+                self.params = params = info['parameter']
                 msg = info['message'] + get_params_info(params)
                 loo_array = get_sorted_loo_array(
                     self.model_name, msg, data.shape[0], DATASET=archive, K_FOLD=num_of_k_fold)

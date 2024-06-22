@@ -184,6 +184,9 @@ class Classifier_LI_SVM():
                       )
 
         print(f'Training time is {duration}')
+        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

@@ -46,7 +46,7 @@ class Classifier_Graph_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        params = info['parameter']
+        self.params = params = info['parameter']
         self.callbacks.append(early_stopping)
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128
         d_model = params['d_model'] if params.get('d_model') else 64  # 125# # random.choice([64, 128, 256])
@@ -172,6 +172,9 @@ class Classifier_Graph_Transformer():
                       )
 
         print(f'Training time is {duration}')
+        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+        if self.params.get('config_file_path') is not None:
+            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

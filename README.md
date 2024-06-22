@@ -2,8 +2,15 @@
 
 ```
 conda create -n tf python==3.9
+conda init
 conda activate tf
-pip install scikit-learn==0.24.1 matplotlib==3.3.4 QtPy==1.9.0 jupyter==1.0.0 Keras==2.12.0 numpy==1.22.4 pandas==1.2.4 wandb==0.15.11 tensorflow-addons==0.20.0 tensorflow[and-cuda]==2.12.0 PyWavelets==1.4.1 PyWavelets==1.4.1 xgboost==2.0.1 scipy==1.9.1
+
+pip install scikit-learn==0.24.1 matplotlib==3.3.4 QtPy==1.9.0 jupyter==1.0.0
+pip install Keras==2.12.0 numpy==1.22.4 pandas==1.2.4 wandb==0.15.11
+pip install tensorflow-addons==0.20.0 tensorflow[and-cuda]==2.12.0
+pip install PyWavelets==1.4.1 xgboost==2.0.1 scipy==1.9.1
+pip install statsmodels==0.14.1 hyperopt==0.2.7 shap==0.43.0
+pip install chord==6.0.1 pingouin==0.5.4
 ```
 
 ---

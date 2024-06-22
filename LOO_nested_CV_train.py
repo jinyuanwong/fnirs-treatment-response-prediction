@@ -80,7 +80,7 @@ class TrainModel():
                     label_not_one_hot = np.argmax(label, axis=1)
                     num_of_k_fold = 3 # I think 3 will be good as pre-treatment data has 15 positive samples and posttreatment has around 12 positive smaples
 
-                params = info['parameter']
+                self.params = params = info['parameter']
                 msg = info['message'] + config_name #get_params_info(params)
                 loo_array = get_sorted_loo_array(model_name, msg, data.shape[0], DATASET=archive, K_FOLD=num_of_k_fold)
                 

@@ -95,13 +95,12 @@ y_pred_val_all = []
 y_test_prediction_prob = []
 model_name = 'mamba'
 for v_i in range(1):
-    
     model_para = f'loocv_v{v_i}' + config_file_name
     y_pred_test_fold = []
     for subject in range(64):
         for k_fold in range(num_of_k_fold):
             X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_LOO_nested_CV(data, label, k=k_fold, num_of_k_fold=num_of_k_fold, current_loo=subject)
-            checkpoint_path = f'results/{model_name}/prognosis_mix_hb/pretreatment_response/{model_para}/LOO_nested_CV/LOO_{subject}/stratified_nested_5_CV_fold-{k_fold}/fold-best-checkpoint' #checkpoint' # fold-best-checkpoint
+            checkpoint_path = f'results/{model_name}/prognosis_mix_hb/pretreatment_response/{model_para}/LOO_nested_CV/LOO_{subject}/stratified_nested_5_CV_fold-{k_fold}/checkpoint' #checkpoint' # fold-best-checkpoint
 
             classifier.model.load_weights(checkpoint_path)
             model = classifier.model
@@ -132,7 +131,7 @@ save(test_metrics, val_metrics, y_pred_test_all, save_fold)
 
 
 """
-using checkpoint 2024-06-31
+using checkpoint 2024-06-13
 
 | Model Name | Testing Set |             |             |             | Validation Set |             |             |             |
 |------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
