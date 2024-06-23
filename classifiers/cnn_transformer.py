@@ -358,8 +358,7 @@ class Classifier_Transformer():
         model.summary()
         model.compile(optimizer=optimizer,
                       loss='categorical_crossentropy',
-                      metrics=['accuracy', tf.keras.metrics.F1Score(
-                          name='f1_score', average='weighted')])
+                      metrics=['accuracy'])
         self.model = model
 
         self.hyperparameters = {

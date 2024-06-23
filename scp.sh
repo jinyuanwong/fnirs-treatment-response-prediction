@@ -19,3 +19,7 @@ scp jy@100.122.67.5:/home/jy/Documents/fnirs/treatment_response/fnirs-depression
 
 rsync -avz --progress $s5:~/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData /Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/
 rsync
+
+
+
+scp $s5:/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/allData/diagnosis514/hbo_simple_data.npy . 
