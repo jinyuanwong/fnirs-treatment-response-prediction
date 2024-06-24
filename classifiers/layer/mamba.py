@@ -39,8 +39,8 @@ def selective_scan(u, delta, A, B, C, D):
     return y + u*D
 
 class MambaBlock(layers.Layer):
-    def __init__(self, modelargs, name="MambaBlock"):
-        super().__init__(name=name)
+    def __init__(self, modelargs):
+        super().__init__()
         self.args = modelargs
         args = modelargs
         self.layer_id = modelargs.layer_id

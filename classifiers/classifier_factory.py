@@ -40,7 +40,10 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
         return mamba.Classifier_Mamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)    
     if classifier_name == 'jamba':  # Time-CNN
         from classifiers import jamba
-        return jamba.Classifier_Jamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)            
+        return jamba.Classifier_Jamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)        
+    if classifier_name == 'jamba_multimodal':  # Time-CNN
+        from classifiers import jamba_multimodal
+        return jamba_multimodal.Classifier_Jamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)                
     if classifier_name == 'gin_transformer':  # Time-CNN
         from classifiers import gin_transformer
         return gin_transformer.Classifier_GIN_Transformer(output_directory, callbacks, input_shape, epochs, sweep_config, info)

@@ -48,21 +48,28 @@ class Classifier_Jamba():
         adj = generate_fnirs_adj_tf() 
         inputs = inputs_time_point
         
-        conv1d_x = conv1d_layer(args)(inputs)
+        # conv1d_x = conv1d_layer(args)(inputs)
         
-        inputs = RMSNorm()(inputs)
+        # inputs = RMSNorm()(inputs)
         
         outputs = []
         
         # multimodal
-        for _ in range(x.shape[-1]):
-            x = MambaBlock(args)(inputs)
+        for i in range(inputs.shape[-1]):
+            x = RMSNorm()(inputs[..., i])
+            x = MambaBlock(args)(x)
             x = Mamba_layer(args)(x)
             x = Mamba_MoE_layer(args)(x)   
             x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
             outputs.append(x)
-            
-        outputs = tf.stack(outputs, axis=-1)
+        
+        print('outputs -> 0 ', outputs)
+        
+        outputs = tf.concat(outputs, axis=-1)
+        
+        print('outputs -> 1 ', outputs)
+
+        outputs = layers.Dense(args.model_internal_dim, activation=args.activation)(outputs)
         
         outputs = Transformer_layer(
                                 FFN_units=args.model_internal_dim,
@@ -81,13 +88,13 @@ class Classifier_Jamba():
         
         # x = tf.concat([x, conv1d_x], axis=-1)
         if args.global_pooling: 
-            x = layers.GlobalAveragePooling1D()(x)
+            outputs = layers.GlobalAveragePooling1D()(outputs)
         else:
-            x = layers.Flatten()(x)
+            outputs = layers.Flatten()(outputs)
         
-        x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu)(x)
+        outputs = layers.Dense(args.last_dense_units, activation=tf.nn.gelu)(outputs)
         
-        outputs = layers.Dense(num_class, activation=args.final_activation)(x)
+        outputs = layers.Dense(num_class, activation=args.final_activation)(outputs)
         model = tf.keras.Model(inputs=inputs_time_point, outputs=outputs)
         model.summary()
 

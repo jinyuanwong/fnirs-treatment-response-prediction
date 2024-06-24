@@ -81,7 +81,7 @@ PARAMETER = {
     },
     'gnn_transformer': {
         'hb_path': 'hb_data.npy',# 'merge_feature.npy', # hb_data
-        'adj_path': 'adj_matrix.npy',
+        # 'adj_path': 'adj_matrix.npy',
         'l1_rate': 0.01,# should be 0.01
         'l2_rate': 0.001,# should be 0.001
         'd_model': 16,#np.random.choice([16, 32, 64]),

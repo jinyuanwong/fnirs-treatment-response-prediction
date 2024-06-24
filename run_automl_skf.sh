@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Define the variables
-model='cnn_transformer'
-config_file='mdd_classification'
+model='jamba_multimodal'
+config_file='mdd_classification_jamba'
 
 # Loop from 0 to 9
-for itr in {0..9}
+for itr in {1..9}
 do
     # Construct the run_itr variable
     run_itr="eval$itr"

@@ -11,6 +11,7 @@ HOLD_OUT_DIV = 10
 
 args = Jamba_ModelArgs_extend_from_Mamba(
             batch_size=64,
+            classweight1=1,
             patiences=300,
             lr_begin = 1e7, # 1e7 -> 1e5
             model_input_dims=128,
@@ -31,6 +32,14 @@ PARAMETER['jamba'] = {
     'config_file_path': os.path.abspath(__file__),
 }
 
+PARAMETER['jamba_multimodal'] = {
+    'hb_path': 'hb_simple_3d.npy',
+    'args': args,
+    'config_file_path': os.path.abspath(__file__),
+}
+
+
+# python ./LOO_nested_CV_train_skf.py jamba_multimodal skf_t1_test_conv1d  mdd_classification_jamba 
 
 
 
