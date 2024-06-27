@@ -1100,8 +1100,8 @@ def get_nine_region_data(data):
 
     # Posterior superior frontal cortex
     # PSFC_ch = ['C9', 'C10', 'C20', 'C21', 'C1', 'C2', 'C11', 'C12'] # 
-    left_PSFC_location = ['C9', 'C10', 'C20', 'C21']
-    right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
+    left_pSFC_location = ['C9', 'C10', 'C20', 'C21']
+    right_pSFC_location = ['C1', 'C2', 'C11', 'C12']
 
     # Dorsolateral prefrontal cortex
     # DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
@@ -1121,7 +1121,7 @@ def get_nine_region_data(data):
     # Medial prefrontal cortex
     MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
     
-    all_region_location = [left_PSFC_location, right_PSFC_location, left_DPC_location, right_DPC_location, left_STG_location, right_STG_location, left_VPC_location, right_VPC_location, MPC_location]
+    all_region_location = [left_pSFC_location, right_pSFC_location, left_DPC_location, right_DPC_location, left_STG_location, right_STG_location, left_VPC_location, right_VPC_location, MPC_location]
     all_region_location = [get_channel_index_of_region(i) for i in all_region_location]
     print(len(all_region_location))
     print(all_region_location)
@@ -1138,15 +1138,15 @@ def get_nine_region_data(data):
 
 def get_channel_to_region_dict():
     channel_to_dict = {}
-    left_PSFC_location = ['C9', 'C10', 'C20', 'C21']
-    for i in left_PSFC_location:
+    left_pSFC_location = ['C9', 'C10', 'C20', 'C21']
+    for i in left_pSFC_location:
         ch = int(i[1:])
-        channel_to_dict[ch] = 'left_PSFC'
+        channel_to_dict[ch] = 'left_pSFC'
         
-    right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
-    for i in right_PSFC_location:
+    right_pSFC_location = ['C1', 'C2', 'C11', 'C12']
+    for i in right_pSFC_location:
         ch = int(i[1:])
-        channel_to_dict[ch] = 'right_PSFC'
+        channel_to_dict[ch] = 'right_pSFC'
         
     # Dorsolateral prefrontal cortex
     # DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']
@@ -1187,7 +1187,7 @@ def get_channel_to_region_dict():
     MPC_location = ['C5', 'C6', 'C16', 'C26', 'C27', 'C36', 'C37', 'C38', 'C47', 'C48']  
     for i in MPC_location:
         ch = int(i[1:])
-        channel_to_dict[ch] = 'MPC'
+        channel_to_dict[ch] = 'mPFC'
     return channel_to_dict
 
 

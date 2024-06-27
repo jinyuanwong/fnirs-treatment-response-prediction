@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Define the variables
-model='jamba_multimodal'
-config_file='mdd_classification_jamba'
+model='jamba'
+config_file='mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_5_nor'
 
 # Loop from 0 to 9
-for itr in {1..9}
+for itr in {1..5}
 do
     # Construct the run_itr variable
     run_itr="eval$itr"

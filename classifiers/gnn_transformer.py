@@ -21,10 +21,6 @@ import math
 from tensorflow.keras.metrics import Recall
 from tensorflow.keras.callbacks import EarlyStopping
 
-from utils.utils_mine import generate_fnirs_adj_tf
-from classifiers.layer.rmsnorm import RMSNorm
-from classifiers.layer.gnn import GNN
-
 # Transformer was based on
 #   Zenghui Wang' Pytorch implementation. https://github.com/wzhlearning/fNIRS-Transformer/blob/main/model.py
 # Adapted to Tensorflow by Jinyuan Wang
@@ -251,37 +247,37 @@ class ClsPositionEncodingLayer(layers.Layer):
         return outputs
 
 
-# class GCN(tf.keras.Model):
-#     def __init__(self,
-#                  d_model,
-#                  activation='relu'):
-#         super(GCN, self).__init__()
+class GCN(tf.keras.Model):
+    def __init__(self,
+                 d_model,
+                 activation='relu'):
+        super(GCN, self).__init__()
 
-#         self.W = layers.Dense(units=d_model)
+        self.W = layers.Dense(units=d_model)
 
-#         if activation == 'relu':
-#             self.activation = tf.keras.layers.ReLU()
-#         elif activation == 'sigmoid':
-#             self.activation = tf.keras.layers.Activation('sigmoid')
-#         elif activation == 'tanh':
-#             self.activation = tf.keras.layers.Activation('tanh')
-#         elif activation == 'prelu':
-#             self.activation = tf.keras.layers.Activation('prelu')
-#         else:
-#             raise ValueError('Provide a valid activation for GNN')
+        if activation == 'relu':
+            self.activation = tf.keras.layers.ReLU()
+        elif activation == 'sigmoid':
+            self.activation = tf.keras.layers.Activation('sigmoid')
+        elif activation == 'tanh':
+            self.activation = tf.keras.layers.Activation('tanh')
+        elif activation == 'prelu':
+            self.activation = tf.keras.layers.Activation('prelu')
+        else:
+            raise ValueError('Provide a valid activation for GNN')
 
-#     def normalize_adjacency(self, adj):
-#         d = tf.reduce_sum(adj, axis=-1)
-#         d_sqrt_inv = tf.pow(d, -0.5)
-#         d_sqrt_inv = tf.where(tf.math.is_inf(d_sqrt_inv), 0., d_sqrt_inv)
-#         d_mat_inv_sqrt = tf.linalg.diag(d_sqrt_inv)
-#         return tf.matmul(tf.matmul(d_mat_inv_sqrt, adj), d_mat_inv_sqrt)
+    def normalize_adjacency(self, adj):
+        d = tf.reduce_sum(adj, axis=-1)
+        d_sqrt_inv = tf.pow(d, -0.5)
+        d_sqrt_inv = tf.where(tf.math.is_inf(d_sqrt_inv), 0., d_sqrt_inv)
+        d_mat_inv_sqrt = tf.linalg.diag(d_sqrt_inv)
+        return tf.matmul(tf.matmul(d_mat_inv_sqrt, adj), d_mat_inv_sqrt)
 
-#     def call(self, inputs, adj):
-#         adj_normalized = self.normalize_adjacency(adj)
-#         inputs_features = self.W(inputs)
-#         outputs = tf.linalg.matmul(adj_normalized, inputs_features)
-#         return self.activation(outputs)
+    def call(self, inputs, adj):
+        adj_normalized = self.normalize_adjacency(adj)
+        inputs_features = self.W(inputs)
+        outputs = tf.linalg.matmul(adj_normalized, inputs_features)
+        return self.activation(outputs)
 
 
 class Transformer(tf.keras.Model):
@@ -334,7 +330,7 @@ class Classifier_GNN_Transformer():
         # 32#random.choice([16, 32, 48])  # 128 256
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        self.params = params = info['parameter']
+        params = info['parameter']
         self.epochs = params['epochs'] if params.get('epochs') else epochs 
 
         self.callbacks.append(early_stopping)
@@ -375,9 +371,8 @@ class Classifier_GNN_Transformer():
                                               epsilon=1e-9)
 
         # If you change these two hyperparameters, remember to change the  self.hyperparameters
-        adj = generate_fnirs_adj_tf()
+        input_adj = tf.keras.Input(shape=(input_shape[1], input_shape[1]))
         inputs = tf.keras.Input(shape=input_shape[1:])
-        inputs = RMSNorm()(inputs)
         if input_shape[-1] != 1 and input_shape[-1] > 10:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
@@ -386,10 +381,9 @@ class Classifier_GNN_Transformer():
         num_branches = inputs.shape[-1]
         outputs = []
         for i in range(num_branches*2):
-            
-            output = GNN(d_model=d_model, adj=adj, activation=activation, dropout_rate=dropout_rate)(inputs[...,i//2])
+            output = GCN(d_model=d_model)(inputs[...,i//2], input_adj)
             for i in range(1,gnn_layers):
-                output = GNN(d_model=d_model)(output)
+                output = GCN(d_model=d_model)(output, input_adj)
             output = ClsPositionEncodingLayer(d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i}')(output)
             output = Transformer(input_shape,
                                 num_class,
@@ -416,7 +410,7 @@ class Classifier_GNN_Transformer():
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_rate, l2=l2_rate))(outputs)
         outputs = layers.Dense(num_class, activation='softmax')(outputs)
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        model = tf.keras.Model(inputs=[inputs, input_adj], outputs=outputs)
         model.summary()
 
         model.compile(optimizer=optimizer,
@@ -452,13 +446,13 @@ class Classifier_GNN_Transformer():
         }
         print(f'hyperparameters: {self.hyperparameters}')
 
-    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
+    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test):
         start_time = time.time()
 
         hist = self.model.fit(
-            x=X_train,
+            x=[X_train, adj_train],
             y=Y_train,
-            validation_data=(X_val, Y_val),
+            validation_data=([X_val, adj_val], Y_val),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=self.callbacks,
@@ -469,17 +463,17 @@ class Classifier_GNN_Transformer():
 
         self.model.load_weights(
             self.output_directory + 'checkpoint')
-        Y_pred = self.model.predict(X_test)
+        Y_pred = self.model.predict([X_test, adj_test])
         self.info['Y_pred_in_test'] = Y_pred
         Y_pred = np.argmax(Y_pred, axis=1)
         Y_true = np.argmax(Y_test, axis=1)
-        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
+        Y_val_pred = np.argmax(self.model.predict([X_val, adj_val]), axis=1)
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
         save_validation_acc(self.output_directory, np.argmax(self.model.predict(
-            X_val), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
-        save_validation_acc(self.output_directory, np.argmax(self.model.predict(X_test), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
+            [X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
+        save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_test, adj_test]), axis=1), np.argmax(Y_test, axis=1), self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')
         if check_if_save_model(self.output_directory, Y_val_pred, Y_val_true, self.info['monitor_metric'], self.info):
             # save learning rate as well
@@ -494,9 +488,6 @@ class Classifier_GNN_Transformer():
                       )
 
         print(f'Training time is {duration}')
-        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
-        if self.params.get('config_file_path') is not None:
-            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
 
     def predict(self):
         pass

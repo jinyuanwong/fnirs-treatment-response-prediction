@@ -35,7 +35,7 @@ def get_fnirs_channel_colors(ranked_channel):
     psfc_color = 'green'
 
     # Posterior superior frontal cortex
-    PSFC_ch = ['C9', 'C10', 'C20', 'C21', 'C1', 'C2', 'C11', 'C12'] # left_PSFC_location = ['C9', 'C10', 'C20', 'C21'] , right_PSFC_location = ['C1', 'C2', 'C11', 'C12']
+    PSFC_ch = ['C9', 'C10', 'C20', 'C21', 'C1', 'C2', 'C11', 'C12'] # left_pSFC_location = ['C9', 'C10', 'C20', 'C21'] , right_pSFC_location = ['C1', 'C2', 'C11', 'C12']
 
     # Dorsolateral prefrontal cortex
     DPC_ch = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29', 'C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']# left_DPC_location = ['C7','C8', 'C17', 'C18', 'C19', 'C28', 'C29'], right_DPC_location = ['C3', 'C4', 'C13', 'C14', 'C15', 'C24', 'C25']

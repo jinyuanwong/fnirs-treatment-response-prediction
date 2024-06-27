@@ -281,8 +281,9 @@
     "\n",
     "task_end_index = 700\n",
     "task_start_index = 100\n",
-    "nine_region_name = ['L-PSFC', 'R-PSFC', 'L-DPC', 'R-DPC', 'L-STG', 'R-STG', 'L-VPC', 'R-VPC', 'MPC']\n",
-    "five_region_name = ['PSFC', 'DPC', 'STG', 'VPC', 'MPC']\n",
+    "nine_region_name = ['L-pSFC', 'R-pSFC', 'L-dlPFC', 'R-dlPFC', 'L-STG', 'R-STG', 'L-vlPFC', 'R-vlPFC', 'mPFC']
+\n",
+    "five_region_name = ['pSFC', 'dlPFC', 'STG', 'vlPFC', 'mPFC']\n",
     "\n",
     "dict_hb = {'HbO': HbO, 'HbR': HbR, 'HbT': HbT}\n",
     "\n",
