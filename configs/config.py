@@ -67,7 +67,6 @@ PARAMETER = {
         'batch_size': 32,
         'n_heads': 2,
         'classweight1': 1,
-
     },
     'pre_post_cnn_transformer': {
         'hb_path': 'data.npy',

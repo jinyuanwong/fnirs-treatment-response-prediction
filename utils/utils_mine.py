@@ -958,3 +958,11 @@ def save_current_file_to_folder(current_file_path, destination_folder):
         print(f"File copied to: {destination_path}")
     except Exception as e:
         print(f"An error occurred: {e} when save_current_file_to_folder")
+        
+        
+def plot_evaluation_metrics_header():
+    row_1 = '| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |'
+    row_2 = '|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|'
+    row_3 = '|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |'
+    for i in [row_1,row_2, row_3]:
+        print(i)

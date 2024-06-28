@@ -20,6 +20,8 @@ import pandas as pd
 import math
 from classifiers.layer.embedding_layer import EmbeddingLayer
 from tensorflow.keras.callbacks import EarlyStopping
+
+from utils.schedule import CustomLearningRateSchedule
 # Transformer was based on
 #   Zenghui Wang' Pytorch implementation. https://github.com/wzhlearning/fNIRS-Transformer/blob/main/model.py
 # Adapted to Tensorflow by Jinyuan Wang
@@ -282,48 +284,28 @@ class Classifier_Transformer():
         early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
-        self.callbacks.append(early_stopping)
+        args = self.params['args']
+        
+        self.callbacks.append(args.early_stopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
-        self.batch_size = params['batch_size']
-        kernel_size_1 = (4, 5)  # 2, 3, 4
-        stride_size_1 = (1, 2)
-        kernel_size_2 = (1, 5)  # 2: random.randint(2,8)  (2,5 are the best)
-        stride_size_2 = (1, 2)
-        kernel_size = [kernel_size_1, kernel_size_2]
-        stride_size = [stride_size_1, stride_size_2]
-        # random.choice([2, 3, 4, 5, 6, 7, 8]) 6,7 are the best
-        # random.choice([4, 24])  # random.choice([12, 24, 36])
-        output_channel = 4  # random.choice([3, 8, 24]) # 24
-        # random.choice([64, 256])# 64 #
-        d_model = params['d_model']  # 125# # random.choice([64, 128, 256])
-        dropout_rate = 0.4
-        # random.choice([4, 12])  # random.randint(10, 12)
-        n_layers = 6  # random.choice([12, 8, 16])
-        FFN_units = 256  # random.choice([64, 128, 256, 512])  # 512, 64, 128,
-        n_heads = params['n_heads']  # 5  # random.choice([4, 8])  # 2
-        #   # random.choice(['relu', 'gelu'])
-        activation = 'gelu'  # random.choice(['relu', 'gelu'])
-        # warmup_step random.choice([100,200,300,400,500,1000,2000])
-        warmup_step = 200
-        # random.choice([0.98, 0.99, 0.999])
-        adam_beta_1, adam_beta_2 = 0.9, 0.999
-        num_of_last_dense = 2  # random.randint(0, 3)
-        l2_rate = 0.001
-        num_class = 2  # 2
-        self.class_weights = {0: 1,  # weight for class 0
-                 1: params['classweight1']}  # weight for class 1, assuming this is the minority class
+        self.batch_size = args.batch_size
+        kernel_size = args.kernel_size
+        stride_size = args.stride_size
 
-        learning_rate = CustomSchedule(
-            d_model * FFN_units * n_layers, warmup_step)
-        optimizer = tf.keras.optimizers.AdamW(learning_rate,
-                                              beta_1=adam_beta_1,
-                                              beta_2=adam_beta_2,
-                                              epsilon=1e-9)
+        output_channel = args.output_channel
+        d_model = args.d_model  #
+        dropout_rate = args.dropout_rate  
+        n_layers = args.n_layers  
+        FFN_units = args.FFN_units
+        n_heads = args.n_heads
+        activation = args.activation
+        warmup_step = args.warmup_step
+        num_classes = args.num_classes
+        l2_rate = args.l2_rate
+        num_class = args.num_class
+        self.class_weights = args.class_weights
+        optimizer = args.optimizer
 
-        # If you change these two hyperparameters, remember to change the  self.hyperparameters
-
-        # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-        #
         if input_shape[-1] != 1 and input_shape[-1] > 10:
             inputs = tf.keras.Input(shape=(input_shape[1:]+[1]))
         else:
@@ -349,7 +331,7 @@ class Classifier_Transformer():
         outputs = layers.LayerNormalization(epsilon=1e-6)(outputs)
 
         "Doing this in here is to get the layer[-2] feature"
-        for i in range(num_of_last_dense):
+        for i in range(num_classes):
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
@@ -361,30 +343,7 @@ class Classifier_Transformer():
                       metrics=['accuracy'])
         self.model = model
 
-        self.hyperparameters = {
-            "Test": 'Adding CLS and using Traditional Position encoding (10000)and CNN encoding',
-            "batch_size": self.batch_size,
-            "kernel_size_1": kernel_size_1,
-            "stride_size_1": stride_size_1,
-            "kernel_size_2": kernel_size_2,
-            "stride_size_2": stride_size_2,
-            "kernel_size": kernel_size,
-            "stride_size": stride_size,
-            "output_channel": output_channel,
-            "d_model": d_model,
-            "dropout_rate": dropout_rate,
-            "n_layers": n_layers,
-            "FFN_units": FFN_units,
-            "n_heads": n_heads,
-            "num_class": num_class,
-            "activation": activation,  # "lr": lr,
-            "num_of_last_dense": num_of_last_dense,
-            "l2_rate": l2_rate,
-            "learning_rate": f"CustomSchedule(d_model * FFN_units * n_layers, {warmup_step})",
-            "optimizer": f"tf.keras.optimizers.AdamW(learning_rate, beta_1={adam_beta_1}, beta_2={adam_beta_2}, epsilon=1e-9)"  # "optimizer = tf.keras.optimizers.RMSprop(\
-            # learning_rate={lr}, rho=0.9, momentum={momentum}, epsilon=1e-07, centered=False)"#
-        }
-        print(f'hyperparameters: {self.hyperparameters}')
+        self.hyperparameters = None
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()

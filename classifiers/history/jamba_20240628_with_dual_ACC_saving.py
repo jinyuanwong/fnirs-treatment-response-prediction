@@ -36,7 +36,12 @@ class Classifier_Jamba():
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
         self.callbacks.append(args.earlystopping)
-                
+        
+        self.checkpoint_save_name = 'best_checkpoint'
+        model_checkpoint_callback = CustomModelCheckpoint(filepath=self.output_directory + 'best_checkpoint')
+        
+        self.callbacks.append(model_checkpoint_callback)
+            
         self.batch_size = args.batch_size
 
         num_class = 2  # 2
@@ -111,7 +116,10 @@ class Classifier_Jamba():
             class_weight=self.class_weights_dict 
         )
 
-        self.model.load_weights(self.output_directory + 'checkpoint')
+        if os.path.exists(self.output_directory + self.checkpoint_save_name):
+            self.model.load_weights(self.output_directory + self.checkpoint_save_name)
+        else: 
+            self.model.load_weights(self.output_directory + 'checkpoint')
             
         Y_test_pred = self.model.predict(X_test)
         Y_true = np.argmax(Y_test, axis=1)

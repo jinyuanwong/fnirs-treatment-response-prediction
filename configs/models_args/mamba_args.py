@@ -13,7 +13,6 @@ import os
 @dataclass
 class ModelArgs:
     batch_size: int = 8
-    lr_begin: int = 100000
     classweight1: int = 15
     last_dense_units: int = 1024
     warmup_step: int = None
@@ -38,6 +37,13 @@ class ModelArgs:
     vocab_size: int = 2
     activation: callable = tf.nn.gelu
     final_activation = None
+    
+    lr_begin: int = 100000
+    warmup_step: int = 4000
+    beta_1 = 0.9
+    beta_2 = 0.99
+    epsilon = 1e-9    
+    
     loss:Union[str, keras.losses.Loss] = None
     optimizer: keras.optimizers.Optimizer = None
     earlystopping: keras.callbacks.EarlyStopping = None
@@ -69,11 +75,7 @@ class ModelArgs:
             raise ValueError(f'warmup_step cannot be {self.warmup_step}')
         else:
             self.learning_rate = CustomSchedule(self.lr_begin, self.warmup_step)
-            self.beta_1 = 0.9
-            self.beta_2 = 0.99
-            self.epsilon = 1e-9
 
-        
         if self.loss == None:
             raise ValueError(f"loss cannot be {self.loss}")
         

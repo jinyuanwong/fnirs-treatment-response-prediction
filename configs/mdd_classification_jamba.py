@@ -1,5 +1,5 @@
 
-from configs.config import *
+from configs.mdd_classification import *
 import os
 from configs.models_args.jamba_args import Jamba_ModelArgs_extend_from_Mamba
 

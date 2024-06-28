@@ -1,4 +1,5 @@
 from configs.config import *
+from configs.models_args.transformer_args import Transformer_ModelArgs
 import os 
 INPUT_HB_TYPE = ['diagnosis514']
 SPECIFY_FOLD = 10
@@ -18,7 +19,15 @@ HOLD_OUT_DIV = 10
 # for model, val in PARAMETER.items():
 #     PARAMETER[model]['hb_path'] = 'hbo_simple_data.npy'
 #     PARAMETER[model]['classweight1'] = 1
-    
+
+transformer_args = Transformer_ModelArgs(
+    batch_size=64,
+    d_model=64,
+    n_heads=1,
+    class_weights={0: 1, 1: 1}, # for pretreament classification {0: 1, 1: 5}
+    )
+
+        
 PARAMETER['gnn_transformer'] = {
     'hb_path': 'hbo_simple_data.npy',  # 'merge_feature.npy', # hb_data
     'l1_rate': 0.01,  # should be 0.01
@@ -27,6 +36,11 @@ PARAMETER['gnn_transformer'] = {
     'batch_size': 64,  # np.random.choice([4, 8, 16, 64]),
     'n_layers': 6,  # np.random.choice([4, 8, 12]),
     'classweight1': 1,
+}
+
+PARAMETER['cnn_transformer'] = {
+    'hb_path': 'hbo_simple_data.npy',
+    'args': transformer_args,
 }
 
 for model, val in PARAMETER.items():
