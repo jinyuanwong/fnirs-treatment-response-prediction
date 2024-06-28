@@ -309,7 +309,7 @@ class Classifier_ALSTM_concatenate_INCEPTION:
             Y_pred = model.predict(X_test)
 
         # convert the predicted from binary to integer
-        Y_pred = np.argmax(Y_pred, axis=1)
+        Y_test_pred = self.model.predict(X_test)
         Y_true = np.argmax(Y_test, axis=1)
 
         save_logs(self.output_directory, self.result_name, hist, Y_pred, Y_true, duration, lr=False)

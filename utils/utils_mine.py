@@ -350,8 +350,12 @@ def read_current_value(Y_pred, Y_true, check_metrice):
 
 
 def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
+
+    Y_pred_binary = np.argmax(Y_pred, axis=1)
+    Y_true_binary = np.argmax(Y_true, axis=1)
+    
     past_metrice = read_past_value(output_directory, check_metrice)
-    current_metrice = read_current_value(Y_pred, Y_true, check_metrice)
+    current_metrice = read_current_value(Y_pred_binary, Y_true_binary, check_metrice)
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
     
     if current_metrice >= past_metrice:
@@ -362,8 +366,10 @@ def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
 def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, save_file_name='val_acc.txt'):
     print(f'Y_pred: {Y_pred}')
     print(f'Y_true: {Y_true}')
+    Y_pred_binary = np.argmax(Y_pred, axis=1)
+    Y_true_binary = np.argmax(Y_true, axis=1)
     past_metrice = read_past_value(output_directory, check_metrice)
-    current_metrice = read_current_value(Y_pred, Y_true, check_metrice)
+    current_metrice = read_current_value(Y_pred_binary, Y_true_binary, check_metrice)
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
     save_data_to_file(output_directory + save_file_name, hist_df_metrics, info)
     print(f'current saved file: {output_directory}' + save_file_name)
@@ -788,10 +794,13 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
 
 def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_onehot=None):
 
-    if y_true_onehot is None:
-        y_true_onehot = tf.one_hot(y_true, depth=2)
-        y_pred_onehot = tf.one_hot(y_pred, depth=2)
+    # if y_true_onehot is None:
+    #     y_true_onehot = tf.one_hot(y_true, depth=2)
+    #     y_pred_onehot = tf.one_hot(y_pred, depth=2)
 
+    Y_pred_binary = np.argmax(y_pred, axis=1)
+    Y_true_binary = np.argmax(y_true, axis=1)
+    
     if y_true_onehot is None:
         save_metrices = ['accuracy', 'sensitivity', 'specificity', 'duration']
     else:
@@ -801,23 +810,22 @@ def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_oneho
     #                    columns=save_metrices)
     res = pd.DataFrame(data=np.zeros((1, len(save_metrices)),
                        dtype=np.float64), index=[0], columns=save_metrices)
-    res['accuracy'] = round(accuracy_score(y_true, y_pred), 5)
+    res['accuracy'] = round(accuracy_score(Y_true_binary, Y_pred_binary), 5)
 
-    res['sensitivity'] = round(recall_score(y_true, y_pred), 5)
+    res['sensitivity'] = round(recall_score(Y_true_binary, Y_pred_binary), 5)
 
-    res['specificity'] = round(get_specificity(y_true, y_pred), 5)
+    res['specificity'] = round(get_specificity(Y_true_binary, Y_pred_binary), 5)
     res['duration'] = round(duration, 5)
 
     # F1 score and AUC
-    if y_true_onehot is not None:
-        metric = tfa.metrics.F1Score(average='weighted', num_classes=2)
-        metric.update_state(y_true_onehot, y_pred_onehot)
-        res['F1-score'] = round(metric.result().numpy(), 5)
+    metric = tfa.metrics.F1Score(average='weighted', num_classes=2)
+    metric.update_state(y_true, y_pred)
+    res['F1-score'] = round(metric.result().numpy(), 5)
 
-        y_pred_1 = y_pred_onehot[:, 1]
-        auc = tf.keras.metrics.AUC()
-        auc.update_state(y_true, y_pred_1)
-        res['AUC'] = round(auc.result().numpy(), 5)
+    y_pred_1 = y_pred[:, 1]
+    auc = tf.keras.metrics.AUC()
+    auc.update_state(y_true[:, 1], y_pred_1)
+    res['AUC'] = round(auc.result().numpy(), 5)
     return res
 
 

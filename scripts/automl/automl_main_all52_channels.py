@@ -12,11 +12,11 @@ def check_have_enough_files(path, model_para):
                 return False
     return True
 
-model = 'mamba' # gnn_transformer_with_cli_demo_v1 gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
+model = 'gnn_transformer' # gnn_transformer_with_cli_demo_v1 gnn_transformer, gnn_transformer_regression , comb_cnn(bad sensitivity), cnn_transformer(result is not consistent to gnn_transformer), cnn_gnn_transformer
 validation = 'loocv'
-config = 'pretreatment_response_mamba'
+config = 'pretreatment_response_nor'
 dataset = 'prognosis_mix_hb'
-task = 'pretreatment_response'
+task = 'pretreatment_response_nor'
 
 all_region_path = f'results/{model}/{dataset}/{task}'
 
@@ -37,7 +37,6 @@ run_path = all_region_path
 print(count)
 # current itr is  
 current_itr = len(count)-1
-print(f"Now will try to see all the result of loocv_v{current_itr}")
 
 # if no loocv_v0 .... no need to check just run loocv_v0
 if current_itr != -1:
@@ -60,9 +59,13 @@ if res:
     run_itr = f"loocv_v{current_itr+1}"
 else:
     run_itr = f"loocv_v{current_itr}"
+    
+print(f"Now will try to see all the result of loocv_v{run_itr}")
+    
 config_file = config
 
 run_command = f"conda run -n tf python ./LOO_nested_CV_train.py {model} {run_itr} {config_file}"#            bash_code = f"StratifiedKFold_holdout_train.py {model} automl"
+print(run_command)
 subprocess.run(run_command, shell=True)
 
 # nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_temporal --msg loocv_v3 > /dev/null 2>&1 &

@@ -513,7 +513,7 @@ class Classifier_GNN_Transformer():
         self.model.load_weights(
             self.output_directory + 'checkpoint')
         Y_pred = self.model.predict([X_test, adj_test, cli_demo_test])
-        Y_pred = np.argmax(Y_pred, axis=1)
+        Y_test_pred = self.model.predict(X_test)
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
@@ -524,13 +524,10 @@ class Classifier_GNN_Transformer():
             # save learning rate as well
             # Can ignore the result name which has beend set as None
             save_logs(self.model, self.output_directory, None,
-                      hist, Y_pred, Y_true, duration,
+                      hist, Y_test_pred, Y_test, duration,
                       lr=True,
-                      is_saving_checkpoint=True,
-                      hyperparameters=self.hyperparameters,
-                      y_true_onehot=Y_test,
-                      y_pred_onehot=tf.one_hot(Y_pred, depth=2).numpy()
-                      )
+                      is_saving_checkpoint=False,
+                      hyperparameters=None)
 
         print(f'Training time is {duration}')
         save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)

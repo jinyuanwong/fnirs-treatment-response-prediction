@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping
 import math
 import os
+from utils.callbacks import CustomModelCheckpoint
 
 class CustomLearningRateSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, **kwargs):
@@ -39,6 +40,7 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     transformers_layers: int = 3
     n_experts: int = 4 # for MoE
     global_pooling: bool = False
+
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
 
     def __post_init__(self):

@@ -2,7 +2,7 @@
 
 # Define the variables
 model='jamba'
-config_file='mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_5_nor'
+config_file='mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_5_nor_chkpt'
 
 # Loop from 0 to 9
 for itr in {1..5}
