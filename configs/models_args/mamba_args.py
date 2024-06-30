@@ -48,7 +48,8 @@ class ModelArgs:
     optimizer: keras.optimizers.Optimizer = None
     earlystopping: keras.callbacks.EarlyStopping = None
     metrics = ['accuracy']
-    
+    monitor_metric_early_stop: str = 'val_loss'
+
 
     def __post_init__(self):
         self.model_internal_dim: int = int(self.projection_expand_factor * self.model_input_dims)
@@ -82,4 +83,4 @@ class ModelArgs:
         if self.patiences == None:
             raise ValueError(f"patiences cannot be {self.patiences}")
         else:
-            self.earlystopping = EarlyStopping(monitor='val_loss', patience=self.patiences)
+            self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)

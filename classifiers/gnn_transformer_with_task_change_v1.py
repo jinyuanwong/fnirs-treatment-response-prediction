@@ -365,13 +365,13 @@ class Classifier_GNN_Transformer():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
+        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
         classweight1 = params['classweight1'] if params.get('classweight1') is not None else 5
         self.class_weights_dict = {0: 1, 1: classweight1}
         
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128
         kernel_size_1 = (4, 5)  # 2, 3, 4
@@ -516,6 +516,7 @@ class Classifier_GNN_Transformer():
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         
         save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val, cli_demo_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
 

@@ -233,6 +233,7 @@ class Classifier_ResNet:
                 callbacks=self.callbacks
             )
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         self.model.save(self.output_directory+'last_model.hdf5')
 

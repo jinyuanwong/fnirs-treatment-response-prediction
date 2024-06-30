@@ -190,10 +190,10 @@ def nested_cross_validation_classification(data, labels, classifiers):
                 ## do not modify the order of the following two lines
                 all_outer_predictions[name]['pred'].append(outer_prediction) # 
                 all_outer_predictions[name]['pred_prob'].append(outer_prediction_prob[1])
-                shap_value = compuate_shap_values(name, clf, X_inner_train, X_test)
-                print('shap_value', shap_value)
-                # shap_value = shap_value[0] # [1] is the class of interest, [0] means only have one sample
-                shap_values[name].append(shap_value)
+                # shap_value = compuate_shap_values(name, clf, X_inner_train, X_test)
+                # print('shap_value', shap_value)
+                # # shap_value = shap_value[0] # [1] is the class of interest, [0] means only have one sample
+                # shap_values[name].append(shap_value)
 
             inner_averages = {metric: np.mean(scores) for metric, scores in inner_scores.items()}
             for metric, avg in inner_averages.items():
@@ -207,7 +207,7 @@ def nested_cross_validation_classification(data, labels, classifiers):
         pred = averaging_multiple_folds_result_into_one(pred, num_k_folds)
         pred_prob = averaging_multiple_folds_result_into_one(pred_prob, num_k_folds, is_prob=True)
         
-        shap_values_test = np.reshape(np.array(shap_values[name]), (64, 5, data.shape[1])).mean(axis=1)
+        # shap_values_test = np.reshape(np.array(shap_values[name]), (64, 5, data.shape[1])).mean(axis=1)
 
         
         outer_metrics = calculate_metrics(labels, pred, pred_prob)
@@ -215,7 +215,7 @@ def nested_cross_validation_classification(data, labels, classifiers):
         outer_performance[name] = outer_metrics
         outer_performance[name]['y_pred_test'] = pred_prob 
         outer_performance[name]['y_true_test'] = labels
-        outer_performance[name]['shap_values_test'] = shap_values_test
+        # outer_performance[name]['shap_values_test'] = shap_values_test
 
     # print("\n## Inner Cross-Validation Performance")
     # print("| Classifier | Average bAcc | Average Sensitivity | Average Specificity | Average AUC |")

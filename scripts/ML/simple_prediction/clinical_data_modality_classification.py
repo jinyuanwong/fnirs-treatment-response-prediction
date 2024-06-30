@@ -118,6 +118,7 @@ def evaluate():
         print(f"\n## {modality_name}")
         evaluate_model(path)
         print('\n--------------------------------------')    
+
 if __name__ == "__main__":
     # change the working directory to the main folder
     set_path()

@@ -18,14 +18,14 @@ class Classifier_Mamba():
         self.callbacks = callbacks
         self.epochs = epochs
 
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
         args = self.params['args']
+        earlystopping = args.earlystopping
 
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
         self.batch_size = args.batch_size
 
         num_class = 2  # 2
@@ -42,11 +42,12 @@ class Classifier_Mamba():
         for i in range(args.num_layers):
             x = ResidualBlock(args, name=f"Residual_{i}")(x)
             x = layers.Dropout(args.dropout_rate)(x) # for regularization
-
-
+        # x = layers.Permute((2, 1))(x)
+        # x = layers.GlobalAveragePooling1D()(x)
         x = layers.LayerNormalization(epsilon=1e-5)(x) # normalization layer
         if not args.use_lm_head: 
             x = layers.Flatten()(x)
+            
         x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu)(x)
         
         outputs = layers.Dense(num_class, activation=args.final_activation)(x)
@@ -90,6 +91,7 @@ class Classifier_Mamba():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,

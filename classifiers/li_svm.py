@@ -169,6 +169,7 @@ class Classifier_LI_SVM():
         Y_true = Y_test #np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         if check_if_save_model(self.output_directory, Y_pred, Y_true, self.info['monitor_metric'], self.info):
             # save learning rate as well

@@ -390,8 +390,8 @@ class Classifier_Bert():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        early_stopping = EarlyStopping(monitor='val_accuracy', patience=50)
-        self.callbacks.append(early_stopping)
+        earlystopping = EarlyStopping(monitor='val_accuracy', patience=50)
+        self.callbacks.append(earlystopping)
         self.batch_size = 16  # 32  # random.choice([128]) # 没有影响，不改变模型的结构
         kernel_size_1 = (4, 5)  # 2, 3, 4
         stride_size_1 = (1, 2)
@@ -521,6 +521,7 @@ class Classifier_Bert():
         Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         if check_if_save_model(self.output_directory, Y_pred, Y_true, 'accuracy'):
             # save learning rate as well

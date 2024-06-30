@@ -328,12 +328,12 @@ class Classifier_GNN_Transformer():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
+        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
         self.epochs = params['epochs'] if params.get('epochs') else epochs 
 
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
         self.batch_size = params['batch_size'] if params.get('batch_size') else 128
         kernel_size_1 = (4, 5)  
         stride_size_1 = (1, 2)
@@ -464,6 +464,7 @@ class Classifier_GNN_Transformer():
 
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_pred_regression(self.output_directory, self.info)
         # save_validation_acc(self.output_directory, np.argmax(self.model.predict([X_val, adj_val]), axis=1), np.argmax(Y_val, axis=1), self.info['monitor_metric'], self.info)
 

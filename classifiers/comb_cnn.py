@@ -88,9 +88,9 @@ class Classifier_CNN():
         self.pool_size = hyperparameters['pool_size']
         self.Dropout_rate = hyperparameters['Dropout_rate']
         self.callbacks = callbacks
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
+        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
         self.useCombinationModel = useCombinationModel
         self.class_weights = {0: 1,  # weight for class 0
                  1: 5}  # weight for class 1, assuming this is the minority class
@@ -201,6 +201,7 @@ class Classifier_CNN():
                 batch_size=self.batch_size, epochs=self.epochs, verbose=False, callbacks=self.callbacks,
                 class_weight=self.class_weights)  # validation_split=0.2,
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         # self.model.save(self.output_directory+'last_model.hdf5')
 
@@ -228,6 +229,7 @@ class Classifier_CNN():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

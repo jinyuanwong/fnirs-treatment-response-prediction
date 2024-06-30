@@ -101,6 +101,7 @@ class Classifier_MCDCNN:
                               verbose=self.verbose, validation_data=(x_val, y_val), callbacks=self.callbacks)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         self.model.save(self.output_directory+'last_model.hdf5')
 

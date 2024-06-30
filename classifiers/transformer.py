@@ -319,10 +319,10 @@ class Classifier_Transformer():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
+        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = params['batch_size']  # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         kernel_size_1 = (4, 5)  # 2, 3, 4
@@ -463,6 +463,7 @@ class Classifier_Transformer():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

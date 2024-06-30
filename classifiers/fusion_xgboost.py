@@ -41,7 +41,7 @@ class Classifier_XGBoost():
             'eval_metric': 'logloss',        # evaluation metric
             'max_depth': 4,                  # maximum depth of trees
             'learning_rate': 0.01,            # learning rate
-            'early_stopping_rounds': 50,#np.random.choice([10, 20, 30, 40, 50]),     # early stoping
+            'earlystopping_rounds': 50,#np.random.choice([10, 20, 30, 40, 50]),     # early stoping
             'n_estimators': 50,# np.random.choice([50, 100, 150, 200, 250, 300, 400, 500]),
             'scale_pos_weight': 61 * 1e5
         }
@@ -55,7 +55,7 @@ class Classifier_XGBoost():
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
         hist = self.model.fit(X_train, Y_train, eval_set=[
-            (X_train, Y_train), (X_val, Y_val)], early_stopping_rounds=self.params['early_stopping_rounds'])
+            (X_train, Y_train), (X_val, Y_val)], earlystopping_rounds=self.params['earlystopping_rounds'])
 
 
         Y_pred = self.model.predict(X_test)
@@ -67,6 +67,7 @@ class Classifier_XGBoost():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

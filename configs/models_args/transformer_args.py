@@ -35,8 +35,8 @@ class Transformer_ModelArgs:
     beta_2 = 0.99
     epsilon = 1e-9    
     
-    early_stopping: keras.callbacks.EarlyStopping = None
-    monitor_metric: str = 'val_loss'
+    earlystopping: keras.callbacks.EarlyStopping = None
+    monitor_metric_early_stop: str = 'val_loss'
     patience: int = 100
 
     def __post_init__(self):
@@ -45,8 +45,8 @@ class Transformer_ModelArgs:
         
         self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step)
         
-        self.early_stopping = tf.keras.callbacks.EarlyStopping(
-            monitor=self.monitor_metric, patience=self.patience, restore_best_weights=True
+        self.earlystopping = tf.keras.callbacks.EarlyStopping(
+            monitor=self.monitor_metric_early_stop, patience=self.patience, restore_best_weights=True
         )
         
         if self.num_classes == 1:

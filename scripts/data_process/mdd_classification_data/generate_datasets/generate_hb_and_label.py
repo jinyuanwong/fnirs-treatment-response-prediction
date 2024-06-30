@@ -63,6 +63,37 @@ def get_simple_avg_hb(data):
     
     return hb_simple
 
+
+from utils.fnirs_utils import get_nine_region_data
+from scipy.stats import zscore
+
+def get_nine_regions_hb_mean_task_change(hb_data_all, hb_index):
+    """ 
+    Parameters: 
+        hb_data_all: shape (514 - subject, 9 - region/channel, 1251 - timepoint, 3 - HbO/HbR/HbT)
+        hb_index: 0 - HbO, 1 - HbR, 2 - HbT
+    
+    outputs: 
+    res: shape (514, 9, 2) -> (514, 18) -> normalize -> (514, 18)
+    """
+    
+    HB = get_nine_region_data(hb_data_all[..., hb_index])
+    task_start_index = 100
+    task_end_index = 700
+    
+    shape = HB.shape[0], HB.shape[1], 2            
+    res = np.zeros(shape)
+    for i in range(HB.shape[1]):    
+        task_change_feature = HB[:, i, task_end_index:].mean(axis=1) - HB[:, i, :task_start_index].mean(axis=1)
+        mean_feature = HB[:, i, :].mean(axis=1) 
+        res[:, i, 0] = task_change_feature
+        res[:, i, 1] = mean_feature
+    
+    res = res.reshape(res.shape[0], -1)
+    normalized_res = zscore(res)    
+    
+    return normalized_res
+
 def obtain_hb_data_label_hamd():
     
     data_fold = 'Prerequisite/data_all_original'
@@ -151,37 +182,42 @@ def obtain_hb_data_label_hamd():
 
 
 if __name__ == '__main__':
-
     hb_data_all, label_all, hamd_all = obtain_hb_data_label_hamd()
 
     hb_data_all_3d = hb_data_all
     # normalize data by dividing by mean values, and concatenate them together
     # hb_data_all = np.concatenate([hb_data_all[..., i] / np.mean(hb_data_all[..., i]) for i in range(3)], axis=2)
-    hb_data_all = np.concatenate([hb_data_all_3d[..., i] for i in range(3)], axis=2)
-
-    # me
+    hb_data_all_1d = np.concatenate([hb_data_all_3d[..., i] for i in range(3)], axis=2)
 
     save_fold = 'allData/diagnosis514/'        
 
-    # save data
-    np.save(save_fold + 'hb_data.npy', hb_data_all)
-    np.save(save_fold + 'label.npy', label_all)
-
-
-
     # average along -1 by every 10pionts 
     hbo = avg_ten_points(hb_data_all_3d[...,:-1,0])
-
     hbr = avg_ten_points(hb_data_all_3d[...,:-1,1])
-
     hbt = avg_ten_points(hb_data_all_3d[...,:-1,2])
-    np.save(save_fold + 'hbo_simple_data.npy', hbo)
-
     hb_simple_3d = np.concatenate([hbo[..., np.newaxis], hbr[..., np.newaxis], hbt[..., np.newaxis]], axis=-1)
-    np.save(save_fold + 'hb_simple_3d.npy', hb_simple_3d)
-    
     hb_simple_all_1d = np.concatenate((hbo, hbr, hbt), axis=-1)
     nor_hb_simple_all_1d = normalize_individual(hb_simple_all_1d)
+
+    np.save(save_fold + 'hb_data_3d.npy', hb_data_all_3d) # subject, channel, timepoint, hbo/hbr/hbt
+    np.save(save_fold + 'hb_data_1d.npy', hb_data_all_1d) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
+
+    nor_hb_data_all_1d = normalize_individual(hb_data_all_1d)
+    np.save(save_fold + 'nor_hb_data_1d.npy', normalize_individual(hb_data_all_1d)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
+    np.save(save_fold + 'nor_seq_ch_hb_data_1d.npy', nor_hb_data_all_1d.transpose(0, 2, 1)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
+
+    np.save(save_fold + 'label.npy', label_all)
+    np.save(save_fold + 'hbo_simple_data.npy', hbo)
+    np.save(save_fold + 'hb_simple_3d.npy', hb_simple_3d)
     np.save(save_fold + 'nor_hb_simple_all_1d.npy', nor_hb_simple_all_1d)
     
+    np.save(save_fold + 'nor_seq_ch_hb_simple_all_1d.npy', nor_hb_simple_all_1d.transpose(0, 2, 1)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
+
     np.save(save_fold + 'hamd.npy', hamd_all)
+    
+    nine_regions_hbo_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(hb_data_all_3d, hb_index=0)
+    nine_regions_hbr_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(hb_data_all_3d, hb_index=1)
+    nine_regions_hbt_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(hb_data_all_3d, hb_index=2)
+    np.save(save_fold + 'nine_regions_hbo_task_change_fnirs_features.npy', nine_regions_hbo_task_change_fnirs_features)
+    np.save(save_fold + 'nine_regions_hbr_task_change_fnirs_features.npy', nine_regions_hbr_task_change_fnirs_features)
+    np.save(save_fold + 'nine_regions_hbt_task_change_fnirs_features.npy', nine_regions_hbt_task_change_fnirs_features)

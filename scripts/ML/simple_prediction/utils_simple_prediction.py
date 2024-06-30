@@ -22,6 +22,27 @@ def load_data_for_classification():
     labels = np.load(label_pth)
     return data, labels
 
+def load_data_for_MDD_HC_classification(modality):
+    if modality == 'hbo':
+        data_pth = 'allData/diagnosis_110_fabeha_dataset_hb_all/nine_regions_hbo_task_change_fnirs_features.npy'
+    elif modality == 'hbr':
+        data_pth = 'allData/diagnosis_110_fabeha_dataset_hb_all/nine_regions_hbr_task_change_fnirs_features.npy'    
+    else: 
+        data_pth = 'allData/diagnosis_110_fabeha_dataset_hb_all/nine_regions_hbt_task_change_fnirs_features.npy'
+        
+    label_pth = 'allData/diagnosis_110_fabeha_dataset_hb_all/label.npy'
+    
+    data = np.load(data_pth)
+    labels = np.load(label_pth)
+    
+    save_fold = 'results/ML_results/simple_prediction/MDD_HC_classification/diagnosis_110_fabeha_dataset_hb_all/' + f'nine_regions_{modality}_task_change_fnirs_features'
+    
+    if not os.path.exists(save_fold):
+        os.makedirs(save_fold)
+    
+    return data, labels, save_fold
+
+
 def load_data_for_partial_response_prediction():
     label_pth = 'allData/prognosis_mix_hb/pretreatment_response/label_partial_response.npy'
     labels = np.load(label_pth)

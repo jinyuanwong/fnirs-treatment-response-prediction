@@ -48,6 +48,7 @@ class Classifier_DecisionTree():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

@@ -57,6 +57,7 @@ class Classifier_LSTM:
         hist = self.model.fit(x_train,y_train,batch_size=self.batch_size,epochs=self.nb_epochs,verbose=self.verbose, validation_data=(x_val,y_val), callbacks=self.callbacks)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         self.model.save(self.output_directory+'last_model.hdf5')
 

@@ -43,6 +43,7 @@ class Classifier_XGBoost():
         # Y_true = np.argmax(Y_test, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         if check_if_save_model(self.output_directory, Y_pred, Y_test, self.info['monitor_metric'], self.info):
             # save learning rate as well

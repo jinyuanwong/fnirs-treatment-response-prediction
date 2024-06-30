@@ -41,14 +41,14 @@ class Classifier_XGBoost():
         #     'eval_metric': 'logloss',        # evaluation metric
         #     'max_depth': np.random.choice([3, 4, 5, 6, 7, 8, 9, 10]),                  # maximum depth of trees
         #     'learning_rate': np.random.choice([0.01, 0.05, 0.1, 0.2, 0.3]),            # learning rate
-        #     'early_stopping_rounds': np.random.choice([10, 20, 30, 40, 50]),     # early stoping
+        #     'earlystopping_rounds': np.random.choice([10, 20, 30, 40, 50]),     # early stoping
         #     'n_estimators': np.random.choice([50, 100, 150, 200, 250, 300, 400, 500]),
         #     'scale_pos_weight': 1e12,
         # }
         params = {
             'objective': 'binary:logistic',  # for binary classification
             'eval_metric': 'logloss',        # evaluation metric
-             'early_stopping_rounds': np.random.choice([10, 20, 30, 40, 50]), 
+             'earlystopping_rounds': np.random.choice([10, 20, 30, 40, 50]), 
             'alpha': 0.8984148424903339, 'gamma': 0.03882220445979434, 'lambda': 0.6753800395275018, 'learning_rate': 0.23017037995236783, 'max_depth': 10, 'min_child_weight': 1.7961639148503241, 'n_estimators': 117, 'scale_pos_weight': 1000} #69215400.51817685}
 
         self.params = params
@@ -70,7 +70,7 @@ class Classifier_XGBoost():
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
         hist = self.model.fit(X_train, Y_train, eval_set=[
-            (X_train, Y_train), (X_val, Y_val)], early_stopping_rounds=self.params['early_stopping_rounds'])
+            (X_train, Y_train), (X_val, Y_val)], earlystopping_rounds=self.params['earlystopping_rounds'])
 
 
         Y_pred = self.model.predict(X_test)
@@ -82,6 +82,7 @@ class Classifier_XGBoost():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

@@ -175,6 +175,7 @@ class Classifier_CNN:
                 validation_data=(X_test[:,:,self.hyperparameter['channel']],Y_test),
                 batch_size=self.batch_size, epochs=self.nb_epochs, verbose=False, callbacks=self.callbacks)#  #validation_split=0.2,
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         # self.model.save(self.output_directory+'last_model.hdf5')
 

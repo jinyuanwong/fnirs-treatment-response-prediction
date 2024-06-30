@@ -203,6 +203,7 @@ class Classifier_TLENET:
         y_pred = np.array(y_predicted)
         
         duration = time.time() - start_time
+        self.info['duration'] = duration
         
         save_logs(self.output_directory, hist, y_pred, y_true, duration )
 

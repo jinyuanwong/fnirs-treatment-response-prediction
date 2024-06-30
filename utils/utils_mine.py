@@ -364,8 +364,6 @@ def check_if_save_model(output_directory, Y_pred, Y_true, check_metrice, info):
 
 
 def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, save_file_name='val_acc.txt'):
-    print(f'Y_pred: {Y_pred}')
-    print(f'Y_true: {Y_true}')
     Y_pred_binary = np.argmax(Y_pred, axis=1)
     Y_true_binary = np.argmax(Y_true, axis=1)
     past_metrice = read_past_value(output_directory, check_metrice)
@@ -373,7 +371,7 @@ def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, s
     hist_df_metrics = calculate_metrics(Y_true, Y_pred, 0)
     save_data_to_file(output_directory + save_file_name, hist_df_metrics, info)
     print(f'current saved file: {output_directory}' + save_file_name)
-    print(f"Current {check_metrice}: {current_metrice}")
+    print(f"Current {check_metrice} + {save_file_name}: {current_metrice}")
 
     if current_metrice > past_metrice:
         return True
@@ -410,6 +408,9 @@ def normalize_individual(data):
     # std = np.std(data, axis=(1,2))
 
     return normalized_data
+
+
+
 
 
 def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_normalize=True, total_k=10, num_of_k=1):

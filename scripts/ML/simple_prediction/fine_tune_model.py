@@ -58,7 +58,7 @@ def tune_random_forest(data, labels, weight_0=None):
     # Return the best estimator
     return grid_search.best_estimator_
 
-def tune_xgboost(data, labels):
+def tune_xgboost(data, labels, weight_0=None):
     # Define the parameter grid for XGBoost
     param_grid = {
         'n_estimators': [100, 200, 300],
@@ -67,6 +67,10 @@ def tune_xgboost(data, labels):
     }
 
     # Create a StratifiedKFold object
+    if weight_0 == None:
+        scale_pos_weight = 1e6
+    else:
+        scale_pos_weight = (1 - weight_0) / weight_0
 
     # Create the XGBClassifier object
     xgb = XGBClassifier(scale_pos_weight=1e6)
@@ -84,7 +88,7 @@ def tune_xgboost(data, labels):
     # Return the best estimator
     return grid_search.best_estimator_
 
-def tune_svm(data, labels):
+def tune_svm(data, labels, weight_0=None):
     # Define the parameter grid for SVM
     param_grid = {
         'C': [0.01, 0.1, 1, 10, 100, 1000],
@@ -99,8 +103,10 @@ def tune_svm(data, labels):
 
     # Create the SVC object
     # class_weight_dict = get_class_weight_dict(labels)
-    weight_1 = 0.925
-    class_weight_dict = {0: 1 - weight_1, 1: weight_1}
+    if weight_0 == None: 
+        weight_0 = 0.075
+    weight_1 = 1 - weight_0
+    class_weight_dict = {0: weight_0, 1: weight_1}
     svc = SVC(class_weight=class_weight_dict)
 
     # Create the GridSearchCV object
@@ -316,17 +322,35 @@ def define_classifier_for_classification_for_response(data, labels, weight_0=Non
         # "KNN": tune_knn(data, labels),
         "SVM": tune_svm(data, labels),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
         "XGBoost": tune_xgboost(data, labels),#XGBClassifier(scale_pos_weight=1e6),
-        "Naive Bayes": tune_gaussian_nb(data, labels),
-        "Random Forest": tune_random_forest(data, labels),
+        "Naive Bayes": tune_gaussian_nb(data, labels, weight_0),
+        "Random Forest": tune_random_forest(data, labels, weight_0),
         # "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
-        "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0=0.5),
-        "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0=0.2),
+        "Discriminant Analysis(LDA)": tune_lda(data, labels, weight_0=0.5),
+        "SGDClassifier": tune_sgd_classifier(data, labels, weight_0=0.2),
     }
-    
+    return classifiers
+
+def define_classifier_for_mdd_hc_classification(data, labels, weight_0=None):
+    if weight_0 is not None:
+        weight_0_name = str(weight_0).replace('.', '_')
+    else:
+        weight_0_name = ''
+    # Define the classifiers dictionary including the Voting Classifier
+    classifiers = {
+        # "MLP": tune_mlp(data, labels),
+        # "KNN": tune_knn(data, labels),
+        "SVM": tune_svm(data, labels, weight_0),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
+        "XGBoost": tune_xgboost(data, labels, weight_0),#XGBClassifier(scale_pos_weight=1e6),
+        "Naive Bayes": tune_gaussian_nb(data, labels, weight_0),
+        "Random Forest": tune_random_forest(data, labels, weight_0),
+        # "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
+        "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0),
+        "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0),
+    }
     return classifiers
 
 
-def define_classifier_for_classification_for_partial_response(data, labels, weight_0=None):
+def define_classifier_for_classification_for_partial_response(data, labels, weight_0):
     if weight_0 is not None:
         weight_0_name = str(weight_0).replace('.', '_')
     else:
@@ -337,7 +361,7 @@ def define_classifier_for_classification_for_partial_response(data, labels, weig
         # "KNN": tune_knn(data, labels),
         # "SVM": tune_svm(data, labels),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
         # "XGBoost": tune_xgboost(data, labels),#XGBClassifier(scale_pos_weight=1e6),
-        # "Naive Bayes"+weight_0_name: tune_gaussian_nb(data, labels, weight_0=weight_0),
+        "Naive Bayes"+weight_0_name: tune_gaussian_nb(data, labels, weight_0=weight_0),
         "Random Forest"+weight_0_name: tune_random_forest(data, labels, weight_0),
         # "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0=0.5),
         # "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0=0.52),

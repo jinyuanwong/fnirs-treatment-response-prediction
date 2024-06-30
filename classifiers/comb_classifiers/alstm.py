@@ -215,6 +215,7 @@ class Classifier_ALSTM:
                 callbacks=self.callbacks
             )
         duration = time.time() - start_time
+        self.info['duration'] = duration
 
         # self.model.save(self.output_directory + 'last_model.hdf5')
 

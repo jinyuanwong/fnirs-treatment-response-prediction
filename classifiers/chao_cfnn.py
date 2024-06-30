@@ -109,9 +109,9 @@ class Classifier_CFNN():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
+        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
-        self.callbacks.append(early_stopping)
+        self.callbacks.append(earlystopping)
 
         self.batch_size = 128  # sweep_config['batch_size']  # 128
 
@@ -174,6 +174,7 @@ class Classifier_CFNN():
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
+        self.info['duration'] = duration
         save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
         save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
                             save_file_name='test_acc.txt')

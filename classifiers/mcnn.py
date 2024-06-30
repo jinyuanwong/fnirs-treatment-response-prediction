@@ -395,7 +395,8 @@ class Classifier_MCNN:
 
         y_pred = np.array(y_predicted)
 
-        duration = time.time() - start_time        
+        duration = time.time() - start_time
+        self.info['duration'] = duration        
 
         df_metrics = calculate_metrics(y_true,y_pred, duration)
 
