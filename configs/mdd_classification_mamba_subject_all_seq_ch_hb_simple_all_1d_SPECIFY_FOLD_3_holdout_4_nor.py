@@ -1,6 +1,9 @@
 from configs.config import *
 from configs.models_args.mamba_args import ModelArgs
+from configs.mdd_classification import *
 import os 
+
+
 INPUT_HB_TYPE = ['diagnosis514']
 SPECIFY_FOLD = 3
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
@@ -30,5 +33,7 @@ PARAMETER['mamba'] = {
     'hb_path': 'nor_seq_ch_hb_simple_all_1d.npy',
     'args': args,
     'config_file_path': os.path.abspath(__file__),
-
 }
+
+for model, val in PARAMETER.items():
+    PARAMETER[model]['hb_path'] = 'nor_seq_ch_hb_simple_all_1d.npy'

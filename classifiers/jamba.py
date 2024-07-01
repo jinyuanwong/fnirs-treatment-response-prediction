@@ -98,7 +98,7 @@ class Classifier_Jamba():
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
-
+        
         hist = self.model.fit(
             x=X_train,
             y=Y_train,
