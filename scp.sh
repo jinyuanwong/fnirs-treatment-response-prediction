@@ -27,3 +27,7 @@ scp $s5:/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearnin
 scp -r -P 21140 /Users/shanxiafeng/Desktop/diagnosis514 root@connect.westb.seetacloud.com:/root/autodl-tmp/fnirs-treatment-response-prediction/allData/.
 
 scp -r -P 21140 /Users/shanxiafeng/Desktop/diagnosis514 @connect.westb.seetacloud.com:/root/autodl-tmp/fnirs-treatment-response-prediction/allData/.
+
+
+
+scp -r /Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction/allData/RawData $s5:/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning/Prerequisite/.

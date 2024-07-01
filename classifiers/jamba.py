@@ -20,8 +20,11 @@ from classifiers.layer.gnn import GNN
 from classifiers.layer.attention import ChannelAttentionLayer
 from classifiers.layer.rmsnorm import RMSNorm
 from classifiers.layer.conv1d import conv1d_layer
-
+from classifiers.layer.mbll import MBLL_Layer
+from classifiers.layer.channel_selection import ChannelSelectionLayer
 from utils.callbacks import CustomModelCheckpoint
+
+
 
 class Classifier_Jamba():
     def __init__(self, output_directory, callbacks, input_shape, epochs, sweep_config, info):
@@ -46,16 +49,24 @@ class Classifier_Jamba():
         #     inputs_time_point = tf.keras.Input(shape=(input_shape[1:]+[1]))
         # else:
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
+        shape = input_shape[1:]
+        # for light_data 
+        inputs_2d = MBLL_Layer()(inputs_time_point)
+        inputs_2d = tf.concat([inputs_2d[..., 0], inputs_2d[..., 1]], axis=-1)
+        
         adj = generate_fnirs_adj_tf() 
-        x = inputs_time_point
+        # x = inputs_time_point
+        x = inputs_2d
         
         conv1d_x = conv1d_layer(args)(x)
-        
+        # conv1d_x = ChannelSelectionLayer(conv1d_x.shape[2], conv1d_x.shape[1])(conv1d_x)
+
         x = RMSNorm()(x)
         # x = ChannelAttentionLayer(input_shape[1])(inputs_time_point)
         x = MambaBlock(args)(x)
 
         x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+        # x = ChannelSelectionLayer(x.shape[2], x.shape[1])(x)
         
         for _ in range(args.num_layers):
             x = Mamba_layer(args)(x)
