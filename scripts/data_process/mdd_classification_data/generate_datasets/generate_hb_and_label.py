@@ -31,10 +31,10 @@ def read_hb_data_label(data):
     return hb_data, label
 
     
-def loop_data_path_hb_type(data_pth, Hb_types):
+def loop_data_path_hb_type(data_pth, Hb_types, datatype='prep'):
     all_hb_data, label = [], []
     for hb_type in Hb_types:
-        path = data_pth + f'/all52CH_prep_{hb_type}.mat'
+        path = data_pth + f'/all52CH_{datatype}_{hb_type}.mat'
         print(path)
         data = loadmat(path)
         hb_data, label = read_hb_data_label(data)
@@ -94,7 +94,124 @@ def get_nine_regions_hb_mean_task_change(hb_data_all, hb_index):
     
     return normalized_res
 
-def obtain_hb_data_label_hamd():
+def calculate_slope(y, start_idx, end_idx):
+    """
+    Calculate the slope of the linear fit for the data points between start_idx and end_idx.
+    
+    Parameters:
+    - y: numpy array of data points
+    - start_idx: starting index
+    - end_idx: ending index
+    
+    Returns:
+    - slope: slope of the linear fit
+    """
+    x = np.arange(start_idx, end_idx)
+    y = y[start_idx:end_idx]
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, c = np.linalg.lstsq(A, y, rcond=None)[0]
+    return m
+
+def extract_features(data):
+    """
+    Extract mean for five periods and slope for four periods.
+    
+    Parameters:
+    - data: numpy array of shape (subjects, channels, time_steps)
+    
+    Returns:
+    - features: numpy array of shape (subjects, channels, features)
+    """
+    
+    n_subjects, n_channels, n_time_steps = data.shape
+    
+    mean_features = np.zeros((n_subjects, n_channels, 5))
+    slope_features = np.zeros((n_subjects, n_channels, 4))
+    
+    mean_periods = [
+        (0, 100),
+        (100, 300),
+        (300, 500),
+        (500, 700),
+        (700, n_time_steps)
+    ]
+    
+    slope_periods = [
+        (50, 150),
+        (250, 350),
+        (450, 550),
+        (650, 750)
+    ]
+    
+    for subject in range(n_subjects):
+        for channel in range(n_channels):
+            # Compute means for each of the five periods
+            for i, (start_idx, end_idx) in enumerate(mean_periods):
+                mean_features[subject, channel, i] = np.mean(data[subject, channel, start_idx:end_idx])
+            
+            # Compute slopes for each of the four periods using the slope function
+            for i, (start_idx, end_idx) in enumerate(slope_periods):
+                slope_features[subject, channel, i] = calculate_slope(data[subject, channel], start_idx, end_idx)
+    
+    # Concatenate mean and slope features
+    features = np.concatenate((mean_features, slope_features), axis=2)
+    return features
+
+def extract_combined_features(hb_data_all):
+    """
+    Extract combined features for all Hb types and normalize the result.
+    
+    Parameters:
+    - hb_data_all: **unnormalized** numpy array of shape (subjects, channels, time_steps, hb_type)
+    
+    Returns:
+    - combined_features: numpy array of shape (subjects, channels, features*3)
+    """
+    
+    n_subjects, n_channels, n_time_steps, n_hb_types = hb_data_all.shape
+    combined_features = []
+    
+    for hb_index in range(n_hb_types):
+        hb_features = extract_features(hb_data_all[..., hb_index])
+        combined_features.append(hb_features)
+    
+    # Combine features for all Hb types
+    combined_features = np.concatenate(combined_features, axis=2)
+
+    # Normalize by dividing by the mean across subjects and channels
+    feature_means = combined_features.mean(axis=(0, 1))
+    normalized_features = combined_features / feature_means
+            
+    return normalized_features
+
+def concatenate_hb_data_and_features(hb_data_all, normalized_features):
+    """
+    Extract combined features for all Hb types and normalize the result.
+    
+    Parameters:
+    - hb_data_all: **unnormalized** numpy array of shape (subjects, channels, time_steps, hb_type)
+    - features: numpy array of shape (subjects, channels, features)
+    
+    Returns:
+    - concatenated_features: numpy array of shape (subjects, channels, features*3)
+    """    
+    n_subjects, n_channels, n_time_steps, n_hb_types = hb_data_all.shape
+
+    # process input data to concatenate it from 4d -> 3d and normalize it using mean(0,1)
+    hb_data_all_1d = np.concatenate([hb_data_all[..., i] for i in range(3)], axis=2)
+    normalized_hb_data_all_1d = hb_data_all_1d / hb_data_all_1d.mean(axis=(0, 1))
+    
+    # Add zeros to reach the desired feature size of 52
+    zeros_to_add = normalized_hb_data_all_1d.shape[2] - normalized_features.shape[2]
+    if zeros_to_add > 0:
+        padding = np.zeros((n_subjects, n_channels, zeros_to_add))
+        normalized_features = np.concatenate((normalized_features, padding), axis=2)
+        
+    concatenated_features = np.concatenate((normalized_hb_data_all_1d, normalized_features), axis=1)    
+    
+    return concatenated_features
+
+def obtain_hb_data_label_hamd(datatype='prep'):
     
     data_fold = 'Prerequisite/data_all_original'
 
@@ -149,8 +266,8 @@ def obtain_hb_data_label_hamd():
     delete_index_in_gabrille = np.where(np.array(two_dataset_correct_order_name) == delete_subejct_name)[0][0]
     two_dataset_correct_order_name.remove(delete_subejct_name)
 
-    hb_data_dataset1, label_dataset1 = loop_data_path_hb_type(dataset_1_pth, Hb_types)
-    hb_data_dataset2, label_dataset2 = loop_data_path_hb_type(dataset_2_pth, Hb_types)
+    hb_data_dataset1, label_dataset1 = loop_data_path_hb_type(dataset_1_pth, Hb_types, datatype)
+    hb_data_dataset2, label_dataset2 = loop_data_path_hb_type(dataset_2_pth, Hb_types, datatype)
 
     hb_data_dataset1 = np.array(hb_data_dataset1)
     hb_data_dataset2 = np.array(hb_data_dataset2)
@@ -185,6 +302,8 @@ if __name__ == '__main__':
     hb_data_all, label_all, hamd_all = obtain_hb_data_label_hamd()
 
     hb_data_all_3d = hb_data_all
+
+    
     # normalize data by dividing by mean values, and concatenate them together
     # hb_data_all = np.concatenate([hb_data_all[..., i] / np.mean(hb_data_all[..., i]) for i in range(3)], axis=2)
     hb_data_all_1d = np.concatenate([hb_data_all_3d[..., i] for i in range(3)], axis=2)
@@ -197,23 +316,29 @@ if __name__ == '__main__':
     hbt = avg_ten_points(hb_data_all_3d[...,:-1,2])
     hb_simple_3d = np.concatenate([hbo[..., np.newaxis], hbr[..., np.newaxis], hbt[..., np.newaxis]], axis=-1)
     hb_simple_all_1d = np.concatenate((hbo, hbr, hbt), axis=-1)
+    
+    
+    nor_hb_data_all_1d = normalize_individual(hb_data_all_1d)
     nor_hb_simple_all_1d = normalize_individual(hb_simple_all_1d)
 
     np.save(save_fold + 'hb_data_3d.npy', hb_data_all_3d) # subject, channel, timepoint, hbo/hbr/hbt
     np.save(save_fold + 'hb_data_1d.npy', hb_data_all_1d) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
 
-    nor_hb_data_all_1d = normalize_individual(hb_data_all_1d)
     np.save(save_fold + 'nor_hb_data_1d.npy', normalize_individual(hb_data_all_1d)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
     np.save(save_fold + 'nor_seq_ch_hb_data_1d.npy', nor_hb_data_all_1d.transpose(0, 2, 1)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
-
     np.save(save_fold + 'label.npy', label_all)
     np.save(save_fold + 'hbo_simple_data.npy', hbo)
-    np.save(save_fold + 'hb_simple_3d.npy', hb_simple_3d)
+    np.save(save_fold + 'hb_simple_3d.npy', hb_simple_3d)    
     np.save(save_fold + 'nor_hb_simple_all_1d.npy', nor_hb_simple_all_1d)
-    
     np.save(save_fold + 'nor_seq_ch_hb_simple_all_1d.npy', nor_hb_simple_all_1d.transpose(0, 2, 1)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
-
     np.save(save_fold + 'hamd.npy', hamd_all)
+
+    extracted_featues = extract_combined_features(hb_data_all_3d)
+    np.save(save_fold + 'extracted_featues.npy', extracted_featues.reshape(extracted_featues.shape[0], -1))
+
+    nor_hb_simple_all_1d_conc_features = concatenate_hb_data_and_features(hb_simple_3d, extracted_featues)    
+    np.save(save_fold + 'nor_hb_simple_all_1d_conc_features.npy', nor_hb_simple_all_1d_conc_features)
+
     
     nine_regions_hbo_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(hb_data_all_3d, hb_index=0)
     nine_regions_hbr_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(hb_data_all_3d, hb_index=1)

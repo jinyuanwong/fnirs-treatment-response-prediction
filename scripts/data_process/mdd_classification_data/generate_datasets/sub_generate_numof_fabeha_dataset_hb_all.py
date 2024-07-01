@@ -18,7 +18,8 @@ def set_path():
 set_path()
 from scripts.data_process.mdd_classification_data.generate_datasets import generate_hb_and_label as generate_hb_and_label #as obtain_hb_data_label_hamd
 from generate_hb_and_label import obtain_hb_data_label_hamd, get_simple_avg_hb
-from generate_hb_and_label import get_nine_regions_hb_mean_task_change
+from generate_hb_and_label import get_nine_regions_hb_mean_task_change, extract_combined_features, concatenate_hb_data_and_features
+        
 # import scripts.data_process.mdd_classification_data.generate_datasets as generate_datasets
 # from generate_datasets import obtain_hb_data_label_hamd
 # import scripts.data_process.mdd_classification_data.generate_datasets as generate_datasets, correct_channel, loop_data_path_hb_type
@@ -52,11 +53,13 @@ from utils.utils_mine import  normalize_individual
 
         
 if __name__ == '__main__':
-    
-    for number_of_subjects in [110, 250]: # 250 or 110
-        hb_data_all, label_all, hamd_all = obtain_hb_data_label_hamd()
-
         
+    for number_of_subjects in [110]:#[110, 250]: # 250 or 110
+        
+        #f'allData/diagnosis_{number_of_subjects}_fabeha_dataset_hb_all/'
+        save_fold = f'allData/raw_diagnosis_{number_of_subjects}_fabeha_dataset_hb_all/'
+
+        hb_data_all, label_all, hamd_all = obtain_hb_data_label_hamd(datatype='raw')
         
         selected_index = retrieve_index_from_fabeha_according_to_label(label_all, number_of_subjects=number_of_subjects)
 
@@ -71,7 +74,6 @@ if __name__ == '__main__':
         print('selected_label', selected_label)
         print(avg_selected_hb_data_all.shape, avg_selected_hb_data_all_1d.shape, selected_label.shape, selected_hamd.shape)
         
-        save_fold = f'allData/diagnosis_{number_of_subjects}_fabeha_dataset_hb_all/'
         if os.path.exists(save_fold) is False:
             os.makedirs(save_fold)
             print('Create folder:', save_fold)
@@ -88,6 +90,12 @@ if __name__ == '__main__':
         np.save(save_fold + 'hb_simple_all_1d.npy', avg_selected_hb_data_all_1d)
         np.save(save_fold + 'nor_hb_simple_all_1d.npy', nor_avg_selected_hb_data_all_1d)
         np.save(save_fold + 'nor_seq_ch_hb_simple_all_1d.npy', nor_avg_selected_hb_data_all_1d.transpose(0, 2, 1)) # subject, channel, timepoint(hbo) + timepoint(hbr) + timepoint(hbt)
+        
+        extracted_featues = extract_combined_features(selected_hb_data_all)
+        np.save(save_fold + 'extracted_featues.npy', extracted_featues.reshape(extracted_featues.shape[0], -1))
+
+        nor_hb_simple_all_1d_conc_features = concatenate_hb_data_and_features(avg_selected_hb_data_all, extracted_featues)    
+        np.save(save_fold + 'nor_hb_simple_all_1d_conc_features.npy', nor_hb_simple_all_1d_conc_features)
 
         nine_regions_hbo_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(selected_hb_data_all, hb_index=0)
         nine_regions_hbr_task_change_fnirs_features = get_nine_regions_hb_mean_task_change(selected_hb_data_all, hb_index=1)

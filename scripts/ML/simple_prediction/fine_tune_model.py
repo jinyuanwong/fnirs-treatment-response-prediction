@@ -73,7 +73,7 @@ def tune_xgboost(data, labels, weight_0=None):
         scale_pos_weight = (1 - weight_0) / weight_0
 
     # Create the XGBClassifier object
-    xgb = XGBClassifier(scale_pos_weight=1e6)
+    xgb = XGBClassifier() # scale_pos_weight=scale_pos_weight
 
     # Create the GridSearchCV object
     grid_search = GridSearchCV(estimator=xgb, param_grid=param_grid, scoring=scoring_scorer, cv=CV, verbose=1, n_jobs=12)
@@ -106,8 +106,8 @@ def tune_svm(data, labels, weight_0=None):
     if weight_0 == None: 
         weight_0 = 0.075
     weight_1 = 1 - weight_0
-    class_weight_dict = {0: weight_0, 1: weight_1}
-    svc = SVC(class_weight=class_weight_dict)
+    class_weight_dict = {0: weight_0, 1: weight_1} # 
+    svc = SVC() # class_weight=class_weight_dict
 
     # Create the GridSearchCV object
     grid_search = GridSearchCV(estimator=svc, param_grid=param_grid, scoring=scoring_scorer, cv=CV, verbose=1, n_jobs=12)

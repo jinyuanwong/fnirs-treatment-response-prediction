@@ -3,7 +3,7 @@ import os
 from fine_tune_model import define_classifier_for_classification_for_response, define_classifier_for_classification_for_partial_response, define_classifier_for_mdd_hc_classification
 from validation_method import stratified_5_fold_classification, nested_cross_validation_classification, loocv_classification
 from utils_simple_prediction import add_task_change_data, load_data_for_classification, load_data_for_partial_response_prediction, add_cgi, add_mddr, set_path, load_task_change_data, save_model_seed, load_fnirs_feature_data
-from utils_simple_prediction import load_data_for_MDD_HC_classification
+from utils_simple_prediction import load_data_for_MDD_HC_classification, load_data_for_MDD_HC_classification_extracted_features
 import time
 
 def classification(data, labels, weight_0=None, partial_response=False):
@@ -84,11 +84,11 @@ def shuffle_input(data, labels, random_seed):
 def train(num_of_repeat, partial_response, random_seed = 42): 
     # weight_0 is used to tune class_weight or prior in the classifiers
     for weight_0 in [0.5]:#[i/10 for i in range (2, 10)]:#[None]: # np.arange(0.2, 1, 0.1): #[None]:# [0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5]:
-        modalities =  ['hbr', 'hbt']  # ['fnirs only']  #  ['clinical only', 'fnirs only', 'clinical + fnirs']  # ['fnirs only']  #   ['clinical only', 'fnirs only', 'clinical + fnirs']  #['fnirs only'] #  ['clinical only', 'fnirs only', 'clinical + fnirs'] #   #      ['clinical only', 'clinical + fnirs']# 
+        modalities =  ['HbO+HbR+HbT']  # ['fnirs only']  #  ['clinical only', 'fnirs only', 'clinical + fnirs']  # ['fnirs only']  #   ['clinical only', 'fnirs only', 'clinical + fnirs']  #['fnirs only'] #  ['clinical only', 'fnirs only', 'clinical + fnirs'] #   #      ['clinical only', 'clinical + fnirs']# 
         for i in range(num_of_repeat):
             for modality in modalities:
                 random_seed += 1
-                data, labels, save_fold = load_data_for_MDD_HC_classification(modality)# choose_modality(modality, partial_response=partial_response)
+                data, labels, save_fold = load_data_for_MDD_HC_classification_extracted_features(modality)# choose_modality(modality, partial_response=partial_response)
 
                 shuffle_data, shuffle_labels = shuffle_input(data, labels, random_seed=random_seed)
 

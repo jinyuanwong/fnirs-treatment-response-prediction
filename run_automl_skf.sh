@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define the variables
-model='mamba'
-config_file='mdd_classification_mamba_subject_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor'
+model='jamba_hybird'
+config_file='mdd_classification_jamba_hybrid_subject_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor'
 itr_name='eval_' #'eval'
 
 # Loop from 0 to 9
@@ -26,4 +26,8 @@ done
 
 # python ./LOO_nested_CV_train_skf.py jamba test mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_5_nor
 
-# python ./LOO_nested_CV_train_skf.py cnn_transformer test mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor
+# python ./LOO_nested_CV_train_skf.py mamba eval_10 mdd_classification_mamba_subject_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor
+
+# python ./LOO_nested_CV_train_skf.py cnn_transformer eval_10 mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor
+
+# python ./LOO_nested_CV_train_skf.py jamba_hybrid eval_10 mdd_classification_jamba_hybrid_subject_all_hb_simple_all_1d_SPECIFY_FOLD_2_nor
