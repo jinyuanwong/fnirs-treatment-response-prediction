@@ -11,7 +11,7 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     transformers_layers: int = 3
     n_experts: int = 4 # for MoE
     global_pooling: bool = False
-
+    l2_rate: float = 0.01
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
 
     def __post_init__(self):

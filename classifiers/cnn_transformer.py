@@ -139,13 +139,14 @@ class PositionalEncoding(layers.Layer):
 
 class EncoderLayer(layers.Layer):
 
-    def __init__(self, FFN_units, n_heads, dropout_rate, activation, name='encoder_layer'):
+    def __init__(self, args, name='encoder_layer'):
         super(EncoderLayer, self).__init__(name=name)
 
-        self.FFN_units = FFN_units
-        self.n_heads = n_heads
-        self.dropout_rate = dropout_rate
-        self.activation = activation
+        self.FFN_units = args.FFN_units
+        self.n_heads = args.n_heads
+        self.dropout_rate = args.dropout_rate
+        self.activation = args.activation
+        self.l2_rate = args.l2_rate
 
     def build(self, input_shape):
         self.d_model = input_shape[-1]
@@ -154,8 +155,8 @@ class EncoderLayer(layers.Layer):
         self.norm_1 = layers.LayerNormalization(epsilon=1e-6)
 
         self.ffn1_relu_gelu = layers.Dense(
-            units=self.FFN_units, activation=self.activation)
-        self.ffn2 = layers.Dense(units=self.d_model)
+            units=self.FFN_units, activation=self.activation, kernel_regularizer=tf.keras.regularizers.l2(self.l2_rate))
+        self.ffn2 = layers.Dense(units=self.d_model, activation=self.activation, kernel_regularizer=tf.keras.regularizers.l2(self.l2_rate))
         self.dropout_2 = layers.Dropout(rate=self.dropout_rate)
         self.norm_2 = layers.LayerNormalization(epsilon=1e-6)
 
@@ -177,16 +178,11 @@ class EncoderLayer(layers.Layer):
 
 class Encoder(layers.Layer):
     def __init__(self,
-                 n_layers,
-                 FFN_units,
-                 n_heads,
-                 dropout_rate,
-                 activation,
+                 args,
                  name="encoder"):
         super(Encoder, self).__init__(name=name)
-        self.n_layers = n_layers
-        self.enc_layers = [EncoderLayer(
-            FFN_units, n_heads, dropout_rate, activation) for _ in range(n_layers)]
+        self.n_layers = args.n_layers
+        self.enc_layers = [EncoderLayer(args) for _ in range(args.n_layers)]
 
     def call(self, inputs):
         outputs = inputs
@@ -243,18 +239,10 @@ class ClsPositionEncodingLayer(layers.Layer):
 class Transformer(tf.keras.Model):
     # input_shape = (None, channel_size, sample_point, datapoint)
     def __init__(self,
-                 dropout_rate,
-                 n_layers,
-                 FFN_units,
-                 n_heads,
-                 activation):
+                 args):
         super(Transformer, self).__init__()
 
-        self.encoder = Encoder(n_layers,
-                               FFN_units,
-                               n_heads,
-                               dropout_rate,
-                               activation,
+        self.encoder = Encoder(args,
                                name="encoder_1")
 
         self.global_average_pooling = layers.GlobalAveragePooling1D(
@@ -319,11 +307,7 @@ class Classifier_Transformer():
             output = ClsPositionEncodingLayer(
                 input_channel=input_shape[1], kenerl_size=kernel_size[0], strides=stride_size[0], d_model=d_model, dropout_rate=dropout_rate, name=f'CLS_pos_encoding_{i+1}')(output)
             # Append the output to the 'outputs' list.
-            output = Transformer(dropout_rate,
-                                n_layers,
-                                FFN_units,
-                                n_heads,
-                                activation)(output)
+            output = Transformer(args)(output)
             outputs.append(output)
 
         outputs = tf.concat(outputs, axis=1)  #
@@ -335,7 +319,8 @@ class Classifier_Transformer():
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
-        outputs = layers.Dense(num_class, activation='softmax')(outputs)
+        outputs = layers.Dense(num_class, activation='softmax',
+                                   kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         model.summary()
         model.compile(optimizer=optimizer,

@@ -22,6 +22,30 @@ PARAMETER['cnn_transformer'] = {
     'args': transformer_args,
 }
 
+args = Jamba_ModelArgs_extend_from_Mamba(
+            batch_size=32,
+            classweight1=1,
+            patiences=10,
+            lr_begin = 1e7, # 1e7 -> 1e5
+            model_input_dims=128,
+            model_states=64,# 64 -> 128
+            last_dense_units=64,
+            num_layers=2, # 2 -> 1
+            dropout_rate=0.85, # 0.35 -> 0.15
+            vocab_size=2,
+            num_classes=2,
+            warmup_step = 4000,
+            loss='categorical_crossentropy', # 'binary_crossentropy', # categorical_crossentropy
+            projection_expand_factor=1,
+        )        
+
+PARAMETER['jamba'] = {
+    'hb_path': 'hbo_simple_data.npy',
+    'args': args,
+    'config_file_path': os.path.abspath(__file__),
+}
+
+
 for model, val in PARAMETER.items():
     PARAMETER[model]['hb_path'] = 'nor_hb_simple_all_1d.npy'
     PARAMETER[model]['classweight1'] = 1

@@ -20,7 +20,7 @@ class Transformer_ModelArgs:
     adam_beta_1: float = 0.9
     adam_beta_2: float = 0.999
     num_classes: int = 2
-    l2_rate: float = 0.001
+    l2_rate: float = 0.01
     num_class: int = 2
     class_weights: Dict[int, float] = field(default_factory=lambda: {0: 1, 1: 1})
     kernel_size_1: Tuple[int, int] = (4, 5)

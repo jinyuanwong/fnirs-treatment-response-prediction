@@ -80,26 +80,15 @@ class Classifier_Jamba():
         for _ in range(args.num_layers):
             x = Mamba_layer(args)(x)
             x = Mamba_MoE_layer(args)(x)   
-            x = Transformer_layer(
-                                FFN_units=args.model_internal_dim,
-                                n_heads=args.n_heads,
-                                dropout_rate=args.dropout_rate,
-                                activation=tf.nn.gelu,
-                                )(x)
-            x = Attention_MoE_layer(
-                                FFN_units=args.model_internal_dim,
-                                n_heads=args.n_heads,
-                                dropout_rate=args.dropout_rate,
-                                activation=tf.nn.gelu,
-                                n_experts = args.n_experts,
-                                )(x)
+            x = Transformer_layer(args)(x)
+            x = Attention_MoE_layer(args)(x)
         
         x = tf.concat([x, conv1d_x], axis=-1)
         if not args.use_lm_head: 
             x = layers.Flatten()(x)
-        x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
         
-        outputs = layers.Dense(num_class, activation=args.final_activation)(x)
+        outputs = layers.Dense(num_class, activation=args.final_activation, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
         model = tf.keras.Model(inputs=inputs_time_point, outputs=outputs)
         model.summary()
 
