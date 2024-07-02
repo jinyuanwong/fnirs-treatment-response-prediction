@@ -37,13 +37,13 @@ class Transformer_ModelArgs:
     
     earlystopping: keras.callbacks.EarlyStopping = None
     monitor_metric_early_stop: str = 'val_loss'
-    patience: int = 100
+    patience: int = 300
 
     def __post_init__(self):
         self.kernel_size = [self.kernel_size_1, self.kernel_size_2]
         self.stride_size = [self.stride_size_1, self.stride_size_2]
         
-        self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step)
+        self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step, end_lr=1e-8)
         
         self.earlystopping = tf.keras.callbacks.EarlyStopping(
             monitor=self.monitor_metric_early_stop, patience=self.patience, restore_best_weights=True

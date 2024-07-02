@@ -51,11 +51,11 @@ class Classifier_Jamba():
         # else:
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
         
-        x = MLP_Preprocess_Layer()(inputs_time_point)
-        x = tf.concat([x[..., 0], x[..., 1]], axis=-1)
+        # x = MLP_Preprocess_Layer()(inputs_time_point)
+        # x = tf.concat([x[..., 0], x[..., 1]], axis=-1)
 
-        x = layers.AveragePooling1D(pool_size=2, data_format='channels_first')(x)
-        # x = inputs_time_point
+        # x = layers.AveragePooling1D(pool_size=2, data_format='channels_first')(inputs_time_point)
+        x = inputs_time_point
 
         shape = input_shape[1:]
         # for light_data 

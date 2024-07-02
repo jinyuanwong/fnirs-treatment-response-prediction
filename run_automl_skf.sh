@@ -2,8 +2,8 @@
 
 # Define the variables
 model='jamba'
-config_file='mdd_classification_jamba_light_data_mlp_preprocess_SKCV_4_holdout_5'
-itr_name='test_mlp_pre' #'eval'
+config_file='mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
+itr_name='multiple_time_retrain' #'eval'
 
 # Loop from 0 to 9
 for itr in {1..200}
@@ -15,7 +15,7 @@ do
     run_command="conda run -n tf python ./LOO_nested_CV_train_skf.py $model $run_itr $config_file"
 
     # Execute the run_command
-    echo "Running command: $run_command"¡
+    echo "Running command: $run_command"
     eval $run_command
 
     sleep 1  # Adjust the sleep duration as needed

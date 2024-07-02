@@ -20,7 +20,7 @@ from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 import importlib
 
-current_time = int(time.time())
+current_time = 1719919781# int(time.time())
 
 # set the random seed
 random.seed(current_time)
