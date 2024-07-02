@@ -162,6 +162,10 @@ class Classifier_LI_SVM():
         X_test = X_test[:, selected_features]
         X_val = X_val[:, selected_features]
         
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(X_train, Y_train)
 
         Y_pred = self.model.predict(X_test)

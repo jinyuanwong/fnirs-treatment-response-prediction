@@ -442,6 +442,10 @@ class Classifier_Transformer():
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(
             x=X_train,
             y=Y_train,

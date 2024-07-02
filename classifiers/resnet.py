@@ -155,6 +155,10 @@ class Classifier_RESNET:
 
         start_time = time.time()
 
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=nb_epochs,
                               verbose=self.verbose, validation_data=(x_val, y_val), callbacks=self.callbacks)
 

@@ -20,8 +20,9 @@ from classifiers.layer.gnn import GNN
 from classifiers.layer.attention import ChannelAttentionLayer
 from classifiers.layer.rmsnorm import RMSNorm
 from classifiers.layer.conv1d import conv1d_layer
-from classifiers.layer.mbll import MBLL_Layer
+from classifiers.layer.preprocess_layer import MBLL_Layer, MLP_Preprocess_Layer 
 from classifiers.layer.channel_selection import ChannelSelectionLayer
+
 from utils.callbacks import CustomModelCheckpoint
 
 
@@ -49,14 +50,22 @@ class Classifier_Jamba():
         #     inputs_time_point = tf.keras.Input(shape=(input_shape[1:]+[1]))
         # else:
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
+        
+        x = MLP_Preprocess_Layer()(inputs_time_point)
+        x = tf.concat([x[..., 0], x[..., 1]], axis=-1)
+
+        x = layers.AveragePooling1D(pool_size=2, data_format='channels_first')(x)
+        # x = inputs_time_point
+
         shape = input_shape[1:]
         # for light_data 
-        inputs_2d = MBLL_Layer()(inputs_time_point)
-        inputs_2d = tf.concat([inputs_2d[..., 0], inputs_2d[..., 1]], axis=-1)
+        # inputs_2d = MBLL_Layer()(inputs_time_point)
+        # inputs_2d = tf.concat([inputs_2d[..., 0], inputs_2d[..., 1]], axis=-1)
+        
+        
         
         adj = generate_fnirs_adj_tf() 
         # x = inputs_time_point
-        x = inputs_2d
         
         conv1d_x = conv1d_layer(args)(x)
         # conv1d_x = ChannelSelectionLayer(conv1d_x.shape[2], conv1d_x.shape[1])(conv1d_x)
@@ -109,6 +118,10 @@ class Classifier_Jamba():
 
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
+        
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
         
         hist = self.model.fit(
             x=X_train,

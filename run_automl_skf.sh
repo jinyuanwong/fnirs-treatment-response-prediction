@@ -2,14 +2,14 @@
 
 # Define the variables
 model='jamba'
-config_file='mdd_classification_jamba_light_data_SPECIFY_FOLD_3_holdout_4'
-itr_name='retrain' #'eval'
+config_file='mdd_classification_jamba_light_data_mlp_preprocess_SKCV_4_holdout_5'
+itr_name='test_mlp_pre' #'eval'
 
 # Loop from 0 to 9
-for itr in {1..10}
+for itr in {1..200}
 do
     # Construct the run_itr variable
-    run_itr="$itr_name" # $itr
+    run_itr="$itr_name" #  $itr
 
     # Construct the run_command
     run_command="conda run -n tf python ./LOO_nested_CV_train_skf.py $model $run_itr $config_file"
@@ -22,9 +22,9 @@ do
 done
 
 
-# python ./LOO_nested_CV_train_skf.py cnn_transformer test mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_5_nor
+# python ./LOO_nested_CV_train_skf.py jamba test_mlp_pre mdd_classification_jamba_light_data_mlp_preprocess_SKCV_4_holdout_5
 
-# python ./LOO_nested_CV_train_skf.py jamba test mdd_classification_jamba_light_data
+# python ./LOO_nested_CV_train_skf.py jamba test mdd_classification_jamba_subject_110_hb_simple_all_1d_SPECIFY_FOLD_4_nor_raw
 
 # python ./LOO_nested_CV_train_skf.py cnn_transformer retrain mdd_classification_mamba_subject_all_seq_ch_hb_simple_all_1d_SPECIFY_FOLD_3_holdout_4_nor
 

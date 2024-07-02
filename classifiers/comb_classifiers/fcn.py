@@ -152,7 +152,11 @@ class Classifier_FCN:
 
         start_time = time.time()
         if self.useCombinationModel == True:
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 [X_train[:, :, 0], X_train[:, :, 1], X_train[:, :, 2], X_train[:, :, 3], X_train[:, :, 4], X_train[:, :, 5],
                  X_train[:, :, 6], X_train[:, :, 7], X_train[:, :, 8], X_train[:, :, 9], X_train[:, :, 10],
                  X_train[:, :, 11], X_train[:, :, 12], X_train[:, :, 13], X_train[:, :, 14], X_train[:, :, 15],
@@ -174,7 +178,11 @@ class Classifier_FCN:
                  X_val[:, :, 42], X_val[:, :, 43], X_val[:, :, 44], X_val[:, :, 45], X_val[:, :, 46], X_val[:, :, 47],
                  X_val[:, :, 48], X_val[:, :, 49], X_val[:, :, 50], X_val[:, :, 51]], Y_val), callbacks=self.callbacks)
         else:
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 X_train, Y_train,
                 batch_size=self.batch_size, epochs=self.nb_epochs, verbose=False,
                 validation_data=(X_val, Y_val),

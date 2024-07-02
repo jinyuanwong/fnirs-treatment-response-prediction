@@ -37,6 +37,10 @@ class Classifier_DecisionTree():
         start_time = time.time()
         
         # Fit the model
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(X_train, Y_train)
 
         Y_pred = self.model.predict(X_test)

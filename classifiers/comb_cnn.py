@@ -186,7 +186,11 @@ class Classifier_CNN():
 
         start_time = time.time()
         if self.useCombinationModel == True:
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 x=[X_train[:, i, :] for i in range(X_train.shape[1])], y=Y_train,
                 validation_data=([X_val[:, i, :]
                                  for i in range(X_val.shape[1])], Y_val),
@@ -194,7 +198,11 @@ class Classifier_CNN():
                 class_weight=self.class_weights)  # validation_split=0.2,
         else:
             # raise Exception("No yet write the code for useCombinationModel == False")
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 x=X_train[:, :, 0], y=Y_train,
                 validation_data=(
                     X_val[:, :, self.hyperparameters['channel']], Y_val),

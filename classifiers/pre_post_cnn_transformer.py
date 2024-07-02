@@ -452,6 +452,10 @@ class Classifier_Transformer():
         print(f'Y_test: {Y_test.shape}')
 
         start_time = time.time()
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(
             x=X_train,
             y=Y_train,

@@ -498,6 +498,10 @@ class Classifier_GNN_Transformer():
                  1: 5}  # weight for class 1, assuming this is the minority class
 
         self.class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(
             x=[X_train, adj_train, cli_demo_train],
             y=Y_train,

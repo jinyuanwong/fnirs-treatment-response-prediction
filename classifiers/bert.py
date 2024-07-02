@@ -503,6 +503,10 @@ class Classifier_Bert():
     def fit(self, data, label, X_test, Y_test):
         start_time = time.time()
         print(f'check_shape = {check_shape[0]}')
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(
             x=data,
             y=label,

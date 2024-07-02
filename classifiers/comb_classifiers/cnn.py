@@ -164,13 +164,21 @@ class Classifier_CNN:
         start_time = time.time()
         if self.useCombinationModel == True:
 
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 x=[data[:,:,i] for i in range(data.shape[-2])],y=label,
                 validation_data=([X_test[:,:,i] for i in range(X_test.shape[-2])],Y_test),
                 batch_size=self.batch_size, epochs=self.nb_epochs, verbose=False, callbacks=self.callbacks)#  #validation_split=0.2,
         else:
             # raise Exception("No yet write the code for useCombinationModel == False")
-            hist = self.model.fit(
+            model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
+        hist = self.model.fit(
                 x=data[:,:,0],y=label,
                 validation_data=(X_test[:,:,self.hyperparameter['channel']],Y_test),
                 batch_size=self.batch_size, epochs=self.nb_epochs, verbose=False, callbacks=self.callbacks)#  #validation_split=0.2,

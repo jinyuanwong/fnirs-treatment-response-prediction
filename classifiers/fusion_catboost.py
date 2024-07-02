@@ -35,6 +35,10 @@ class Classifier_XGBoost():
         Y_train = np.argmax(Y_train, axis=1)
         Y_val = np.argmax(Y_val, axis=1)
         Y_test = np.argmax(Y_test, axis=1)
+        model_path = self.output_directory + 'checkpoint'
+        if os.path.exists(model_path):
+            self.model.load_weights(model_path)        
+        
         hist = self.model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
 
         Y_pred = self.model.predict(X_test)
