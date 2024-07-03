@@ -77,11 +77,11 @@ class Classifier_Jamba():
         x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
         # x = ChannelSelectionLayer(x.shape[2], x.shape[1])(x)
         x = RMSNorm()(x)
-        for _ in range(args.num_layers):
-            x = Mamba_layer(args)(x)
-            x = Mamba_MoE_layer(args)(x)   
-            x = Transformer_layer(args)(x)
-            x = Attention_MoE_layer(args)(x)
+        # for _ in range(args.num_layers):
+        #     x = Mamba_layer(args)(x)
+        #     x = Mamba_MoE_layer(args)(x)   
+        #     x = Transformer_layer(args)(x)
+        #     x = Attention_MoE_layer(args)(x)
          
         x = tf.concat([x, conv1d_x], axis=-1)
         if not args.use_lm_head: 
@@ -114,9 +114,9 @@ class Classifier_Jamba():
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
         
-        model_path = self.output_directory + 'checkpoint'
-        if os.path.exists(model_path):
-            self.model.load_weights(model_path)        
+        # model_path = self.output_directory + 'checkpoint'
+        # if os.path.exists(model_path):
+        #     self.model.load_weights(model_path)        
         
         hist = self.model.fit(
             x=X_train,

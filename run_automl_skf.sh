@@ -3,10 +3,10 @@
 # Define the variables
 model='jamba'
 config_file='mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor' #'mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
-itr_name='aug_all_data_reduce_complex_1' #'eval'
+itr_name='aug_20_all_data_reduce_complex_1_2_only_gnn_find_random_seed' #'eval'
 
 # Loop from 0 to 9
-for itr in {1..2}
+for itr in {1..2000}
 do
     # Construct the run_itr variable
     run_itr="$itr_name$itr" #  $itr
