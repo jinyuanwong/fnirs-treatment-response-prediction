@@ -47,6 +47,7 @@ class ModelArgs:
     loss:Union[str, keras.losses.Loss] = None
     optimizer: keras.optimizers.Optimizer = None
     earlystopping: keras.callbacks.EarlyStopping = None
+    reduce_lr: keras.callbacks.ReduceLROnPlateau = None
     metrics = ['accuracy']
     monitor_metric_early_stop: str = 'val_loss'
 

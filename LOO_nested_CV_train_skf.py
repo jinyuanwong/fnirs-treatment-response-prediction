@@ -8,6 +8,7 @@ import time
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from utils.utils_mine import *
+from utils.fnirs_utils import augment_data
 import tensorflow as tf
 import tensorflow.keras as keras
 from datetime import date
@@ -20,7 +21,7 @@ from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 import importlib
 
-current_time = 1719919781# int(time.time())
+current_time = 1719981546 # 1719470102# 1719981546# int(time.time()) # 1719919781#
 
 # set the random seed
 random.seed(current_time)
@@ -90,6 +91,10 @@ class TrainModel():
                     else:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                             data, label, k, num_of_k_fold, seed=current_time, hold_out_div=config.HOLD_OUT_DIV)
+                    # print(f'X_train shape: {X_train.shape}'*99)
+                    # Augment data
+                    X_train, Y_train = augment_data(X_train, Y_train, ratio=20)
+                    
                     # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                     archive + \

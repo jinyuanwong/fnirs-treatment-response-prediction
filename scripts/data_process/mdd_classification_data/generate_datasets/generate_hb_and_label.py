@@ -178,11 +178,11 @@ def extract_combined_features(hb_data_all):
     # Combine features for all Hb types
     combined_features = np.concatenate(combined_features, axis=2)
 
-    # Normalize by dividing by the mean across subjects and channels
-    feature_means = combined_features.mean(axis=(0, 1))
-    normalized_features = combined_features / feature_means
-            
-    return normalized_features
+    # # Normalize by dividing by the mean across subjects and channels
+    # feature_means = combined_features.mean(axis=(0, 1))
+    # normalized_features = combined_features / feature_means
+                
+    return combined_features
 
 def concatenate_hb_data_and_features(hb_data_all, normalized_features):
     """

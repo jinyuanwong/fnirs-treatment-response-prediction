@@ -40,7 +40,7 @@ class Classifier_Jamba():
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
         self.callbacks.append(args.earlystopping)
-                
+        self.callbacks.append(args.reduce_lr)                
         self.batch_size = args.batch_size
 
         num_class = 2  # 2
@@ -73,22 +73,28 @@ class Classifier_Jamba():
         x = RMSNorm()(x)
         # x = ChannelAttentionLayer(input_shape[1])(inputs_time_point)
         x = MambaBlock(args)(x)
-
+        x = RMSNorm()(x)
         x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
         # x = ChannelSelectionLayer(x.shape[2], x.shape[1])(x)
-        
+        x = RMSNorm()(x)
         for _ in range(args.num_layers):
             x = Mamba_layer(args)(x)
             x = Mamba_MoE_layer(args)(x)   
             x = Transformer_layer(args)(x)
             x = Attention_MoE_layer(args)(x)
-        
+         
         x = tf.concat([x, conv1d_x], axis=-1)
         if not args.use_lm_head: 
             x = layers.Flatten()(x)
-        x = layers.Dense(args.last_dense_units, activation=tf.nn.gelu, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
-        
+
+        x = layers.Dense(args.last_dense_units*4, activation=args.activation, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
+        x = layers.Dropout(args.dropout_rate)(x)
+   
+        x = layers.Dense(args.last_dense_units, activation=args.activation, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
+        x = layers.Dropout(args.dropout_rate)(x)
+        x = RMSNorm()(x)
         outputs = layers.Dense(num_class, activation=args.final_activation, kernel_regularizer=keras.regularizers.l2(args.l2_rate))(x)
+        x = layers.Dropout(args.dropout_rate)(x)
         model = tf.keras.Model(inputs=inputs_time_point, outputs=outputs)
         model.summary()
 

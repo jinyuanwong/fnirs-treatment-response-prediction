@@ -339,13 +339,12 @@ def define_classifier_for_mdd_hc_classification(data, labels, weight_0=None):
     classifiers = {
         # "MLP": tune_mlp(data, labels),
         # "KNN": tune_knn(data, labels),
-        "SVM": tune_svm(data, labels, weight_0),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
-        "XGBoost": tune_xgboost(data, labels, weight_0),#XGBClassifier(scale_pos_weight=1e6),
+        # "SVM": tune_svm(data, labels, weight_0),  #SVC(class_weight=get_class_weight_dict(labels), kernel='rbf', C=10, gamma='auto', probability=True) # SVC(C=1000, coef0=0.5, degree=2, gamma='scale', kernel='poly', probability=True) 
+        # "XGBoost": tune_xgboost(data, labels, weight_0),#XGBClassifier(scale_pos_weight=1e6),
         "Naive Bayes": tune_gaussian_nb(data, labels, weight_0),
-        "Random Forest": tune_random_forest(data, labels, weight_0),
-        # "Discriminant Analysis(QDA)"+weight_0_name: tune_qda(data, labels),
-        "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0),
-        "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0),
+        # "Random Forest": tune_random_forest(data, labels, weight_0),
+        # "Discriminant Analysis(LDA)"+weight_0_name: tune_lda(data, labels, weight_0),
+        # "SGDClassifier"+weight_0_name: tune_sgd_classifier(data, labels, weight_0),
     }
     return classifiers
 

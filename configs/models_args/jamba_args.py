@@ -5,17 +5,18 @@ from tensorflow.keras.callbacks import EarlyStopping
 import math
 import os
 from utils.schedule import CustomLearningRateSchedule
-
+from utils.callbacks import reduceLRonplateau
 class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     n_heads: int = 4
     transformers_layers: int = 3
     n_experts: int = 4 # for MoE
     global_pooling: bool = False
-    l2_rate: float = 0.01
+    l2_rate: float = 0.001
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
 
     def __post_init__(self):
         super().__post_init__() 
-        self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step, end_lr=1e-8)
+        self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step, end_lr=1e-8) # 0.001#
         self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
+        self.reduce_lr = reduceLRonplateau()
     

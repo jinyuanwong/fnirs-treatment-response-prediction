@@ -3,7 +3,7 @@ from configs.models_args.transformer_args import Transformer_ModelArgs
 import os 
 
 from configs.mdd_classification_jamba import *
-INPUT_HB_TYPE = ['diagnosis514']
+INPUT_HB_TYPE = ['diagnosis_110_fabeha_dataset_hb_all']
 SPECIFY_FOLD = 4
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 MAX_EPOCHS = 1000

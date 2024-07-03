@@ -587,7 +587,11 @@ def shuffle_data_demo_label(data, label, demo, seed):
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
     total_amount = data.shape[0] 
     data, label = shuffle_data_label(data, label, seed)
-    label_not_onehot = np.argmax(label, axis=1)
+    if len(label.shape) > 1:
+        label_not_onehot = np.argmax(label, axis=1)
+    else:
+        mean_label = np.mean(label)
+        label_not_onehot = [1 if i > mean_label else 0 for i in label]
     pos = data[label_not_onehot==1]
     neg = data[label_not_onehot==0]
     holdout_pos_num = pos.shape[0] // hold_out_div
@@ -624,7 +628,10 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     X_train = np.concatenate((train_pos, train_neg), axis=0)
     Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
     
-    Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
+    if len(label.shape) > 1:
+        Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
+    else:
+        Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:

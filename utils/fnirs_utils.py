@@ -1207,3 +1207,42 @@ def impute_nan_data(data):
     # Transform the clinical_data ndarray by imputing the NaN values
     imputed_data = imputer.transform(input)
     return imputed_data
+
+
+
+def add_noise(data, noise_level=0.05):
+    noise = noise_level * np.random.randn(*data.shape)
+    return data + noise
+
+def scale_data(data, scale_range=(0.7, 1.3)):
+    scale = np.random.uniform(scale_range[0], scale_range[1])
+    return data * scale
+
+def shift_data(data, shift_range=(-10, 10), axis=-1):
+    shift = np.random.randint(shift_range[0], shift_range[1])
+    return np.roll(data, shift, axis=axis)
+
+def augment_data(X_train, Y_train, noise_level=2, scale_range=(0.7, 1.3), shift_range=(-10, 10), ratio=1):
+    augmented_data = []
+    augmented_labels = []
+    
+    for x, y in zip(X_train, Y_train):
+        for _ in range(ratio):
+            augmented_data.append(add_noise(x, noise_level))
+            augmented_data.append(scale_data(x, scale_range))
+            augmented_data.append(shift_data(x, shift_range, axis=-1))
+            augmented_data.append(shift_data(x, shift_range, axis=-2))
+            augmented_labels.append(y)
+            augmented_labels.append(y)
+            augmented_labels.append(y)
+            augmented_labels.append(y)
+    
+    # Convert to numpy arrays
+    X_train_augmented = np.array(augmented_data)
+    Y_train_augmented = np.array(augmented_labels)
+    
+    # Combine with original data
+    X_train_combined = np.concatenate((X_train, X_train_augmented), axis=0)
+    Y_train_combined = np.concatenate((Y_train, Y_train_augmented), axis=0)
+    
+    return X_train_combined, Y_train_combined

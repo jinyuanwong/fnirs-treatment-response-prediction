@@ -47,10 +47,10 @@ def load_data_for_MDD_HC_classification(modality):
 
 def load_data_for_MDD_HC_classification_extracted_features(modality):
     
-    dataset_name = 'diagnosis_110_fabeha_dataset_hb_all'#'diagnosis514' #diagnosis_110_fabeha_dataset_hb_all
+    dataset_name = 'diagnosis514'#'diagnosis514' #diagnosis_110_fabeha_dataset_hb_all
     
     
-    data_pth = f'allData/{dataset_name}/extracted_featues.npy'
+    data_pth = f'allData/{dataset_name}/sig_normalized_feature.npy'
         
     label_pth = f'allData/{dataset_name}/label.npy'
     

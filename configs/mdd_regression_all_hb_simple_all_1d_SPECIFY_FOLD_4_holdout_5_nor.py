@@ -13,6 +13,7 @@ transformer_args = Transformer_ModelArgs(
     batch_size=64,
     d_model=64,
     n_heads=1,
+    num_class=1,
     class_weights={0: 1, 1: 1}, # for pretreament classification {0: 1, 1: 5}
     )
 
@@ -33,9 +34,10 @@ args = Jamba_ModelArgs_extend_from_Mamba(
             num_layers=2, # 2 -> 1
             dropout_rate=0.3, # 0.35 -> 0.15
             vocab_size=2,
-            num_classes=2,
+            num_classes=1,
             warmup_step = 4000,
-            loss='categorical_crossentropy', # 'binary_crossentropy', # categorical_crossentropy
+            # loss='categorical_crossentropy', # 'binary_crossentropy', # categorical_crossentropy
+            loss = 'mean_squared_error',
             projection_expand_factor=1,
         )        
 
@@ -49,4 +51,4 @@ PARAMETER['jamba'] = {
 for model, val in PARAMETER.items():
     PARAMETER[model]['hb_path'] = 'nor_hb_simple_all_1d.npy'
     PARAMETER[model]['classweight1'] = 1
-    
+    PARAMETER[model]['label_path'] = 'hamd.npy'

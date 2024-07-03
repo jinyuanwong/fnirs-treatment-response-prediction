@@ -1,5 +1,7 @@
 import tensorflow as tf
 import numpy as np
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
 
 class CustomModelCheckpoint(tf.keras.callbacks.Callback):
     def __init__(self, monitor='val_accuracy', threshold=0.65, mode='max', save_best_only=True, save_weights_only=True, filepath='checkpoint'):
@@ -42,3 +44,6 @@ class CustomModelCheckpoint(tf.keras.callbacks.Callback):
 checkpoint_filepath = 'best_model_checkpoint'
 custom_checkpoint = CustomModelCheckpoint(filepath=checkpoint_filepath, monitor='val_accuracy', threshold=0.6, mode='max', save_best_only=True, save_weights_only=False)
 
+def reduceLRonplateau(monitor='val_loss', factor=0.01, patience=5, min_lr=1e-9):
+    reduce_lr = ReduceLROnPlateau(monitor=monitor, factor=factor, patience=patience, min_lr=min_lr)
+    return reduce_lr
