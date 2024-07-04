@@ -21,7 +21,7 @@ from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 import importlib
 
-current_time = int(time.time())# 1719981546 # 1719470102# 1719981546# int(time.time()) # 1719919781#
+current_time = int(time.time())# 1720051797 # 1719981546 # 1719470102# 1719981546# int(time.time()) # 1719919781#
 
 # set the random seed
 random.seed(current_time)
@@ -75,6 +75,8 @@ class TrainModel():
                 else:
                     data, label = simply_read_data_fnirs(
                         fnirs_data_path, model_name, self.label_path, self.hb_path, None)
+
+                
                 num_of_k_fold = config.SPECIFY_FOLD
                 self.params = params = info['parameter']
                 msg = info['message'] + config_name #get_params_info(params)
@@ -91,10 +93,16 @@ class TrainModel():
                     else:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test = stratified_k_fold_cross_validation_with_holdout(
                             data, label, k, num_of_k_fold, seed=current_time, hold_out_div=config.HOLD_OUT_DIV)
+
+                    # reading data will set the random.seed
+                    # random.seed(current_time)
+                    # np.random.seed(current_time)
+                    # tf.random.set_seed(current_time)
+                    print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
                     # print(f'X_train shape: {X_train.shape}'*99)
                     # Augment data
-                    X_train, Y_train = augment_data(X_train, Y_train, ratio=20)
-                    
+                    X_train, Y_train = augment_data(X_train, Y_train, ratio=1)
+                             
                     # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
                     archive + \
