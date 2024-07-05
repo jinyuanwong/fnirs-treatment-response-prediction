@@ -99,6 +99,7 @@ class TrainModel():
                     # np.random.seed(current_time)
                     # tf.random.set_seed(current_time)
                     print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
+                    print(f'Y_test - {Y_test}')
                     # print(f'X_train shape: {X_train.shape}'*99)
                     # Augment data
                     X_train, Y_train = augment_data(X_train, Y_train, ratio=1)

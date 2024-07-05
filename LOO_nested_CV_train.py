@@ -8,6 +8,8 @@ import time
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from utils.utils_mine import *
+from utils.fnirs_utils import augment_data
+
 import tensorflow as tf
 import tensorflow.keras as keras
 from datetime import date
@@ -20,7 +22,7 @@ from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 import importlib
 
-current_time = int(time.time())
+current_time = 42 # int(time.time())
 
 # set the random seed
 random.seed(current_time)
@@ -104,6 +106,11 @@ class TrainModel():
                         print(f'output_directory -> {output_directory}')
                         create_directory(output_directory)
 
+                        print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
+                        print(f'Y_test - {Y_test}')
+                        # print(f'X_train shape: {X_train.shape}'*99)
+                        # Augment data
+                        X_train, Y_train = augment_data(X_train, Y_train, ratio=2)
                         checkpoint_path = output_directory + 'checkpoint'
 
                         def learning_rate_schedule(epoch, learning_rate):
