@@ -2,7 +2,7 @@ import numpy as np
 from scipy.io import loadmat
 import sys 
 import os
-
+import pandas as pd 
 def set_path():
     if sys.platform == 'darwin':
         print("Current system is macOS")
@@ -213,6 +213,8 @@ def concatenate_hb_data_and_features(hb_data_all, normalized_features):
 
 def obtain_hb_data_label_hamd(datatype='prep'):
     
+    raw_multi_task_label = pd.read_csv('Prerequisite/patients_info/subject_table.csv')
+    multi_task_label = []
     data_fold = 'Prerequisite/data_all_original'
 
     dataset_1_pth = data_fold + '/Gabrielle_s Data/All 52-channel/'        
@@ -240,31 +242,35 @@ def obtain_hb_data_label_hamd(datatype='prep'):
     print(subject_to_hamd_dict)    
     # data['subject_name']
 
-    # Cyrus Febeha
-    can_not_find = []
-
-    for i in fabeha_sub_name + cyrus_sub_name:
-        if i not in subject_to_hamd_dict:
-            # can_not_find.append(i)
-            for name_in_hamd in subject_to_hamd_dict:
-                if name_in_hamd == i[:len(name_in_hamd)]:
-                    print(f"can find {i} | replace with {name_in_hamd} | with score of {subject_to_hamd_dict[name_in_hamd]}")
-                    subject_to_hamd_dict[i] = subject_to_hamd_dict[name_in_hamd]
-                    break
-
-
-    for i in fabeha_sub_name + cyrus_sub_name:
-        if i not in subject_to_hamd_dict:
-            can_not_find.append(i)
-    print(can_not_find)       
-
-
     # Goal generate a shape including the correct order of label and hamd score 
 
     delete_subejct_name = 'Cyrus_CT033'
     two_dataset_correct_order_name = cyrus_sub_name + fabeha_sub_name
     delete_index_in_gabrille = np.where(np.array(two_dataset_correct_order_name) == delete_subejct_name)[0][0]
     two_dataset_correct_order_name.remove(delete_subejct_name)
+    
+    # Cyrus Febeha
+    can_not_find = []
+    print('fabeha_sub_name + cyrus_sub_name', fabeha_sub_name + cyrus_sub_name)
+    for name_index, i in enumerate(two_dataset_correct_order_name):
+        if i not in subject_to_hamd_dict:
+            # can_not_find.append(i)
+            for name_in_hamd in subject_to_hamd_dict:
+                if name_in_hamd == i[:len(name_in_hamd)]:
+                    print(f"can find {i} | replace with {name_in_hamd} | with score of {subject_to_hamd_dict[name_in_hamd]}")
+                    subject_to_hamd_dict[i] = subject_to_hamd_dict[name_in_hamd]
+                    two_dataset_correct_order_name[name_index] = name_in_hamd
+                    break
+        print(i)
+        multi_task_label.append(raw_multi_task_label[raw_multi_task_label['ID'] == two_dataset_correct_order_name[name_index]].values[0][1:])
+    multi_task_label = np.array(multi_task_label)
+    for i in two_dataset_correct_order_name:
+        if i not in subject_to_hamd_dict:
+            can_not_find.append(i)
+    print(can_not_find)       
+
+
+
 
     hb_data_dataset1, label_dataset1 = loop_data_path_hb_type(dataset_1_pth, Hb_types, datatype)
     hb_data_dataset2, label_dataset2 = loop_data_path_hb_type(dataset_2_pth, Hb_types, datatype)
@@ -294,13 +300,12 @@ def obtain_hb_data_label_hamd(datatype='prep'):
         hamd_all.append(sub_hamd)
     hamd_all = np.array(hamd_all)
 
-    return hb_data_all, label_all, hamd_all
+    return hb_data_all, label_all, hamd_all, multi_task_label
 
 
 
 if __name__ == '__main__':
-    hb_data_all, label_all, hamd_all = obtain_hb_data_label_hamd()
-
+    hb_data_all, label_all, hamd_all, multi_task_label = obtain_hb_data_label_hamd()
     hb_data_all_3d = hb_data_all
 
     
@@ -346,3 +351,5 @@ if __name__ == '__main__':
     np.save(save_fold + 'nine_regions_hbo_task_change_fnirs_features.npy', nine_regions_hbo_task_change_fnirs_features)
     np.save(save_fold + 'nine_regions_hbr_task_change_fnirs_features.npy', nine_regions_hbr_task_change_fnirs_features)
     np.save(save_fold + 'nine_regions_hbt_task_change_fnirs_features.npy', nine_regions_hbt_task_change_fnirs_features)
+
+    np.save(save_fold + 'multi_task_label.npy', multi_task_label)

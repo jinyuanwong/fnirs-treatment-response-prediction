@@ -99,10 +99,9 @@ class TrainModel():
                     # np.random.seed(current_time)
                     # tf.random.set_seed(current_time)
                     print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
-                    print(f'Y_test - {Y_test}')
                     # print(f'X_train shape: {X_train.shape}'*99)
                     # Augment data
-                    X_train, Y_train = augment_data(X_train, Y_train, ratio=1)
+                    X_train, Y_train = augment_data(X_train, Y_train, ratio=config.AUGMENT_RATIO)
                              
                     # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \

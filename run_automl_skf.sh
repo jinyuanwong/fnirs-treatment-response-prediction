@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Define the variables
-model='jamba'
-config_file='mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_40_holdout_200_nor' #'mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
-itr_name='skf_40_hold_100' #'eval'
+model='jamba_MTL'
+config_file='MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor' #'mdd_classification_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
+itr_name='MTL_V1_240707_itr_' #'eval'
 
 # Loop from 0 to 9
-for itr in {1..4}
+for itr in {1..5}
 do
     # Construct the run_itr variable
     run_itr="$itr_name$itr" #  $itr $itr

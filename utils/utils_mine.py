@@ -340,6 +340,7 @@ def read_past_value(directory, check_metrice):
 
 def read_current_value(Y_pred, Y_true, check_metrice):
     if check_metrice == 'accuracy':
+        print('error', Y_true, Y_pred)
         return accuracy_score(Y_true, Y_pred)
     if check_metrice == 'sensitivity' or check_metrice == 'recall':
         return recall_score(Y_true, Y_pred)
@@ -376,6 +377,23 @@ def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, s
     if current_metrice > past_metrice:
         return True
     return False
+
+def save_validation_acc_multi_task(output_directory, Y_pred, Y_true, check_metric, info, save_file_name='val_acc.txt'):
+    metrics = {}
+    for i, task_name in enumerate(check_metric.keys()):
+        Y_pred = np.array(Y_pred)
+        Y_pred_binary = np.argmax(Y_pred[i], axis=1)
+        Y_true_binary = np.argmax(Y_true[:, i], axis=1)
+        past_metric = read_past_value(output_directory, check_metric[task_name])
+        current_metric = read_current_value(Y_pred_binary, Y_true_binary, check_metric[task_name])
+        hist_df_metrics = calculate_metrics(Y_true[:, i], Y_pred[i], 0)
+        save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
+        print(f'Current saved file: {output_directory}' + save_file_name.replace('.txt', f'_{task_name}.txt'))
+        print(f"Current {check_metric[task_name]}: {current_metric}")
+
+        metrics[task_name] = current_metric > past_metric
+
+    return any(metrics.values())
 
 def save_validation_pred_regression(output_directory, info):
     save_data_to_file(output_directory + 'val_acc.txt', [], info)
@@ -599,8 +617,10 @@ def shuffle_data_demo_label(data, label, demo, seed):
 
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
     total_amount = data.shape[0] 
-    data, label, indices = shuffle_data_label(data, label, seed)
-    if len(label.shape) > 1:
+    _, _, indices = shuffle_data_label(data, label, seed)
+    if len(label.shape) == 3:
+        label_not_onehot = np.argmax(label[:, -1, :], axis=1)
+    elif len(label.shape) == 2:
         label_not_onehot = np.argmax(label, axis=1)
     else:
         mean_label = np.mean(label)
@@ -652,7 +672,10 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     X_train = np.concatenate((train_pos, train_neg), axis=0)
     Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
     indices_train = np.concatenate((train_pos_indices, train_neg_indices), axis=0)
-    print(f'X_train -> {X_train.mean(axis=(0,1,2))}, X_val -> {X_val.mean(axis=(0,1,2))}, X_test -> {X_test.mean(axis=(0,1,2))}')
+    
+
+
+    # print(f'X_train -> {X_train.mean(axis=(0,1,2))}, X_val -> {X_val.mean(axis=(0,1,2))}, X_test -> {X_test.mean(axis=(0,1,2))}')
 
     # print(f'indices_train: {indices_train}')
     # print(f'indices_val: {indices_val}')
@@ -662,6 +685,10 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
         Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
     else:
         Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
+    X_train, X_val, X_test = data[indices_train], data[indices_val], data[indices_test]
+    Y_train, Y_val, Y_test = label[indices_train], label[indices_val], label[indices_test]
+
+    # Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:

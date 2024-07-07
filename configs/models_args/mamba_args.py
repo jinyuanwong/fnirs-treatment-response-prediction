@@ -48,7 +48,7 @@ class ModelArgs:
     optimizer: keras.optimizers.Optimizer = None
     earlystopping: keras.callbacks.EarlyStopping = None
     reduce_lr: keras.callbacks.ReduceLROnPlateau = None
-    metrics = ['accuracy']
+    metrics: dict = None
     monitor_metric_early_stop: str = 'val_loss'
 
 
