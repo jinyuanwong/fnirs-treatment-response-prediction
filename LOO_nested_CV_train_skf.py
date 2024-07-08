@@ -21,12 +21,13 @@ from classifiers.classifier_factory import create_classifier
 from scripts.plot.DL.read_LOO_nestedCV_gnntr import get_sorted_loo_array
 import importlib
 
-current_time = int(time.time())# 1720051797 # 1719981546 # 1719470102# 1719981546# int(time.time()) # 1719919781#
+# current_time = int(time.time())# 1720051797 # 1719981546 # 1719470102# 1719981546# int(time.time()) # 1719919781#
 
 # set the random seed
-random.seed(current_time)
-np.random.seed(current_time)
-tf.random.set_seed(current_time)
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
 
 # gpus = tf.config.list_physical_devices('GPU')
 # tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=1024*6)])
@@ -398,6 +399,9 @@ if __name__ == '__main__':
     model_name = arg[1]
     config_file_name = 'configs.' + arg[3]
     config_name = arg[3]
+    current_time = int(arg[4])
+    set_seed(current_time)
+    print('config_file_name', config_file_name)
     config = importlib.import_module(config_file_name)
     preprocessed_hb_fold_path = config.PREPROCESSED_HB_FOLD_PATH
     default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
@@ -411,29 +415,29 @@ if __name__ == '__main__':
     using_wandb = config.IS_USING_WANDB
     if model_name == 'zhu_xgboost':
         using_wandb = False
-    if using_wandb == True:
-        wandb.login()
-        if model_name == 'dgi_transformer':
-            using_sweep_for_dgi_transformer()
-        elif model_name == 'gnn_transformer':
-            using_sweep_for_gnn_transformer()
-        elif model_name == 'yu_gnn':
-            using_sweep_for_yu_gnn()
-        elif model_name == 'wang_alex':
-            using_sweep_for_wang_alex()
-        elif model_name == 'chao_cfnn':
-            using_sweep_for_chao_cfnn()
-        elif model_name == 'zhu_xgboost':
-            # using_sweep_for_zhu_xgboost()
-            raise NotImplementedError(
-                'Currently sweep for zhu_xgboost is not implemented yet.')
-        elif model_name == 'mvg_transformer':
-            using_sweep_for_mvg_transformer()
-            raise NotImplementedError(
-                'Currently sweep for mvg_transformer is not implemented yet.')
-        elif model_name == 'graphsage_transformer':
-            raise NotImplementedError(
-                'Currently sweep for mvg_transformer is not implemented yet.')
-    else:
-        model = TrainModel(model_name, config=config)
-        model.begin()
+    # if using_wandb == True:
+    #     wandb.login()
+    #     if model_name == 'dgi_transformer':
+    #         using_sweep_for_dgi_transformer()
+    #     elif model_name == 'gnn_transformer':
+    #         using_sweep_for_gnn_transformer()
+    #     elif model_name == 'yu_gnn':
+    #         using_sweep_for_yu_gnn()
+    #     elif model_name == 'wang_alex':
+    #         using_sweep_for_wang_alex()
+    #     elif model_name == 'chao_cfnn':
+    #         using_sweep_for_chao_cfnn()
+    #     elif model_name == 'zhu_xgboost':
+    #         # using_sweep_for_zhu_xgboost()
+    #         raise NotImplementedError(
+    #             'Currently sweep for zhu_xgboost is not implemented yet.')
+    #     elif model_name == 'mvg_transformer':
+    #         using_sweep_for_mvg_transformer()
+    #         raise NotImplementedError(
+    #             'Currently sweep for mvg_transformer is not implemented yet.')
+    #     elif model_name == 'graphsage_transformer':
+    #         raise NotImplementedError(
+    #             'Currently sweep for mvg_transformer is not implemented yet.')
+    # else:
+    model = TrainModel(model_name, config=config)
+    model.begin()
