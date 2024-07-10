@@ -254,3 +254,25 @@ PARAMETER = {
 
 
 # python ./LOO_nested_CV_train.py gnn_transformer test  pretreatment_response 
+
+
+def calculate_patience(aug_times):
+    """
+    Returns the patience value based on the number of augmentation times.
+    0 augmentations correspond to a patience value of 15, 
+    and 10 augmentations correspond to a patience value of 3.
+    Linear interpolation is used for values in between.
+    
+    Parameters:
+    aug_times (int): Number of augmentations
+    
+    Returns:
+    int: Corresponding patience value
+    """
+    if aug_times <= 0:
+        return 15
+    elif aug_times >= 10:
+        return 3
+    else:
+        # Linear interpolation calculation
+        return round(15 - (aug_times / 10) * 12)

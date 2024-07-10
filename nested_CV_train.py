@@ -196,7 +196,7 @@ if __name__ == '__main__':
     # save current file 
     config.PARAMETER[model_name]['config_file_path'].append(os.path.abspath(__file__))
     
-    MSG = arg[2] # message = arg[2]
+    MSG = arg[2] + arg[3] # message = arg[2]
     
     info = {'current_time_seed': current_time,
             'message': MSG,

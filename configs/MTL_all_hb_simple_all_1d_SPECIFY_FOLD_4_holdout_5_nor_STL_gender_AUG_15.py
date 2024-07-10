@@ -14,13 +14,14 @@ from classifiers.loss.focal_loss import focal_loss
 from configs.mdd_classification_jamba import *
 INPUT_HB_TYPE = ['diagnosis514']
 SPECIFY_FOLD = 4
+OUTER_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 MAX_EPOCHS = 1000
 HOLD_OUT_DIV = 5
 # MONITOR_METRIC = 'depression_accuracy'
-AUGMENT_RATIO = 20
-MIN_DELETE_CHANNEL = 5
-MAX_DELETE_CHANNEL = 15
+AUGMENT_RATIO = 15
+MIN_DELETE_CHANNEL = 8
+MAX_DELETE_CHANNEL = 17
 # AUGMENT_RATIO = 20
 focal_loss_fn = focal_loss(alpha=0.25, gamma=2.0) # V2 
 
@@ -42,7 +43,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     load_previous_checkpoint = True,
     batch_size=64,
     classweight1=1,
-    patiences=3,
+    patiences=calculate_patience(AUGMENT_RATIO),
     lr_begin=1e7,  # 1e7 -> 1e5
     model_input_dims=128,
     model_states=64,  # 64 -> 128
@@ -55,13 +56,11 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     # loss={'gender': 'categorical_crossentropy', 'smoking':  tfa.losses.SeesawLoss(), 'alcohol':  tfa.losses.SeesawLoss(),
     #       'Suicide_Risk':  tfa.losses.SeesawLoss(), 'depression': 'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy
     loss={
-          'HAMD_Scores': focal_loss_fn, #'categorical_crossentropy',
-          'Suicide_Risk': focal_loss_fn, #'categorical_crossentropy', 
-          'depression': focal_loss_fn}, #'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy    
+          'gender': focal_loss_fn, #'categorical_crossentropy',
+          }, #'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy    
     metrics={
-            'HAMD_Scores': 'accuracy',
-            'Suicide_Risk': 'accuracy', 
-            'depression': 'accuracy'},
+            'gender': 'accuracy',
+            },
     projection_expand_factor=1,
 )
 
@@ -73,5 +72,8 @@ PARAMETER['jamba_MTL'] = {
 
 for model, val in PARAMETER.items():
     PARAMETER[model]['hb_path'] = 'nor_hb_simple_all_1d.npy'
-    PARAMETER[model]['label_path'] = 'multi_task_label_three_depression_metrics_onehot.npy'
+    PARAMETER[model]['label_path'] = 'multi_task_label_gender_onehot.npy'
     PARAMETER[model]['classweight1'] = 1
+    
+    
+    # python ./nested_CV_train.py jamba_MTL MTL_20240710_V2_AugmentRatio_1_31415926 MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_STL_gender_AUG_0 31415926
