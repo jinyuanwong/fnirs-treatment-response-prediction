@@ -680,8 +680,8 @@ def nested_cross_validation_split(data, label, inner_k, total_inner_k, outer_k, 
     
     indices_test = np.concatenate((pos_indices[outer_k*holdout_pos_num:(outer_k+1)*holdout_pos_num], neg_indices[outer_k*holdout_neg_num:(outer_k+1)*holdout_neg_num]), axis=0)
     
-    train_val_pos_indices = np.concatenate((pos_indices[0:inner_k*holdout_pos_num], pos_indices[(inner_k+1)*holdout_pos_num:]), axis=0)
-    train_val_neg_indices = np.concatenate((neg_indices[0:inner_k*holdout_neg_num], neg_indices[(inner_k+1)*holdout_neg_num:]), axis=0)
+    train_val_pos_indices = np.concatenate((pos_indices[0:outer_k*holdout_pos_num], pos_indices[(outer_k+1)*holdout_pos_num:]), axis=0)
+    train_val_neg_indices = np.concatenate((neg_indices[0:outer_k*holdout_neg_num], neg_indices[(outer_k+1)*holdout_neg_num:]), axis=0)
 
     train_val_pos_num = train_val_pos_indices.shape[0]
     train_val_neg_num = train_val_neg_indices.shape[0]
@@ -699,13 +699,9 @@ def nested_cross_validation_split(data, label, inner_k, total_inner_k, outer_k, 
     X_train, X_val, X_test = data[indices_train], data[indices_val], data[indices_test]
     Y_train, Y_val, Y_test = label[indices_train], label[indices_val], label[indices_test]
 
-    if adj is None:
-        return X_train, Y_train, X_val, Y_val, X_test, Y_test
-    else:
-        adj_train = adj[:X_train.shape[0]]
-        adj_val = adj[:X_val.shape[0]]
-        adj_test = adj[:X_test.shape[0]]
-        return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
+    # print(f"indices_train: {indices_train.shape}, indices_val: {indices_val.shape}, indices_test: {indices_test.shape}")
+    # print(f"indices_train: {indices_train}, indices_val: {indices_val}, indices_test: {indices_test}")
+    return indices_train, indices_val, indices_test
     
 def stratified_k_fold_cross_validation_with_holdout_with_cli_demo(data, label, cli_demo, k, num_of_k_fold, adj=None, seed=42):
     data, cli_demo, label = shuffle_data_demo_label(data, label, cli_demo, seed)
