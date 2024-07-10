@@ -30,7 +30,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
 PARAMETER['jamba'] = {
     'hb_path': 'hbo_simple_data.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 # refer https://towardsdatascience.com/mamba-ssm-theory-and-implementation-in-keras-and-tensorflow-32d6d4b32546

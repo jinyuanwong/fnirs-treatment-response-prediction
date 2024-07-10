@@ -2,15 +2,15 @@
 
 model='jamba_MTL'
 config_files=(
-'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_STL_gender'
+'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_STL_gender_AUG_10'
 )
 # 'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_loss'
 
 
-itr_name='MTL_20240710_V1'
-seeds=(1720351610 1720353641 1720355734 1720358054 1720360139)
-python_file="./LOO_nested_CV_train_skf.py"
-
+itr_name='MTL_20240710_V2_AugmentRatio_10'
+seeds=(31415926 27182818 16180339 12345678 98765432)
+# python_file="./LOO_nested_CV_train_skf.py"
+python_file="./nested_CV_train.py"
 # Loop through each seed
 for seed in "${seeds[@]}"
 do

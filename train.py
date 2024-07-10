@@ -63,10 +63,10 @@ class TrainModel():
                 # case using adj include GNN, GNN-Transformer, ....
                 if using_adj:
                     X_train_val, X_test, Y_train_val, Y_test, adj_train_val, adj_test = read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, self.adj_path)
+                        fnirs_data_path, self.hb_path, self.adj_path)
                 else:
                     X_train_val, X_test, Y_train_val, Y_test = read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, None)
+                        fnirs_data_path, self.hb_path, None)
                 for k in range(num_of_k_fold):
 
                     if using_adj:

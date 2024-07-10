@@ -29,19 +29,19 @@ args = Jamba_ModelArgs_extend_from_Mamba(
 PARAMETER['jamba'] = {
     'hb_path': 'hbo_simple_data.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 PARAMETER['jamba_hybrid'] = {
     'hb_path': 'hbo_simple_data.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 PARAMETER['jamba_multimodal'] = {
     'hb_path': 'hb_simple_3d.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 

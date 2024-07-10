@@ -69,13 +69,13 @@ class TrainModel():
                 # case using adj include GNN, GNN-Transformer, ....
                 if using_adj:
                     data, label, adj = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, self.adj_path)
+                        fnirs_data_path, self.hb_path, self.adj_path)
                     if using_cli_demo:
                         data, label, adj, cli_demo = simply_read_data_fnirs(
-                            fnirs_data_path, model_name, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
+                            fnirs_data_path, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
                 else:
                     data, label = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.hb_path, None)
+                        fnirs_data_path, self.hb_path, None)
                 num_of_k_fold = SPECIFY_FOLD
                 for SCVHO_index in range(STRATIFIED_CV_TOTAL_TRAININING_TIME):
                     current_time = int(time.time())

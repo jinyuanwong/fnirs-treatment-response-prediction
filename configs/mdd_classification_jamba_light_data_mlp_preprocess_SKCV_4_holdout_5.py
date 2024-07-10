@@ -29,7 +29,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
 PARAMETER['jamba'] = {
     'hb_path': 'light_data_mlp_preprocessed.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 

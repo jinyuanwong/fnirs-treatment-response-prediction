@@ -32,7 +32,7 @@ args = ModelArgs(
 PARAMETER['mamba'] = {
     'hb_path': 'nor_seq_ch_hb_simple_all_1d.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 for model, val in PARAMETER.items():

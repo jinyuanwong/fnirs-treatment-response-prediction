@@ -18,6 +18,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score, roc_auc_score
 # 保存日志
 import logging
 
@@ -319,9 +320,9 @@ def save_data_to_file(filename, df, info=None):
                 if key == 'Y_pred_in_test':
                     # Handling the 2D array, converting each sub-array to a string and joining them
                     array_string = '[' + '; '.join([' '.join([f"{val:.8f}" for val in row]) for row in value]) + ']'
-                    file.write(f'| {key}: {array_string}')
+                    file.write(f' {key}: {array_string} |')
                 else:
-                    file.write(f'| {key}: {value}')
+                    file.write(f' {key}: {value} |')
             file.write('\n')
 
     except Exception as e:
@@ -387,7 +388,7 @@ def save_validation_acc_multi_task(output_directory, Y_pred, Y_true, check_metri
         Y_true_binary = np.argmax(Y_true[:, i], axis=1)
         past_metric = read_past_value(output_directory, check_metric[task_name])
         current_metric = read_current_value(Y_pred_binary, Y_true_binary, check_metric[task_name])
-        hist_df_metrics = calculate_metrics(Y_true[:, i], Y_task_i, 0)
+        hist_df_metrics = calculate_metrics(Y_true[:, i], Y_task_i, info['duration'])
         save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
         print(f'Current saved file: {output_directory}' + save_file_name.replace('.txt', f'_{task_name}.txt'))
         print(f"Current {check_metric[task_name]}: {current_metric}")
@@ -519,24 +520,13 @@ def read_data_fnirs(file_name, model_name, hb_path, adj_path, do_individual_norm
         return X_train, X_test, Y_train, Y_test
 
 
-def simply_read_data_fnirs(file_name, model_name, label_path, hb_path, adj_path=None, cli_demo_path=None):
+def simply_read_data_fnirs(file_name, label_path, hb_path, adj_path=None, cli_demo_path=None):
 
     data = np.load(file_name + '/' + hb_path)
-
-    # if model_name != 'chao_cfnn' and model_name != 'zhu_xgboost':
-    #     data = data.reshape((data.shape[0], data.shape[1], data.shape[2], 1))
-    #     # if data shape is like 458, 125, 52
-    #     # change to 458, 52, 125
-    #     if data.shape[2] == 52:
-    #         data = np.transpose(data, (0, 2, 1, 3))
 
     label = np.load(file_name + '/' + label_path)
     if label_path == 'label.npy':
         label = onehotEncode(label.astype(int))
-
-
-    if model_name == 'comb_cnn':
-        label = label.astype('float32')
 
     if adj_path is not None:
         adj = np.load(file_name + '/' + adj_path)
@@ -601,7 +591,7 @@ import time
 def shuffle_data_label(data, label, seed):
     # seed = 1720051797 # int(time.time())
     # print(f'Current seed is for shuffling: {seed}' * 10)
-    random.seed(seed)
+    # random.seed(seed)
     indices = np.arange(data.shape[0])
     combined = list(zip(data, label, indices))
     random.shuffle(combined)
@@ -642,15 +632,6 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     train_val_pos_indices = pos_indices[holdout_pos_num:]
     train_val_neg_indices = neg_indices[holdout_neg_num:]
 
-    """
-    train_val_pos_num 
-    - should be 10 for pretreatment dataset 
-    - should be 8 for pre-post-treatment dataset 
-    
-    next, I will devide them by 2 to do 5 and 4 fold cross validation
-    so the num_of_k_fold should be calulated by 
-    (label==1).sum() * 2 / 3 / 2
-    """
     train_val_pos_num = pos_indices.shape[0]-holdout_pos_num 
     train_val_neg_num = neg_indices.shape[0]-holdout_neg_num
     one_fold_number_pos = train_val_pos_num//num_of_k_fold
@@ -676,6 +657,56 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
         adj_test = adj[:X_test.shape[0]]
         return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
 
+def nested_cross_validation_split(data, label, inner_k, total_inner_k, outer_k, total_outer_k, adj=None, seed=42):
+    total_amount = data.shape[0] 
+    _, _, indices = shuffle_data_label(data, label, seed)
+    
+    # if label.shape is 3. 
+    # It means label = (subject, type_of_label[task], onehot_encoded)   
+    # if label.shape is 2 
+    # It means label = (subject, onehot_encoded) with only one task
+    if len(label.shape) == 3:
+        label_not_onehot = np.argmax(label[:, -1, :], axis=1)
+    elif len(label.shape) == 2:
+        label_not_onehot = np.argmax(label, axis=1)
+    else:
+        mean_label = np.mean(label)
+        label_not_onehot = [1 if i > mean_label else 0 for i in label]
+    pos_indices = indices[label_not_onehot==1]
+    neg_indices = indices[label_not_onehot==0]
+    
+    holdout_pos_num = pos_indices.shape[0] // total_outer_k
+    holdout_neg_num = neg_indices.shape[0] // total_outer_k
+    
+    indices_test = np.concatenate((pos_indices[outer_k*holdout_pos_num:(outer_k+1)*holdout_pos_num], neg_indices[outer_k*holdout_neg_num:(outer_k+1)*holdout_neg_num]), axis=0)
+    
+    train_val_pos_indices = np.concatenate((pos_indices[0:inner_k*holdout_pos_num], pos_indices[(inner_k+1)*holdout_pos_num:]), axis=0)
+    train_val_neg_indices = np.concatenate((neg_indices[0:inner_k*holdout_neg_num], neg_indices[(inner_k+1)*holdout_neg_num:]), axis=0)
+
+    train_val_pos_num = train_val_pos_indices.shape[0]
+    train_val_neg_num = train_val_neg_indices.shape[0]
+    
+    one_fold_number_pos = train_val_pos_num//total_inner_k
+    one_fold_number_neg = train_val_neg_num//total_inner_k
+    val_pos_indices = train_val_pos_indices[inner_k*one_fold_number_pos:(inner_k+1)*one_fold_number_pos]
+    val_neg_indices = train_val_neg_indices[inner_k*one_fold_number_neg:(inner_k+1)*one_fold_number_neg]
+    indices_val = np.concatenate((val_pos_indices, val_neg_indices), axis=0)
+    
+    train_pos_indices = np.concatenate((train_val_pos_indices[0:inner_k*one_fold_number_pos], train_val_pos_indices[(inner_k+1)*one_fold_number_pos:]), axis=0)
+    train_neg_indices = np.concatenate((train_val_neg_indices[0:inner_k*one_fold_number_neg], train_val_neg_indices[(inner_k+1)*one_fold_number_neg:]), axis=0)
+    indices_train = np.concatenate((train_pos_indices, train_neg_indices), axis=0)
+    
+    X_train, X_val, X_test = data[indices_train], data[indices_val], data[indices_test]
+    Y_train, Y_val, Y_test = label[indices_train], label[indices_val], label[indices_test]
+
+    if adj is None:
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test
+    else:
+        adj_train = adj[:X_train.shape[0]]
+        adj_val = adj[:X_val.shape[0]]
+        adj_test = adj[:X_test.shape[0]]
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
+    
 def stratified_k_fold_cross_validation_with_holdout_with_cli_demo(data, label, cli_demo, k, num_of_k_fold, adj=None, seed=42):
     data, cli_demo, label = shuffle_data_demo_label(data, label, cli_demo, seed)
     index_1 = np.where(label == 1)[0]
@@ -837,18 +868,12 @@ def stratified_LOO_nested_CV(data, label, k, num_of_k_fold, current_loo, adj=Non
 
 def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_onehot=None):
 
-    # if y_true_onehot is None:
-    #     y_true_onehot = tf.one_hot(y_true, depth=2)
-    #     y_pred_onehot = tf.one_hot(y_pred, depth=2)
-
     Y_pred_binary = np.argmax(y_pred, axis=1)
     Y_true_binary = np.argmax(y_true, axis=1)
     
-    if y_true_onehot is None:
-        save_metrices = ['accuracy', 'sensitivity', 'specificity', 'duration']
-    else:
-        save_metrices = ['accuracy', 'sensitivity',
-                         'specificity',  'duration', 'F1-score', 'AUC']
+
+    save_metrices = ['AUC', 'accuracy', 'sensitivity',
+                        'specificity', 'F1-score', 'duration']
     # res = pd.DataFrame(data=np.zeros((1, len(save_metrices)), dtype=np.float), index=[0],
     #                    columns=save_metrices)
     res = pd.DataFrame(data=np.zeros((1, len(save_metrices)),
@@ -858,17 +883,15 @@ def calculate_metrics(y_true, y_pred, duration, y_true_onehot=None, y_pred_oneho
     res['sensitivity'] = round(recall_score(Y_true_binary, Y_pred_binary), 5)
 
     res['specificity'] = round(get_specificity(Y_true_binary, Y_pred_binary), 5)
+
+    # For F1 Y_true_binary
+    f1 = f1_score(Y_true_binary, Y_pred_binary, average='weighted')
+    res['F1-score'] = round(f1, 5)
+
+    auc = roc_auc_score(Y_true_binary, y_pred[:, 1])
+    res['AUC'] = round(auc, 5)
+    
     res['duration'] = round(duration, 5)
-
-    # F1 score and AUC
-    metric = tfa.metrics.F1Score(average='weighted', num_classes=2)
-    metric.update_state(y_true, y_pred)
-    res['F1-score'] = round(metric.result().numpy(), 5)
-
-    y_pred_1 = y_pred[:, 1]
-    auc = tf.keras.metrics.AUC()
-    auc.update_state(y_true[:, 1], y_pred_1)
-    res['AUC'] = round(auc.result().numpy(), 5)
     return res
 
 
@@ -984,23 +1007,23 @@ def get_metrics(y_true, y_pred):
     return accuracy, sensitivity, specificity, f1
 
 
-def save_current_file_to_folder(current_file_path, destination_folder):
-    try:
-
-        os.makedirs(destination_folder, exist_ok=True)
-        
-        # Define the destination path
-        destination_path = os.path.join(destination_folder, 'used_' + os.path.basename(current_file_path))
-        
-        # Debugging: Print the destination path
-        # print(f"Destination path: {destination_path}")
-        
-        # Copy the current file to the destination folder
-        shutil.copy(current_file_path, destination_path)
-        
-        print(f"File copied to: {destination_path}")
-    except Exception as e:
-        print(f"An error occurred: {e} when save_current_file_to_folder")
+def save_current_file_to_folder(save_file_paths, destination_folder):
+    for current_file_path in save_file_paths:
+        try:
+            os.makedirs(destination_folder, exist_ok=True)
+            
+            # Define the destination path
+            destination_path = os.path.join(destination_folder, 'used_' + os.path.basename(current_file_path))
+            
+            # Debugging: Print the destination path
+            # print(f"Destination path: {destination_path}")
+            
+            # Copy the current file to the destination folder
+            shutil.copy(current_file_path, destination_path)
+            
+            print(f"File copied to: {destination_path}")
+        except Exception as e:
+            print(f"An error occurred: {e} when save_current_file_to_folder")
         
         
 def plot_evaluation_metrics_header():
@@ -1032,3 +1055,9 @@ def save_hist_file(hist, output_directory):
 
     # Save the combined DataFrame back to the history.csv file
     combined_df.to_csv(history_file, index=False)
+    
+    
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)    

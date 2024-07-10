@@ -29,6 +29,6 @@ args = ModelArgs(
 PARAMETER['mamba'] = {
     'hb_path': 'nor_hb_data_1d.npy',
     'args': args,
-    'config_file_path': os.path.abspath(__file__),
+    'config_file_path': [os.path.abspath(__file__)],
 
 }

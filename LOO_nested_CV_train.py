@@ -69,13 +69,13 @@ class TrainModel():
                 if using_adj:
                     if using_cli_demo:
                         data, label, adj, cli_demo = simply_read_data_fnirs(
-                            fnirs_data_path, model_name, self.label_path, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
+                            fnirs_data_path, self.label_path, self.hb_path, self.adj_path, cli_demo_path=using_cli_demo)
                     else:
                         data, label, adj = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.label_path, self.hb_path, self.adj_path)
+                        fnirs_data_path, self.label_path, self.hb_path, self.adj_path)
                 else:
                     data, label = simply_read_data_fnirs(
-                        fnirs_data_path, model_name, self.label_path, self.hb_path, None)
+                        fnirs_data_path, self.label_path, self.hb_path, None)
                 if SPECIFY_FOLD: 
                     num_of_k_fold = SPECIFY_FOLD
                 else:
