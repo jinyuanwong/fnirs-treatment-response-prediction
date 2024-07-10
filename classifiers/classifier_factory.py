@@ -38,6 +38,9 @@ def create_classifier(classifier_name, output_directory, callbacks, input_shape,
     if classifier_name == 'mamba':  # Time-CNN
         from classifiers import mamba
         return mamba.Classifier_Mamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)    
+    if classifier_name == 'mamba_MTL':  # Time-CNN
+        from classifiers import mamba_MTL
+        return mamba_MTL.Classifier_Mamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)    
     if classifier_name == 'jamba':  # Time-CNN
         from classifiers import jamba
         return jamba.Classifier_Jamba(output_directory, callbacks, input_shape, epochs, sweep_config, info)        

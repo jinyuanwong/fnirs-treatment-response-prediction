@@ -1222,16 +1222,28 @@ def shift_data(data, shift_range=(-10, 10), axis=-1):
     shift = np.random.randint(shift_range[0], shift_range[1])
     return np.roll(data, shift, axis=axis)
 
-def augment_data(X_train, Y_train, noise_level=2, scale_range=(0.7, 1.3), shift_range=(-10, 10), ratio=1):
+
+import random 
+def generate_52_shuffle_array(min_num_channel=5, max_num_channel=15, total_ch=52):
+    random_number = random.randint(min_num_channel, max_num_channel)
+    values_array = [0] * random_number + [1] * (total_ch - random_number)
+    # Shuffle the array
+    random.shuffle(values_array)
+    return values_array
+def random_delete_channel(data, min_num_channel=5, max_num_channel=15, total_ch=52):
+    data_shape_ch = np.array(generate_52_shuffle_array(min_num_channel=min_num_channel, max_num_channel=max_num_channel, total_ch=total_ch) )
+    return np.einsum('ij,i->ij', data, data_shape_ch)
+
+def augment_data(X_train, Y_train, noise_level=2, scale_range=(0.7, 1.3), shift_range=(-10, 10), ratio=1, min_delete_ch=5, max_delete_ch=15):
     augmented_data = []
     augmented_labels = []
     
     for x, y in zip(X_train, Y_train):
         for _ in range(ratio):
-            augmented_data.append(add_noise(x, noise_level))
-            augmented_data.append(scale_data(x, scale_range))
-            augmented_data.append(shift_data(x, shift_range, axis=-1))
-            augmented_data.append(shift_data(x, shift_range, axis=-2))
+            augmented_data.append(random_delete_channel(add_noise(x, noise_level), min_delete_ch, max_delete_ch))
+            augmented_data.append(random_delete_channel(scale_data(x, scale_range), min_delete_ch, max_delete_ch))
+            augmented_data.append(random_delete_channel(shift_data(x, shift_range, axis=-1), min_delete_ch, max_delete_ch))
+            augmented_data.append(random_delete_channel(shift_data(x, shift_range, axis=-2), min_delete_ch, max_delete_ch))
             augmented_labels.append(y)
             augmented_labels.append(y)
             augmented_labels.append(y)

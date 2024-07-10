@@ -17,11 +17,12 @@ SPECIFY_FOLD = 4
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 MAX_EPOCHS = 100
 HOLD_OUT_DIV = 5
-MONITOR_METRIC = 'accuracy'
-AUGMENT_RATIO = 20*3
+# MONITOR_METRIC = 'depression_accuracy'
+AUGMENT_RATIO = 20
 MIN_DELETE_CHANNEL = 5
-MAX_DELETE_CHANNEL = 25
-focal_loss_fn = focal_loss(alpha=0.25, gamma=2.0)
+MAX_DELETE_CHANNEL = 15
+# AUGMENT_RATIO = 20
+focal_loss_fn = focal_loss(alpha=0.25, gamma=2.0) # V2 
 
 transformer_args = Transformer_ModelArgs(
     batch_size=64,
@@ -32,14 +33,16 @@ transformer_args = Transformer_ModelArgs(
 
 
 PARAMETER['cnn_transformer'] = {
-    'hb_path': 'nor_hb_simple_all_1d.npy',
     'args': transformer_args,
 }
 
 args = Jamba_ModelArgs_extend_from_Mamba(
+    monitor_metric_mode = 'min',
+    monitro_metric_checkpoint = 'val_loss',
+    load_previous_checkpoint = True,
     batch_size=64,
     classweight1=1,
-    patiences=2,
+    patiences=3,
     lr_begin=1e7,  # 1e7 -> 1e5
     model_input_dims=128,
     model_states=64,  # 64 -> 128
@@ -51,13 +54,18 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     warmup_step=4000,
     # loss={'gender': 'categorical_crossentropy', 'smoking':  tfa.losses.SeesawLoss(), 'alcohol':  tfa.losses.SeesawLoss(),
     #       'Suicide_Risk':  tfa.losses.SeesawLoss(), 'depression': 'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy
-    loss=focal_loss_fn,
-    metrics=['accuracy'],
+    loss={
+          'HAMD_Scores': focal_loss_fn, #'categorical_crossentropy',
+          'Suicide_Risk': focal_loss_fn, #'categorical_crossentropy', 
+          'depression': focal_loss_fn}, #'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy    
+    metrics={
+            'HAMD_Scores': 'accuracy',
+            'Suicide_Risk': 'accuracy', 
+            'depression': 'accuracy'},
     projection_expand_factor=1,
 )
 
-PARAMETER['jamba'] = PARAMETER['jamba_MTL'] = {
-    'hb_path': 'hbo_simple_data.npy',
+PARAMETER['jamba_MTL'] = {
     'args': args,
     'config_file_path': os.path.abspath(__file__),
 }
@@ -65,5 +73,5 @@ PARAMETER['jamba'] = PARAMETER['jamba_MTL'] = {
 
 for model, val in PARAMETER.items():
     PARAMETER[model]['hb_path'] = 'nor_hb_simple_all_1d.npy'
-    PARAMETER[model]['label_path'] = 'label.npy'
+    PARAMETER[model]['label_path'] = 'multi_task_label_three_depression_metrics_onehot.npy'
     PARAMETER[model]['classweight1'] = 1

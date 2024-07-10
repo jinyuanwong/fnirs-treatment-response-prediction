@@ -35,6 +35,8 @@ class Classifier_Jamba():
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
         
+        args.update_model_checkpoint(output_directory + 'checkpoint')
+        self.callbacks.append(args.model_checkpoint)
         self.callbacks.append(args.earlystopping)
         self.batch_size = args.batch_size
 

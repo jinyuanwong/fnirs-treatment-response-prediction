@@ -380,13 +380,14 @@ def save_validation_acc(output_directory, Y_pred, Y_true, check_metrice, info, s
 
 def save_validation_acc_multi_task(output_directory, Y_pred, Y_true, check_metric, info, save_file_name='val_acc.txt'):
     metrics = {}
+    Y_pred = np.array(Y_pred)
     for i, task_name in enumerate(check_metric.keys()):
-        Y_pred = np.array(Y_pred)
-        Y_pred_binary = np.argmax(Y_pred[i], axis=1)
+        Y_task_i = Y_pred[i] if Y_pred.shape == 3 else Y_pred   
+        Y_pred_binary = np.argmax(Y_task_i, axis=1)
         Y_true_binary = np.argmax(Y_true[:, i], axis=1)
         past_metric = read_past_value(output_directory, check_metric[task_name])
         current_metric = read_current_value(Y_pred_binary, Y_true_binary, check_metric[task_name])
-        hist_df_metrics = calculate_metrics(Y_true[:, i], Y_pred[i], 0)
+        hist_df_metrics = calculate_metrics(Y_true[:, i], Y_task_i, 0)
         save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
         print(f'Current saved file: {output_directory}' + save_file_name.replace('.txt', f'_{task_name}.txt'))
         print(f"Current {check_metric[task_name]}: {current_metric}")
@@ -618,6 +619,11 @@ def shuffle_data_demo_label(data, label, demo, seed):
 def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
     total_amount = data.shape[0] 
     _, _, indices = shuffle_data_label(data, label, seed)
+    
+    # if label.shape is 3. 
+    # It means label = (subject, type_of_label[task], onehot_encoded)   
+    # if label.shape is 2 
+    # It means label = (subject, onehot_encoded) with only one task
     if len(label.shape) == 3:
         label_not_onehot = np.argmax(label[:, -1, :], axis=1)
     elif len(label.shape) == 2:
@@ -625,20 +631,14 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     else:
         mean_label = np.mean(label)
         label_not_onehot = [1 if i > mean_label else 0 for i in label]
-    pos = data[label_not_onehot==1]
-    neg = data[label_not_onehot==0]
     pos_indices = indices[label_not_onehot==1]
     neg_indices = indices[label_not_onehot==0]
     
-    holdout_pos_num = pos.shape[0] // hold_out_div
-    holdout_neg_num = neg.shape[0] // hold_out_div
+    holdout_pos_num = pos_indices.shape[0] // hold_out_div
+    holdout_neg_num = neg_indices.shape[0] // hold_out_div
     
-    X_test = np.concatenate((pos[:holdout_pos_num], neg[:holdout_neg_num]), axis=0)
-    Y_test = np.concatenate((np.ones(holdout_pos_num), np.zeros(holdout_neg_num)), axis=0)
     indices_test = np.concatenate((pos_indices[:holdout_pos_num], neg_indices[:holdout_neg_num]), axis=0)
     
-    train_val_pos = pos[holdout_pos_num:]
-    train_val_neg = neg[holdout_neg_num:]
     train_val_pos_indices = pos_indices[holdout_pos_num:]
     train_val_neg_indices = neg_indices[holdout_neg_num:]
 
@@ -651,44 +651,23 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
     so the num_of_k_fold should be calulated by 
     (label==1).sum() * 2 / 3 / 2
     """
-    train_val_pos_num = pos.shape[0]-holdout_pos_num 
-    train_val_neg_num = neg.shape[0]-holdout_neg_num
+    train_val_pos_num = pos_indices.shape[0]-holdout_pos_num 
+    train_val_neg_num = neg_indices.shape[0]-holdout_neg_num
     one_fold_number_pos = train_val_pos_num//num_of_k_fold
     one_fold_number_neg = train_val_neg_num//num_of_k_fold
-    val_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
-    val_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
     val_pos_indices = train_val_pos_indices[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
     val_neg_indices = train_val_neg_indices[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
     
-    X_val = np.concatenate((val_pos, val_neg), axis=0)
-    Y_val = np.concatenate((np.ones(val_pos.shape[0]), np.zeros(val_neg.shape[0])), axis=0)
     indices_val = np.concatenate((val_pos_indices, val_neg_indices), axis=0)
     
-    train_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
-    train_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
     train_pos_indices = np.concatenate((train_val_pos_indices[0:k*one_fold_number_pos], train_val_pos_indices[(k+1)*one_fold_number_pos:]), axis=0)
     train_neg_indices = np.concatenate((train_val_neg_indices[0:k*one_fold_number_neg], train_val_neg_indices[(k+1)*one_fold_number_neg:]), axis=0)
     
-    X_train = np.concatenate((train_pos, train_neg), axis=0)
-    Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
     indices_train = np.concatenate((train_pos_indices, train_neg_indices), axis=0)
     
-
-
-    # print(f'X_train -> {X_train.mean(axis=(0,1,2))}, X_val -> {X_val.mean(axis=(0,1,2))}, X_test -> {X_test.mean(axis=(0,1,2))}')
-
-    # print(f'indices_train: {indices_train}')
-    # print(f'indices_val: {indices_val}')
-    # print(f'indices_test: {indices_test}')
-    # print(f'Y_test -> {Y_test}')
-    if len(label.shape) > 1:
-        Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
-    else:
-        Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
     X_train, X_val, X_test = data[indices_train], data[indices_val], data[indices_test]
     Y_train, Y_val, Y_test = label[indices_train], label[indices_val], label[indices_test]
 
-    # Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
     if adj is None:
         return X_train, Y_train, X_val, Y_val, X_test, Y_test
     else:
@@ -696,115 +675,6 @@ def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fol
         adj_val = adj[:X_val.shape[0]]
         adj_test = adj[:X_test.shape[0]]
         return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
-        # raise NotImplementedError('adj is not implemented yet')
-
-# def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
-#     random_seed = 1720051797
-#     train_indices = [ 85,  79,  94, 105, 372,  70, 495,  99, 508, 473, 336, 382, 110,
-#        428,  93, 349, 486, 114, 344, 113, 419, 353, 391, 351, 370, 126,
-#        500,  77, 512,  71, 454,  89, 507, 463, 488, 476, 484, 412, 379,
-#        338,  83, 492, 399, 478, 490, 496, 436, 439,  88, 404, 468, 347,
-#        367, 479, 481, 402, 448, 374, 357, 480, 390, 460, 354, 501, 106,
-#        362, 124, 348, 502, 396,  74, 346, 122, 438, 389, 403, 120, 408,
-#         80, 475, 337, 392, 411,  72, 494, 434,  87, 487, 485, 424, 504,
-#        387, 440, 452, 136, 458,  91, 102, 505, 444, 138, 474, 131, 116,
-#        418, 137, 420, 461, 340, 118, 339, 450, 427, 133, 104, 376, 394,
-#        471, 352, 456,  96, 417, 365, 459, 132, 134, 472, 425, 371, 435,
-#        426,  76, 446, 477, 511, 127, 128, 356, 125, 483, 130, 467,  75,
-#        497, 499, 466, 111, 369, 447, 414, 358, 225, 249, 198, 224, 246,
-#        158, 284, 146,  61,  56,  65, 207, 309, 165, 236, 298,   2,  22,
-#        262,   4, 230,   9, 288, 254, 295,   3, 187,  17,  45, 274, 166,
-#        291,  11, 296,  30, 220, 320, 311, 251,  69, 231, 155, 328, 321,
-#         46, 280, 148, 215,  38, 232, 302,  47, 178, 308, 290, 194, 183,
-#        174,  39,  10, 153,  33, 304,  18, 212, 245, 294, 278, 237, 217,
-#        168, 219, 199, 234,  41, 257, 248,  19, 265, 182,  55, 179,  53,
-#        156, 325,  43, 189, 310,  29,  15, 300, 173, 191, 303, 150, 211,
-#        264, 258, 218, 247,  59, 160, 227, 327,   1,  44,  64, 293, 196,
-#        223,  28, 209, 270, 281, 256, 202, 289,  63,  57, 233, 149, 157,
-#        319, 322, 143,  34, 283, 272, 312,  20, 253, 195,  23, 276, 184,
-#        222, 201,   0, 329, 181,  35, 313, 263,  12, 292, 151, 323, 330,
-#        266,  60, 221, 239, 186,  51, 192, 282, 204,   7, 147]
-
-#     val_indices = [457, 470, 413, 384, 117, 416, 121, 341, 437, 443, 366,  81, 493,
-#        381, 100, 334, 333, 510, 503,  97, 109, 498, 400, 405, 355, 455,
-#        103, 464, 397, 453, 423, 462, 364, 115, 509, 377, 343, 421, 398,
-#        482, 442, 139, 360, 451, 407,  73, 363, 388, 129, 395, 170,  49,
-#        305, 238, 261,  25, 273, 163, 208,  27, 152,   8, 210, 307,  67,
-#        287, 318, 269, 159,  24,  16, 241, 279, 167, 326, 176,  26, 275,
-#        226, 214, 259, 154, 267, 297,  52, 169, 235, 140, 260, 252, 190,
-#        200, 185, 206, 306, 188, 324, 213,  54, 205,  62, 331]
-
-#     test_indices = [107, 410, 373, 422,  95, 506, 433, 386, 342, 430, 361, 441, 123,
-#        383, 513, 375, 449,  78, 345, 350, 119, 112, 380, 415, 445, 385,
-#        465,  84, 431, 432,  98,  92, 108, 429, 409, 101, 359, 489,  86,
-#        491, 401, 135, 368, 378,  90,  82, 406, 469, 335, 393, 161, 268,
-#        240, 277, 271, 299,  31,  40, 301, 332,  21,   5, 203, 145,  36,
-#        242,  58, 314, 144, 171, 162, 285,  42,  13, 180,   6, 250, 175,
-#         14, 316,  68, 172,  32, 216, 164, 315,  48, 197, 229, 193, 286,
-#         37, 228, 317, 177, 243, 142, 244, 141, 255,  66,  50]
-#     X_train, Y_train = data[train_indices], label[train_indices]
-#     X_val, Y_val = data[val_indices], label[val_indices]
-#     X_test, Y_test = data[test_indices], label[test_indices]
-#     Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
-#     print(f'X_train -> {X_train.mean(axis=(0,1,2))}, X_val -> {X_val.mean(axis=(0,1,2))}, X_test -> {X_test.mean(axis=(0,1,2))}')
-#     return X_train, Y_train, X_val, Y_val, X_test, Y_test
-
-# def stratified_k_fold_cross_validation_with_holdout(data, label, k, num_of_k_fold, adj=None, seed=42, hold_out_div=3):
-#     total_amount = data.shape[0] 
-#     data, label = shuffle_data_label(data, label, seed)
-#     if len(label.shape) > 1:
-#         label_not_onehot = np.argmax(label, axis=1)
-#     else:
-#         mean_label = np.mean(label)
-#         label_not_onehot = [1 if i > mean_label else 0 for i in label]
-#     pos = data[label_not_onehot==1]
-#     neg = data[label_not_onehot==0]
-#     holdout_pos_num = pos.shape[0] // hold_out_div
-#     holdout_neg_num = neg.shape[0] // hold_out_div
-    
-#     X_test = np.concatenate((pos[:holdout_pos_num], neg[:holdout_neg_num]), axis=0)
-#     Y_test = np.concatenate((np.ones(holdout_pos_num), np.zeros(holdout_neg_num)), axis=0)
-    
-#     train_val_pos = pos[holdout_pos_num:]
-#     train_val_neg = neg[holdout_neg_num:]
-
-#     """
-#     train_val_pos_num 
-#     - should be 10 for pretreatment dataset 
-#     - should be 8 for pre-post-treatment dataset 
-    
-#     next, I will devide them by 2 to do 5 and 4 fold cross validation
-#     so the num_of_k_fold should be calulated by 
-#     (label==1).sum() * 2 / 3 / 2
-#     """
-#     train_val_pos_num = pos.shape[0]-holdout_pos_num 
-#     train_val_neg_num = neg.shape[0]-holdout_neg_num
-#     one_fold_number_pos = train_val_pos_num//num_of_k_fold
-#     one_fold_number_neg = train_val_neg_num//num_of_k_fold
-#     val_pos = train_val_pos[k*one_fold_number_pos:(k+1)*one_fold_number_pos]
-#     val_neg = train_val_neg[k*one_fold_number_neg:(k+1)*one_fold_number_neg]
-    
-#     X_val = np.concatenate((val_pos, val_neg), axis=0)
-#     Y_val = np.concatenate((np.ones(val_pos.shape[0]), np.zeros(val_neg.shape[0])), axis=0)
-    
-#     train_pos = np.concatenate((train_val_pos[0:k*one_fold_number_pos], train_val_pos[(k+1)*one_fold_number_pos:]), axis=0)
-#     train_neg = np.concatenate((train_val_neg[0:k*one_fold_number_neg], train_val_neg[(k+1)*one_fold_number_neg:]), axis=0)
-    
-#     X_train = np.concatenate((train_pos, train_neg), axis=0)
-#     Y_train = np.concatenate((np.ones(train_pos.shape[0]), np.zeros(train_neg.shape[0])), axis=0)
-    
-#     if len(label.shape) > 1:
-#         Y_train, Y_val, Y_test = onehotEncode(Y_train).astype('float32'), onehotEncode(Y_val).astype('float32'), onehotEncode(Y_test).astype('float32')
-#     else:
-#         Y_train, Y_val, Y_test = Y_train.astype('float32'), Y_val.astype('float32'), Y_test.astype('float32')
-#     if adj is None:
-#         return X_train, Y_train, X_val, Y_val, X_test, Y_test
-#     else:
-#         adj_train = adj[:X_train.shape[0]]
-#         adj_val = adj[:X_val.shape[0]]
-#         adj_test = adj[:X_test.shape[0]]
-#         return X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test
-#         # raise NotImplementedError('adj is not implemented yet')
 
 def stratified_k_fold_cross_validation_with_holdout_with_cli_demo(data, label, cli_demo, k, num_of_k_fold, adj=None, seed=42):
     data, cli_demo, label = shuffle_data_demo_label(data, label, cli_demo, seed)
@@ -1139,3 +1009,26 @@ def plot_evaluation_metrics_header():
     row_3 = '|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |'
     for i in [row_1,row_2, row_3]:
         print(i)
+        
+        
+        
+def save_hist_file(hist, output_directory):
+    
+    # Assume hist is an object that has a history attribute which is a dictionary of the training history
+    hist_df = pd.DataFrame(hist.history)
+
+    history_file = os.path.join(output_directory, 'history.csv')
+
+    # Check if the history.csv file exists
+    if os.path.exists(history_file):
+        # Read the existing CSV file into a DataFrame
+        existing_df = pd.read_csv(history_file)
+        
+        # Concatenate the existing DataFrame with the new hist_df
+        combined_df = pd.concat([existing_df, hist_df], ignore_index=True)
+    else:
+        # If the file does not exist, the combined DataFrame is the new hist_df
+        combined_df = hist_df
+
+    # Save the combined DataFrame back to the history.csv file
+    combined_df.to_csv(history_file, index=False)

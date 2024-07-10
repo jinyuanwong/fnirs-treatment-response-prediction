@@ -3,6 +3,8 @@ from scipy.io import loadmat
 import sys 
 import os
 import pandas as pd 
+from sklearn.preprocessing import OneHotEncoder
+
 def set_path():
     if sys.platform == 'darwin':
         print("Current system is macOS")
@@ -302,6 +304,53 @@ def obtain_hb_data_label_hamd(datatype='prep'):
 
     return hb_data_all, label_all, hamd_all, multi_task_label
 
+"""
+Args:
+    labels: (subject, num_of_labels=8)
+        -Correct_Order 'Gender', 'Age', 'Education', 'Smoking', 'Alcohol', 'HAMD_Scores', 'Suicide_Risk', 'Depression'
+    
+    specify_return_labels (default: 'all')
+        - 'all' ('Gender', 'Age', 'Education', 'Smoking', 'Alcohol', 'HAMD_Scores', 'Suicide_Risk', 'Depression')
+        - 'three_depression_metrics' (HAMD_Scores, Suicide_Risk, Depression)
+        - 'gender_three_depression_metrics' (Gender, HAMD_Scores, Suicide_Risk, Depression)
+        - 'gender_age_three_depression_metrics' (Gender, Age, HAMD_Scores, Suicide_Risk, Depression)
+    
+    
+output:
+    transpose_labels: (subject, num_of_labels, 2)
+
+"""
+def one_hot_encode_labels_for_multitask_learning_and_save(labels, save_fold, specify_return_labels='all'):
+    print('labels.shape', labels.shape)
+    if specify_return_labels == 'all':
+        return_index = np.arange(labels.shape[1])
+    elif specify_return_labels == 'three_depression_metrics':
+        return_index = [5, 6, 7]  # Indices for 'HAMD_Scores', 'Suicide_Risk', 'Depression'
+    elif specify_return_labels == 'gender_three_depression_metrics':
+        return_index = [0, 5, 6, 7]  # Indices for 'Gender', 'HAMD_Scores', 'Suicide_Risk', 'Depression'
+    elif specify_return_labels == 'gender_age_three_depression_metrics':
+        return_index = [0, 1, 5, 6, 7]  # Indices for 'Gender', 'Age', 'HAMD_Scores', 'Suicide_Risk', 'Depression'
+    elif specify_return_labels == 'gender':
+        return_index = [0]
+    else:
+        raise Exception("Invalid specify_return_labels value")
+        
+    labels = labels[:, return_index]
+    encoded_labels = []
+    for index, label in enumerate(labels.T):
+        label = label.reshape(-1, 1)
+        # print(label, label.shape)
+        encoded = OneHotEncoder().fit_transform(label)
+        encode = encoded.toarray()[..., np.newaxis]
+        encoded_labels.append(encode)
+        
+    concate_labels = np.concatenate(encoded_labels, axis=-1)
+    # from shape (subject, 2, num_of_labels) to (subject, num_of_labels, 2)
+    transpose_labels = np.transpose(concate_labels, (0, 2, 1))
+    
+    np.save(save_fold + f'multi_task_label_{specify_return_labels}_onehot.npy', transpose_labels)
+
+    return transpose_labels
 
 
 if __name__ == '__main__':
@@ -353,3 +402,13 @@ if __name__ == '__main__':
     np.save(save_fold + 'nine_regions_hbt_task_change_fnirs_features.npy', nine_regions_hbt_task_change_fnirs_features)
 
     np.save(save_fold + 'multi_task_label.npy', multi_task_label)
+    
+    multi_task_label_all_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='all')
+    multi_task_label_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='three_depression_metrics')
+    multi_task_label_gender_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_three_depression_metrics')
+    multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_age_three_depression_metrics')
+    multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender')
+    # np.save(save_fold + 'multi_task_label_all_onehot.npy', multi_task_label_all_onehot)
+    # np.save(save_fold + 'multi_task_label_three_depression_metrics_onehot.npy', multi_task_label_three_depression_metrics_onehot)
+    # np.save(save_fold + 'multi_task_label_gender_three_depression_metrics_onehot.npy', multi_task_label_gender_three_depression_metrics_onehot)
+    # np.save(save_fold + 'multi_task_label_gender_age_three_depression_metrics_onehot.npy', multi_task_label_gender_age_three_depression_metrics_onehot)

@@ -39,6 +39,12 @@ class Transformer_ModelArgs:
     monitor_metric_early_stop: str = 'val_loss'
     patience: int = 300
 
+    load_previous_checkpoint: bool = True
+
+    monitor_metric_mode: str = None
+    monitro_metric_checkpoint: str = 'val_loss'
+    checkpoint_path: str = None
+    
     def __post_init__(self):
         self.kernel_size = [self.kernel_size_1, self.kernel_size_2]
         self.stride_size = [self.stride_size_1, self.stride_size_2]

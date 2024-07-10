@@ -26,11 +26,6 @@ class GNN(tf.keras.Model):
         return tf.matmul(tf.matmul(d_mat_inv_sqrt, adj), d_mat_inv_sqrt)
 
     def call(self, inputs):
-        # adj_normalized = self.normalize_adjacency(adj)
-        # inputs_features = self.W(inputs)
-        # outputs = tf.linalg.matmul(adj_normalized, inputs_features)
-        # adj_normalized = self.normalize_adjacency(adj)
-        # inputs_features = self.W(inputs)
         outputs = tf.linalg.matmul(self.adj, inputs)
         outputs = self.W(outputs)
         outputs = self.dropout(outputs)

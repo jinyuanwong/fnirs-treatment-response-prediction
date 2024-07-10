@@ -6,8 +6,7 @@ from utils.utils_mine import CustomSchedule
 
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.callbacks import EarlyStopping
-
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import os 
 
 @dataclass
@@ -37,6 +36,7 @@ class ModelArgs:
     vocab_size: int = 2
     activation: callable = tf.nn.gelu
     final_activation = None
+    load_previous_checkpoint: bool = True
     
     lr_begin: int = 100000
     warmup_step: int = 4000
@@ -51,6 +51,9 @@ class ModelArgs:
     metrics: dict = None
     monitor_metric_early_stop: str = 'val_loss'
 
+    monitor_metric_mode: str = None
+    monitro_metric_checkpoint: str = 'val_loss'
+    checkpoint_path: str = None
 
     def __post_init__(self):
         self.model_internal_dim: int = int(self.projection_expand_factor * self.model_input_dims)
@@ -85,3 +88,16 @@ class ModelArgs:
             raise ValueError(f"patiences cannot be {self.patiences}")
         else:
             self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
+
+    def update_model_checkpoint(self, checkpoint_path):
+        if checkpoint_path:
+            self.checkpoint_path = checkpoint_path
+            self.model_checkpoint = ModelCheckpoint(
+                filepath=self.checkpoint_path,
+                monitor=self.monitro_metric_checkpoint,
+                mode=self.monitor_metric_mode,
+                save_weights_only=True,
+                save_best_only=True
+            )
+        else:
+            self.model_checkpoint = None

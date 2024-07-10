@@ -1,25 +1,80 @@
 #!/bin/bash
 
-model='jamba'
-config_file='STL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
-itr_name='MTL_V1_240707_wo_MTL_itr_'
-indices=(1720351610 1720353641 1720355734 1720358054 1720360139)
+model='jamba_MTL'
+config_files=(
+'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_STL_gender'
+)
+# 'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_loss'
 
-# Loop through indices
-for itr in {0..4}
+
+itr_name='MTL_20240710_V1'
+seeds=(1720351610 1720353641 1720355734 1720358054 1720360139)
+python_file="./LOO_nested_CV_train_skf.py"
+
+# Loop through each seed
+for seed in "${seeds[@]}"
 do
-    # Construct the run_itr variable
-    run_itr="$itr_name$itr" # Use indices
+    # Loop through each configuration file
+    for config in "${config_files[@]}"
+    do 
+        # Construct the run_itr variable
+        run_itr="${itr_name}_${seed}"
 
-    # Construct the run_command
-    run_command="conda run -n tf python ./LOO_nested_CV_train_skf.py $model $run_itr $config_file ${indices[$itr]}"
+        # Construct the run_command
+        run_command="conda run -n tf python $python_file $model $run_itr $config $seed"
 
-    # Execute the run_command
-    echo "Running command: $run_command"
-    eval $run_command
+        # Execute the run_command
+        echo "Running command: $run_command"
+        eval $run_command
 
-    sleep 1  # Adjust the sleep duration as needed
+        # Check if the command executed successfully
+        if [ $? -ne 0 ]; then
+            echo "Command failed: $run_command"
+            exit 1
+        fi
+
+        sleep 1  # Adjust the sleep duration as needed    
+    done
 done
+
+# #!/bin/bash
+
+# model='jamba_MTL'
+# config_files=(
+# 'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor_loss'
+# 'MTL_all_hb_simple_all_1d_SPECIFY_FOLD_4_holdout_5_nor'
+# )
+
+# itr_name='MTL_V1_240708'
+# seeds=(1720351610 1720353641 1720355734 1720358054 1720360139)
+# python_file="./LOO_nested_CV_train_skf.py"
+
+# # Get the length of the arrays 
+# num_seeds=${#seeds[@]}
+# num_configs=${#config_files[@]}
+
+
+# # Loop through indices
+# for seed_idx in $(seq 0 $((num_seeds-1)))
+# do
+#     for config_idx in $(seq 0 $((num_configs-1)))
+#     do 
+#         seed="${seeds[$seed_idx]}"
+#         config="${config_files[$config_idx]}"
+        
+#         # Construct the run_itr variable
+#         run_itr="${itr_name}_${seed}" # Use indices
+
+#         # Construct the run_command
+#         run_command="conda run -n tf python $python_file $model $run_itr $config $seed"
+
+#         # Execute the run_command
+#         echo "Running command: $run_command"
+#         eval $run_command
+
+#         sleep 1  # Adjust the sleep duration as needed    
+#     done
+# done
 
 
 # Loop from 0 to 9

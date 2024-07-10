@@ -274,6 +274,8 @@ class Classifier_Transformer():
         self.params = params = info['parameter']
         args = self.params['args']
         
+        args.update_model_checkpoint(output_directory + 'checkpoint')
+        self.callbacks.append(args.model_checkpoint)
         self.callbacks.append(args.earlystopping)
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = args.batch_size

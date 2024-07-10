@@ -39,6 +39,8 @@ class Classifier_Jamba():
         args = self.params['args']
         self.class_weights_dict = {0: 1, 1: args.classweight1}
         
+        args.update_model_checkpoint(output_directory + 'checkpoint')
+        self.callbacks.append(args.model_checkpoint)
         self.callbacks.append(args.earlystopping)
         self.callbacks.append(args.reduce_lr)                
         self.batch_size = args.batch_size
@@ -77,11 +79,11 @@ class Classifier_Jamba():
         x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
         # x = ChannelSelectionLayer(x.shape[2], x.shape[1])(x)
         x = RMSNorm()(x)
-        # for _ in range(args.num_layers):
-        #     x = Mamba_layer(args)(x)
-        #     x = Mamba_MoE_layer(args)(x)   
-        #     x = Transformer_layer(args)(x)
-        #     x = Attention_MoE_layer(args)(x)
+        for _ in range(args.num_layers):
+            x = Mamba_layer(args)(x)
+            x = Mamba_MoE_layer(args)(x)   
+            x = Transformer_layer(args)(x)
+            x = Attention_MoE_layer(args)(x)
          
         x = tf.concat([x, conv1d_x], axis=-1)
         if not args.use_lm_head: 

@@ -80,10 +80,7 @@ class TrainModel():
                 
                 num_of_k_fold = config.SPECIFY_FOLD
                 self.params = params = info['parameter']
-                msg = info['message'] + config_name #get_params_info(params)
-                # loo_array = np.arange(5) # get_sorted_loo_array(model_name, msg, data.shape[0], DATASET=archive, K_FOLD=num_of_k_fold)
-                
-                # for current_loo in loo_array:#  loo_array:# range(loo_start_from, data.shape[0]): #
+                msg = info['message'] # + config_name #get_params_info(params)
                 for k in range(num_of_k_fold):
                     if using_adj:
                         X_train, Y_train, X_val, Y_val, X_test, Y_test, adj_train, adj_val, adj_test = stratified_k_fold_cross_validation_with_holdout(
@@ -99,10 +96,10 @@ class TrainModel():
                     # random.seed(current_time)
                     # np.random.seed(current_time)
                     # tf.random.set_seed(current_time)
-                    print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
                     # print(f'X_train shape: {X_train.shape}'*99)
                     # Augment data
-                    X_train, Y_train = augment_data(X_train, Y_train, ratio=config.AUGMENT_RATIO)
+                    if config.AUGMENT_RATIO != 0: X_train, Y_train = augment_data(X_train, Y_train, ratio=config.AUGMENT_RATIO, min_delete_ch=config.MIN_DELETE_CHANNEL, max_delete_ch=config.MAX_DELETE_CHANNEL)
+                    print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
                              
                     # msg = info['message'] + f"d_model_{params['d_model']}_batch_size_{params['batch_size']}_n_layers_{params['n_layers']}"
                     output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
@@ -111,14 +108,6 @@ class TrainModel():
 
                     print(f'output_directory -> {output_directory}')
                     create_directory(output_directory)
-
-                    checkpoint_path = output_directory + 'checkpoint'
-
-                    def learning_rate_schedule(epoch, learning_rate):
-                        return learning_rate
-
-                    lr_monitor = tf.keras.callbacks.LearningRateScheduler(
-                        learning_rate_schedule)
 
                     if model_name in ['chao_cfnn', 'zhu_xgboost', 'decision_tree']:
                         input_shape = [self.batch_size,
@@ -132,14 +121,7 @@ class TrainModel():
                         input_shape = [self.batch_size] + list(X_train.shape[1:])
 
 
-                    model_checkpoint = ModelCheckpoint(filepath=checkpoint_path,
-                                                    monitor='val_' + self.config.MONITOR_METRIC,
-                                                    mode='max',
-                                                    save_weights_only=True,
-                                                    save_best_only=True)
-
-                    callbacks = [model_checkpoint,
-                                lr_monitor]
+                    callbacks = []
                     if using_wandb:
                         callbacks.append(WandbCallback(save_model=False))
 
@@ -168,230 +150,6 @@ class TrainModel():
                         break
 
 
-def train_model():
-    wandb.init()  # mode='disabled'
-    config = wandb.config
-    if config is None:
-        raise ValueError("config is None")
-    print(f"Config: {config}")
-    model = TrainModel(model_name, config)
-    if model_name == 'dgi_transformer':
-        model.begin()
-    elif model_name == 'gnn_transformer':
-        model.begin()
-    elif model_name == 'yu_gnn':
-        model.begin()
-    elif model_name == 'wang_alex':
-        model.begin()
-    elif model_name == 'cnn_transformer':
-        model.begin()
-    elif model_name == 'chao_cfnn':
-        model.begin()
-    elif model_name == 'zhu_xgboost':
-        model.begin()
-    elif model_name == 'mvg_transformer':
-        model.begin()
-    wandb.finish()
-
-# for yu_gnn
-
-
-def using_sweep_for_yu_gnn():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'activation': {
-            'values': ['relu', 'prelu']
-        },
-        'lr': {
-            'values': [0.5, 0.1, 1e-2]
-        },
-        'd_model_1': {
-            'values': [10, 20]
-        },
-        'batch_size': {
-            'values': [128, 256]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="yu_gnn")
-
-    wandb.agent(sweep_id, function=train_model, count=10)
-
-# for wang_alex
-
-
-def using_sweep_for_wang_alex():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'lr': {
-            'values': [0.5, 0.1, 1e-2]
-        },
-        'dropout2': {
-            'values': [0.7, 0.5, 0.3, 0.1]
-        },
-        'dense2': {
-            'values': [256, 128, 64]
-        },
-        'batch_size': {
-            'values': [64, 128, 256]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="wang_alex")
-
-    wandb.agent(sweep_id, function=train_model, count=25)
-
-# for chao_cfnn
-
-
-def using_sweep_for_chao_cfnn():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'lr': {
-            'values': [0.5, 0.1, 1e-2]
-        },
-        'activation': {
-            'values': ['relu', 'prelu', 'sigmoid']
-        },
-        'dense0': {
-            'values': [256, 128, 64]
-        },
-        'batch_size': {
-            'values': [64, 128, 256]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="chao_cfnn")
-
-    wandb.agent(sweep_id, function=train_model, count=25)
-
-# for zhu_xgboost
-
-
-def using_sweep_for_zhu_xgboost():
-    pass
-
-
-def using_sweep_for_gnn_transformer():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'FFN_units': {
-            'values': [64, 128, 256, 512]
-        },
-        'gnn_layers': {
-            'values': [1, 2, 3, 4, 5]
-        },
-        'n_layers': {
-            'values': [4, 8, 12]
-        },
-        'lr_factor': {
-            'values': [0.001, 0.01, 0.1, 10]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="gnn_transformer")
-    wandb.agent(sweep_id, function=train_model, count=30)
-
-
-def using_sweep_for_mvg_transformer():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'FFN_units': {
-            'values': [64, 256]
-        },
-        'batch_size': {
-            'values': [32, 64, 128]
-        },
-        'n_heads': {
-            'values': [1, 2, 4]
-        },
-        'activation': {
-            'values': ['relu', 'sigmoid']
-        },
-        'mvg_layer': {
-            'values': [2, 3, 4, 5]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="mvg_transformer")
-    wandb.agent(sweep_id, function=train_model, count=25)
-
-# for gnn_transformer
-
-
-def using_sweep_for_dgi_transformer():
-
-    sweep_config = {
-        'method': 'random'
-    }
-    metric = {
-        'name': 'val_loss',
-        'goal': 'minimize'
-    }
-    sweep_config['metric'] = metric
-    parameters_dict = {
-        'n_layers': {
-            'values': [4, 8, 12]
-        },
-        'batch_size': {
-            'values': [32, 64, 128]
-        },
-        'lr_rate': {
-            'values': [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-        }
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="dgi_transformer")
-
-    wandb.agent(sweep_id, function=train_model, count=20)
-
-
 model_names = ['transformer', 'gnn_transformer',
                'dim_transformer', 'dgi_transformer', 'yu_gnn']
 if __name__ == '__main__':
@@ -413,31 +171,6 @@ if __name__ == '__main__':
     
     print('You are using model: {}'.format(model_name))
     using_wandb = config.IS_USING_WANDB
-    if model_name == 'zhu_xgboost':
-        using_wandb = False
-    # if using_wandb == True:
-    #     wandb.login()
-    #     if model_name == 'dgi_transformer':
-    #         using_sweep_for_dgi_transformer()
-    #     elif model_name == 'gnn_transformer':
-    #         using_sweep_for_gnn_transformer()
-    #     elif model_name == 'yu_gnn':
-    #         using_sweep_for_yu_gnn()
-    #     elif model_name == 'wang_alex':
-    #         using_sweep_for_wang_alex()
-    #     elif model_name == 'chao_cfnn':
-    #         using_sweep_for_chao_cfnn()
-    #     elif model_name == 'zhu_xgboost':
-    #         # using_sweep_for_zhu_xgboost()
-    #         raise NotImplementedError(
-    #             'Currently sweep for zhu_xgboost is not implemented yet.')
-    #     elif model_name == 'mvg_transformer':
-    #         using_sweep_for_mvg_transformer()
-    #         raise NotImplementedError(
-    #             'Currently sweep for mvg_transformer is not implemented yet.')
-    #     elif model_name == 'graphsage_transformer':
-    #         raise NotImplementedError(
-    #             'Currently sweep for mvg_transformer is not implemented yet.')
-    # else:
+
     model = TrainModel(model_name, config=config)
     model.begin()
