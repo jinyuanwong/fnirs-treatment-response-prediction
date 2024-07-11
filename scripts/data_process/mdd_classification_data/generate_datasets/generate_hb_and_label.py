@@ -332,6 +332,8 @@ def one_hot_encode_labels_for_multitask_learning_and_save(labels, save_fold, spe
         return_index = [0, 1, 5, 6, 7]  # Indices for 'Gender', 'Age', 'HAMD_Scores', 'Suicide_Risk', 'Depression'
     elif specify_return_labels == 'gender':
         return_index = [0]
+    elif specify_return_labels == 'depression':
+        return_index = [7]        
     else:
         raise Exception("Invalid specify_return_labels value")
         
@@ -408,7 +410,4 @@ if __name__ == '__main__':
     multi_task_label_gender_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_three_depression_metrics')
     multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_age_three_depression_metrics')
     multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender')
-    # np.save(save_fold + 'multi_task_label_all_onehot.npy', multi_task_label_all_onehot)
-    # np.save(save_fold + 'multi_task_label_three_depression_metrics_onehot.npy', multi_task_label_three_depression_metrics_onehot)
-    # np.save(save_fold + 'multi_task_label_gender_three_depression_metrics_onehot.npy', multi_task_label_gender_three_depression_metrics_onehot)
-    # np.save(save_fold + 'multi_task_label_gender_age_three_depression_metrics_onehot.npy', multi_task_label_gender_age_three_depression_metrics_onehot)
+    multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='depression')
