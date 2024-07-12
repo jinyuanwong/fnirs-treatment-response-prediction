@@ -26,7 +26,7 @@ from sklearn.metrics import make_scorer, accuracy_score, recall_score, f1_score,
 from sklearn.model_selection import cross_validate, StratifiedKFold
 import random
 from sklearn.metrics import roc_auc_score
-
+from utils.utils_mine import plot_evaluation_metrics_header
 def set_path():
     if sys.platform == 'darwin':
         print("Current system is macOS")
@@ -889,23 +889,25 @@ def print_md_table_val_test(model_name, test_result, val_result, print_table_hea
 
 def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table_header=True, already_balanced_accuracy=False):
     if print_table_header:
-        print('| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |')
-        print('|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|')
-        print('|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |')
-
+        plot_evaluation_metrics_header()
 
     # print('| Dataset | Model Name | Accuracy | Sensitivity | Specificity | F1 Score |')
     # print('|------------|------------|----------|-------------|-------------|----------|')
     print(f'| {model_name}   |', end='')
     test_result = np.array(test_result)
+    if test_result.shape[0] > 4: # if the result has duration
+        test_result = test_result[:-1]
     val_result = np.array(val_result)
     if not already_balanced_accuracy:
         test_result[0] = (test_result[1] + test_result[2]) / 2
         val_result[0] = (val_result[1] + val_result[2]) / 2
     for val in test_result:
-        print(f' {val*100:.4f}  |', end='')
-    for val in val_result:
-        print(f' {val*100:.4f}  |', end='')       
+        print(f' {val*100:.2f}  |', end='')
+    for val_index, val in enumerate(val_result):
+        if val_result.shape[0]==5 and val_index == 4:
+            print(f' {val:.1f}  |', end='')     
+        else:
+            print(f' {val*100:.2f}  |', end='')       
     print('')
 
 

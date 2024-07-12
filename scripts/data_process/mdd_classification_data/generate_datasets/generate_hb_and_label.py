@@ -410,4 +410,19 @@ if __name__ == '__main__':
     multi_task_label_gender_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_three_depression_metrics')
     multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender_age_three_depression_metrics')
     multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='gender')
-    multi_task_label_gender_age_three_depression_metrics_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='depression')
+    task_label_depression_onehot = one_hot_encode_labels_for_multitask_learning_and_save(multi_task_label, save_fold, specify_return_labels='depression')
+    
+    # generate female/male - depression classification 
+    male_index = multi_task_label[:, 0] == 0
+    female_index = multi_task_label[:, 0] == 1 
+    
+    male_hb_data = nor_hb_simple_all_1d[male_index]
+    female_hb_data = nor_hb_simple_all_1d[female_index]
+    male_multi_task_label_depression_onehot = task_label_depression_onehot[male_index]
+    female_multi_task_label_depression_onehot = task_label_depression_onehot[female_index]
+    np.save(save_fold + 'male_nor_hb_simple_all_1d.npy', male_hb_data)
+    np.save(save_fold + 'female_nor_hb_simple_all_1d.npy', female_hb_data)
+    np.save(save_fold + 'male_multi_task_label_depression_onehot.npy', male_multi_task_label_depression_onehot)
+    np.save(save_fold + 'female_multi_task_label_depression_onehot.npy', female_multi_task_label_depression_onehot)
+    
+    

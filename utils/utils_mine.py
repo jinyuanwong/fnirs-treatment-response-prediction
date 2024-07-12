@@ -1026,10 +1026,11 @@ def save_current_file_to_folder(save_file_paths, destination_folder):
             print(f"An error occurred: {e} when save_current_file_to_folder")
         
         
-def plot_evaluation_metrics_header():
-    row_1 = '| Model Name | Testing Set |             |             |             | Validation Set |             |             |             |'
-    row_2 = '|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|'
-    row_3 = '|            | Balanced Accuracy | Sensitivity | Specificity | AUC | Balanced Accuracy | Sensitivity | Specificity | AUC |'
+def plot_evaluation_metrics_header( table_name = 'Model Name', parameter_name=None):
+    row_1 = f'| {table_name} | Testing Set |             |             |             | Validation Set |             |             |             |             |'
+    row_2 = '|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|'
+    row_3 = f'|      {parameter_name}      | bAcc(%) | Sen(%) | Spe(%) | AUC(%) | bAcc(%) | Sen(%) | Spe(%) | AUC(%) | Duration(s) |'
+    
     for i in [row_1,row_2, row_3]:
         print(i)
         

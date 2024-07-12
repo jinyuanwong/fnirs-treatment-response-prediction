@@ -18,7 +18,7 @@ Mamba: https://towardsdatascience.com/mamba-ssm-theory-and-implementation-in-ker
 def selective_scan(u, delta, A, B, C, D):
     # A_bar = exp(△A)
     dA = tf.einsum('bld,dn -> bldn', delta, A)
-    dB_u = tf.einsum('bld, bld, bln->bldn', delta, u, B)
+    dB_u = tf.einsum('bld, bld, bln->bldn', delta, u, B) # what is delta and u is not the same shape? check if u is subject, 52, 125, and delta is subject, 52, 128? 
     
     dA_cumsum = tf.pad(
         dA[:, 1:], [[0, 0], [1, 1], [0, 0], [0, 0]])[:, 1:, :, :] # https://www.tensorflow.org/api_docs/python/tf/pad
