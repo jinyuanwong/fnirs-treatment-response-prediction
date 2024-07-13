@@ -57,7 +57,8 @@ class Classifier_Mamba():
         optimizer = tf.keras.optimizers.AdamW(args.learning_rate,
                                         beta_1=args.beta_1,
                                         beta_2=args.beta_2,
-                                        epsilon=args.epsilon)
+                                        epsilon=args.epsilon,
+                                        clipnorm=args.clipnorm)
         
         model.compile(optimizer=optimizer,
                       loss=args.loss,#categorical_crossentropy

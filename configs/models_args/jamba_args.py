@@ -16,7 +16,12 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
 
     def __post_init__(self):
         super().__post_init__() 
-        self.learning_rate = CustomLearningRateSchedule(warmup_step=self.warmup_step, end_lr=1e-8) # 0.001#
-        self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
+
+        if self.warmup_step == None:
+            raise ValueError(f'warmup_step cannot be {self.warmup_step}')
+        else:
+            self.set_learning_rate(self.lr_begin, self.warmup_step, mode='CustomLearningRateSchedule')
+            
+        # self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
         self.reduce_lr = reduceLRonplateau()
     

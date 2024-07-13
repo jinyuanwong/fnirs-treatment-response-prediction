@@ -1,5 +1,5 @@
 #!/bin/bash
-source scripts/experiment_configs/input_dimension_classification_depression.sh
+source scripts/experiment_configs/male_femal_seperate_classification_depression.sh
 
 # model='jamba_MTL'
 # config_files=(

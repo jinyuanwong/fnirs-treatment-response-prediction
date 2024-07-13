@@ -1,3 +1,9 @@
+PROCESS_ID=$(ps aux | grep "./run.sh" | grep -v grep | awk '{print $2}')
+if [ ! -z "$PROCESS_ID" ]; then
+  echo "Actual process id: $PROCESS_ID" 
+  kill $PROCESS_ID
+fi
+
 PROCESS_ID=$(ps aux | grep "./run_automl_v0.sh" | grep -v grep | awk '{print $2}')
 if [ ! -z "$PROCESS_ID" ]; then
   echo "Actual process id: $PROCESS_ID" 

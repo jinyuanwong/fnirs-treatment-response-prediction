@@ -16,6 +16,13 @@ pip install datasets==2.19.2
 pip install dataclasses==0.6
 ```
 
+
+## Initial SQLite 
+
+```
+sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db.sql
+```
+
 ---
 
 ## 2. Train the model 

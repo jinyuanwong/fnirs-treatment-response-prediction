@@ -36,7 +36,7 @@ PARAMETER['cnn_transformer'] = {
 
 args = Jamba_ModelArgs_extend_from_Mamba(
     monitor_metric_mode = 'max',
-    monitro_metric_checkpoint = 'val_depression_accuracy',
+    monitor_metric_checkpoint = 'val_depression_accuracy',
     load_previous_checkpoint = True,
     batch_size=64,
     classweight1=1,
