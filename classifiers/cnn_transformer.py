@@ -269,7 +269,6 @@ class Classifier_Transformer():
 
         # 随机给定超参数进行训练
         # 32#random.choice([16, 32, 48])  # 128 256
-        earlystopping = EarlyStopping(monitor='val_loss', patience=100)
         self.info = info
         self.params = params = info['parameter']
         args = self.params['args']
@@ -277,6 +276,7 @@ class Classifier_Transformer():
         args.update_model_checkpoint(output_directory + 'checkpoint')
         self.callbacks.append(args.model_checkpoint)
         self.callbacks.append(args.earlystopping)
+        self.callbacks.append(args.reduce_lr)         
         # 32  # random.choice([128]) # 没有影响，不改变模型的结构 # 8 is very bad ~70%
         self.batch_size = args.batch_size
         kernel_size = args.kernel_size
@@ -292,7 +292,7 @@ class Classifier_Transformer():
         warmup_step = args.warmup_step
         num_classes = args.num_classes
         l2_rate = args.l2_rate
-        num_class = args.num_class
+        num_class = args.num_classes
         self.class_weights = args.class_weights
         optimizer = args.optimizer
 
@@ -321,66 +321,113 @@ class Classifier_Transformer():
             outputs = layers.Dense(FFN_units/(2**i),
                                    activation=activation,
                                    kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
-        outputs = layers.Dense(num_class, activation='softmax',
-                                   kernel_regularizer=tf.keras.regularizers.l2(l2_rate))(outputs)
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        output_list = []
+        # Define outputs
+        for metric_name, _ in  args.metrics.items():
+            print('Check - order if it is right:', metric_name)
+            output_metric = layers.Dense(num_classes, activation=args.final_activation, name=metric_name)(outputs)
+            output_list.append(output_metric)
+            
+        model = tf.keras.Model(inputs=inputs, outputs=output_list)
         model.summary()
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',
-                      metrics=['accuracy'])
+                      loss=args.loss,
+                      metrics=args.metrics)
         self.model = model
 
-        self.hyperparameters = None
-
+        # self.hyperparameters = None
     def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
         start_time = time.time()
-
-        model_path = self.output_directory + 'checkpoint'
-        if os.path.exists(model_path):
-            self.model.load_weights(model_path)        
+        if self.params['args'].load_previous_checkpoint == True:
+            if os.path.exists(self.output_directory + 'checkpoint'):
+                self.model.load_weights(self.output_directory + 'checkpoint')
         
+        y = {metric_name: Y_train[:, i] for i, metric_name in enumerate(self.params['args'].metrics)}
+        validation_y = {metric_name: Y_val[:, i] for i, metric_name in enumerate(self.params['args'].metrics)}
+
         hist = self.model.fit(
             x=X_train,
-            y=Y_train,
-            validation_data=(X_val, Y_val),
+            y=y,
+            validation_data=(X_val, validation_y),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=self.callbacks,
             verbose=True,
-            shuffle=True,  # Set shuffle to True
-            class_weight=self.class_weights
+            shuffle=True,
+            # class_weight=self.class_weights_dict
         )
 
-        self.model.load_weights(
-            self.output_directory + 'checkpoint')
-        Y_pred = self.model.predict(X_test)
-        self.info['Y_pred_in_test'] = Y_pred
+        self.model.load_weights(self.output_directory + 'checkpoint')
+            
         Y_test_pred = self.model.predict(X_test)
         Y_true = np.argmax(Y_test, axis=1)
-        
         Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
         Y_val_true = np.argmax(Y_val, axis=1)
 
         duration = time.time() - start_time
         self.info['duration'] = duration
-        save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
-        save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
-                            save_file_name='test_acc.txt')
-                        
-        if check_if_save_model(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info):
-            # save learning rate as well
-            # Can ignore the result name which has beend set as None
-            save_logs(self.model, self.output_directory, None,
-                      hist, Y_test_pred, Y_test, duration,
-                      lr=True,
-                      is_saving_checkpoint=False,
-                      hyperparameters=None)
+        
+        save_validation_acc_multi_task(self.output_directory, self.model.predict(X_val), Y_val, self.params['args'].metrics, self.info)
+        save_validation_acc_multi_task(self.output_directory, self.model.predict(X_test), Y_test, self.params['args'].metrics, self.info, save_file_name='test_acc.txt')
+        save_hist_file(hist, self.output_directory)
+        # if check_if_save_model(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info):
+        #     save_logs(self.model, self.output_directory, None, hist, Y_test_pred, Y_test, duration, lr=True, is_saving_checkpoint=False, hyperparameters=None)
 
         print(f'Training time is {duration}')
-        save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
         if self.params.get('config_file_path') is not None:
-            save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
+            save_current_file_to_folder(self.params['config_file_path'] + [os.path.abspath(__file__)], self.output_directory)
 
     def predict(self):
         pass
+    # def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test):
+    #     start_time = time.time()
+
+    #     model_path = self.output_directory + 'checkpoint'
+    #     if os.path.exists(model_path):
+    #         self.model.load_weights(model_path)        
+        
+    #     hist = self.model.fit(
+    #         x=X_train,
+    #         y=Y_train,
+    #         validation_data=(X_val, Y_val),
+    #         batch_size=self.batch_size,
+    #         epochs=self.epochs,
+    #         callbacks=self.callbacks,
+    #         verbose=True,
+    #         shuffle=True,  # Set shuffle to True
+    #         class_weight=self.class_weights
+    #     )
+
+    #     self.model.load_weights(
+    #         self.output_directory + 'checkpoint')
+    #     Y_pred = self.model.predict(X_test)
+    #     self.info['Y_pred_in_test'] = Y_pred
+    #     Y_test_pred = self.model.predict(X_test)
+    #     Y_true = np.argmax(Y_test, axis=1)
+        
+    #     Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
+    #     Y_val_true = np.argmax(Y_val, axis=1)
+
+    #     duration = time.time() - start_time
+    #     self.info['duration'] = duration
+    #     save_validation_acc(self.output_directory, self.model.predict(X_val), Y_val, self.info['monitor_metric'], self.info)
+    #     save_validation_acc(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info,
+    #                         save_file_name='test_acc.txt')
+                        
+    #     if check_if_save_model(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info):
+    #         # save learning rate as well
+    #         # Can ignore the result name which has beend set as None
+    #         save_logs(self.model, self.output_directory, None,
+    #                   hist, Y_test_pred, Y_test, duration,
+    #                   lr=True,
+    #                   is_saving_checkpoint=False,
+    #                   hyperparameters=None)
+
+    #     print(f'Training time is {duration}')
+    #     save_current_file_to_folder(os.path.abspath(__file__), self.output_directory)
+    #     if self.params.get('config_file_path') is not None:
+    #         save_current_file_to_folder(self.params['config_file_path'], self.output_directory)
+
+    # def predict(self):
+    #     pass
 # model = Transformer('transformer', None, None, (5, 52, 128, 1), 1)

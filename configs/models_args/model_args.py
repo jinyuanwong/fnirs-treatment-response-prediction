@@ -13,6 +13,7 @@ class MotherArgs:
     num_classes: int = 2
     final_activation: str = 'softmax'
     l2_rate: float = 0.01
+    load_previous_checkpoint: bool = True
     
     # model.fit parameters
     batch_size: int = 8

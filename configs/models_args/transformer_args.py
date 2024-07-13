@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from utils.schedule import CustomLearningRateSchedule
 from configs.models_args.model_args import MotherArgs
+from utils.callbacks import reduceLRonplateau
 
 @dataclass
 class Transformer_ModelArgs(MotherArgs):
@@ -11,7 +12,7 @@ class Transformer_ModelArgs(MotherArgs):
     # Transformer parameter settings
     d_model: int = 64
     n_heads: int = 1
-    n_layers: int = 6
+    n_layers: int = 3
     FFN_units: int = 256
     class_weights: Dict[int, float] = field(default_factory=lambda: {0: 1, 1: 1})
     kernel_size_1: Tuple[int, int] = (4, 5)
@@ -38,3 +39,5 @@ class Transformer_ModelArgs(MotherArgs):
             raise ValueError(f'num classes cannot be {self.num_classes}')
         else:
             self.set_final_activation()        
+        self.reduce_lr = reduceLRonplateau()
+ 

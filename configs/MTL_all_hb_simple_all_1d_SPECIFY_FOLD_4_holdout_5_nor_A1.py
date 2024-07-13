@@ -34,6 +34,7 @@ transformer_args = Transformer_ModelArgs(
 
 PARAMETER['cnn_transformer'] = {
     'args': transformer_args,
+    'config_file_path': [os.path.abspath(__file__)],
 }
 
 args = Jamba_ModelArgs_extend_from_Mamba(
