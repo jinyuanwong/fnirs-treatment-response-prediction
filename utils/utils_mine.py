@@ -1026,8 +1026,8 @@ def save_current_file_to_folder(save_file_paths, destination_folder):
             print(f"An error occurred: {e} when save_current_file_to_folder")
         
         
-def plot_evaluation_metrics_header( table_name = 'Model Name', parameter_name=None):
-    row_1 = f'| {table_name} | Testing Set |             |             |             | Validation Set |             |             |             |             |'
+def plot_evaluation_metrics_header( table_name = 'Model Name', parameter_name=None, val_auc_threshold=0):
+    row_1 = f'| {table_name} | Testing Set |             |             |             | Validation Set |             |             |      Threshold={val_auc_threshold}       |             |'
     row_2 = '|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|'
     row_3 = f'|      {parameter_name}      | bAcc(%) | Sen(%) | Spe(%) | AUC(%) | bAcc(%) | Sen(%) | Spe(%) | AUC(%) | Duration(s) |'
     

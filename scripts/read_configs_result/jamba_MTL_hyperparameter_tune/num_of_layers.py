@@ -137,7 +137,7 @@ model_name = 'jamba_MTL'
 for metric, val in metrics.items():
     all_metircs_name.append(metric)
     print()
-    plot_evaluation_metrics_header(table_name = 'Depression', parameter_name='Input Dimension', val_auc_threshold=Val_AUC_Threshold)     
+    plot_evaluation_metrics_header(table_name = 'Depression', parameter_name='Num of layers', val_auc_threshold=Val_AUC_Threshold)     
     for aug_val, config_names in model_config_dict.items():
         rep_test_metric = []
         rep_val_metric = []

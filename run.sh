@@ -10,7 +10,7 @@
     # "tasks/model_states_depression.sh"
 
 task_files=(
-    "tasks/baseline_model.sh"
+    "tasks/model_states_depression.sh"
 
 )
 # SQLite database to track executed configuration files
@@ -28,8 +28,6 @@ do
     # Loop through each configuration file path defined in the task file
     for config_file in "${config_files[@]}"
     do
-        # Source the current configuration file
-        source $config_file
 
         log_message "Starting experiments with task file: $task_file, configuration file: $config_file"
 
@@ -42,37 +40,33 @@ do
                 continue
             fi
 
-            # Loop through each configuration setting
-            for config in "${config_files[@]}"
-            do 
-                # Construct the run_itr variable
-                run_itr="${itr_name}_${seed}"
+            # Construct the run_itr variable
+            run_itr="${itr_name}_${seed}"
 
-                # Insert a new experiment record
-                insert_experiment "$task_file" "$config_file" "$seed" "$run_itr"
+            # Insert a new experiment record should be config instead of config_file
+            insert_experiment "$task_file" "$config_file" "$seed" "$run_itr"
 
-                # Construct the run_command
-                run_command="conda run -n tf python $python_file $model $run_itr $config $seed"
+            # Construct the run_command
+            run_command="conda run -n tf python $python_file $model $run_itr $config_file $seed"
 
-                # Execute the run_command
-                echo "Running command: $run_command"
-                log_message "Running command: $run_command"
-                eval $run_command
+            # Execute the run_command
+            echo "Running command: $run_command"
+            log_message "Running command: $run_command"
+            eval $run_command
 
-                # Check if the command executed successfully
-                if [ $? -ne 0 ]; then
-                    log_message "Command failed: $run_command"
-                    echo "Command failed: $run_command"
-                    sqlite3 $db_file "UPDATE experiments SET status='failed', end_time=CURRENT_TIMESTAMP WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND run_itr='$run_itr';"
-                    exit 1
-                fi
+            # Check if the command executed successfully
+            if [ $? -ne 0 ]; then
+                log_message "Command failed: $run_command"
+                echo "Command failed: $run_command"
+                sqlite3 $db_file "UPDATE experiments SET status='failed', end_time=CURRENT_TIMESTAMP WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND run_itr='$run_itr';"
+                exit 1
+            fi
 
-                # Mark the experiment as executed #  "$result"
-                mark_executed "$task_file" "$config_file" "$seed" "$run_itr" 
+            # Mark the experiment as executed #  "$result"
+            mark_executed "$task_file" "$config_file" "$seed" "$run_itr" 
 
-                sleep 1  # Adjust the sleep duration as needed    
-            done
-        done
+            sleep 1  # Adjust the sleep duration as needed    
+    done
 
         log_message "Completed experiments with task file: $task_file, configuration file: $config_file"
     done
