@@ -51,7 +51,7 @@ class Classifier_Jamba():
         
         # MambaBlock layer
         if args.use_mamba_block:
-            x = MambaBlock(args)(tf.add_n(concate_input, axis=-1))
+            x = MambaBlock(args)(tf.add_n(concate_input))
             mamba_x = RMSNorm()(x)
             concate_input.append(mamba_x)
             x = mamba_x
@@ -59,7 +59,7 @@ class Classifier_Jamba():
         # GNN layer
         if args.use_gnn_layer:
             adj = generate_fnirs_adj_tf()
-            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(tf.add_n(concate_input, axis=-1))
+            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(tf.add_n(concate_input))
             gnn_x = RMSNorm()(x)
             concate_input.append(gnn_x)
             x = gnn_x
