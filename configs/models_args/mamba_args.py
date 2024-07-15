@@ -33,7 +33,11 @@ class ModelArgs(MotherArgs):
     vocab_size: int = 2
     load_previous_checkpoint: bool = True
 
-
+    # For jamba_MTL_V (V>V2)
+    use_mlp_layer: bool = True #
+    use_gnn_layer: bool = True #
+    use_conv1d_layer: bool = True #
+    use_mamba_block: bool = True #
         
     lr_begin: int = 100000
     warmup_step: int = 4000

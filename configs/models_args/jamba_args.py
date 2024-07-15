@@ -15,11 +15,7 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     l2_rate: float = 0.001
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
 
-    # For jamba_MTL_V (V>V2)
-    use_mlp_layer: bool = True #
-    use_gnn_layer: bool = True #
-    use_conv1d_layer: bool = True #
-    use_mamba_block: bool = True #
+
 
     def __post_init__(self):
         super().__post_init__() 
