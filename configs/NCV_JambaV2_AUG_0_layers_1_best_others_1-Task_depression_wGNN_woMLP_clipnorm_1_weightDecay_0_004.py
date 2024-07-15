@@ -53,7 +53,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     dropout_rate=0.3,  # 0.35 -> 0.15
     vocab_size=2,
     num_classes=2,
-    warmup_step=4000,
+    warmup_step=100,
     # loss={'gender': 'categorical_crossentropy', 'smoking':  tfa.losses.SeesawLoss(), 'alcohol':  tfa.losses.SeesawLoss(),
     #       'Suicide_Risk':  tfa.losses.SeesawLoss(), 'depression': 'categorical_crossentropy'},  # 'binary_crossentropy', # categorical_crossentropy
     loss={
