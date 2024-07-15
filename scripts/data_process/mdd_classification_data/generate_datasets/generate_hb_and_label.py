@@ -355,6 +355,64 @@ def one_hot_encode_labels_for_multitask_learning_and_save(labels, save_fold, spe
     return transpose_labels
 
 
+def select_data_label_based_of_samplesize(data, label, size, repeat_idx):
+    """
+    Select a subset of the data and corresponding labels based on the specified sample size.
+
+    Args:
+        data (numpy.ndarray): The input data array of shape (514, 52, 375). 
+                              This represents 514 samples, each with a shape of (52, 375).
+        label (numpy.ndarray): The label array of shape (514, 1, 2), which is one-hot encoded. 
+                               This represents 514 labels, each with a shape of (1, 2).
+        size (int): The number of samples to select from the data and label arrays.
+        repeat_idx (int): The index of the repeat to select from the data and label arrays.
+
+    Returns:
+        tuple: A tuple containing:
+            - selected_data (numpy.ndarray): A subset of the input data array with shape (size, 52, 375).
+            - selected_label (numpy.ndarray): A subset of the label array with shape (size, 1, 2).
+    """
+    from utils.utils_mine import set_seed, shuffle_data_label
+    
+    # Ensure the sample size does not exceed the number of available samples
+    if size > data.shape[0]:
+        raise ValueError("The size exceeds the number of available samples in the data.")
+    
+    set_seed(size + repeat_idx)
+    shuffle_data, shuffle_label, _ = shuffle_data_label(data, label, seed=size + repeat_idx)
+    label_argmax = np.argmax(shuffle_label, axis=2).reshape(-1)
+    pos_indices = label_argmax==1
+    neg_indices = label_argmax==0
+    pos_data, pos_label = shuffle_data[pos_indices], shuffle_label[pos_indices]
+    neg_data, neg_label = shuffle_data[neg_indices], shuffle_label[neg_indices]
+    selected_data = np.concatenate((pos_data[:size//2], neg_data[:size//2]), axis=0)
+    selected_label = np.concatenate((pos_label[:size//2], neg_label[:size//2]), axis=0)
+    return selected_data, selected_label
+    
+def change_file_data_label_path(file_path, data_name, label_name):
+    """
+    Replace the data and label file paths in the specified file.
+
+    Args:
+        file_path (str): The path to the file to be modified.
+        data_name (str): The new data file name to replace the existing one.
+        label_name (str): The new label file name to replace the existing one.
+    """
+    # Read the file content
+    with open(file_path, 'r') as file:
+        content = file.readlines()
+    
+    # Modify the relevant lines
+    for i in range(len(content)):
+        if "nor_hb_simple_all_1d.npy" in content[i]:
+            content[i] = f"    PARAMETER[model]['hb_path'] = '{data_name}'\n"
+        if "multi_task_label_depression_onehot.npy" in content[i]:
+            content[i] = f"    PARAMETER[model]['label_path'] = '{label_name}'\n"
+    
+    # Write the modified content back to the file
+    with open(file_path, 'w') as file:
+        file.writelines(content)
+        
 if __name__ == '__main__':
     hb_data_all, label_all, hamd_all, multi_task_label = obtain_hb_data_label_hamd()
     hb_data_all_3d = hb_data_all
@@ -425,4 +483,20 @@ if __name__ == '__main__':
     np.save(save_fold + 'male_multi_task_label_depression_onehot.npy', male_multi_task_label_depression_onehot)
     np.save(save_fold + 'female_multi_task_label_depression_onehot.npy', female_multi_task_label_depression_onehot)
     
-    
+    # generating different sizes of dataset (514(already have), 257, 128, 64) to see the effects
+    different_size_of_data, different_size_of_label = [], []
+    for size in [256, 128, 64]:
+        for repeat_idx, repeat in enumerate(range(514//size)):
+            data_selected, label_selected = select_data_label_based_of_samplesize(nor_hb_simple_all_1d, task_label_depression_onehot, size, repeat_idx)
+            data_name = f'nor_hb_simple_1d_data_selected_{size}_{repeat_idx}.npy'
+            label_name = f'nor_hb_simple_1d_label_selected_{size}_{repeat_idx}.npy'
+            np.save(save_fold + data_name, data_selected)
+            np.save(save_fold + label_name, label_selected)
+            # change the data and the label path name in the config file
+            config_file = 'NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_' + f'size_{size}_rep_{repeat_idx}.py'
+            file = './configs/' + config_file
+            if os.path.exists(file):
+                change_file_data_label_path(file, data_name, label_name)
+            else:
+                raise Exception(f"File {file} does not exist.")
+            print(f"\'{config_file[:-3]}\'")

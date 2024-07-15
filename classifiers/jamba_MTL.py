@@ -108,8 +108,8 @@ class Classifier_Jamba():
             shuffle=True,
             # class_weight=self.class_weights_dict
         )
-
         self.model.load_weights(self.output_directory + 'checkpoint')
+        
             
         Y_test_pred = self.model.predict(X_test)
         Y_true = np.argmax(Y_test, axis=1)
@@ -119,8 +119,10 @@ class Classifier_Jamba():
         duration = time.time() - start_time
         self.info['duration'] = duration
         
+        
         save_validation_acc_multi_task(self.output_directory, self.model.predict(X_val), Y_val, self.params['args'].metrics, self.info)
         save_validation_acc_multi_task(self.output_directory, self.model.predict(X_test), Y_test, self.params['args'].metrics, self.info, save_file_name='test_acc.txt')
+        
         save_hist_file(hist, self.output_directory)
         # if check_if_save_model(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info):
         #     save_logs(self.model, self.output_directory, None, hist, Y_test_pred, Y_test, duration, lr=True, is_saving_checkpoint=False, hyperparameters=None)

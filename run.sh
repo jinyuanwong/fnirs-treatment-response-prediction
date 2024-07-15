@@ -7,10 +7,12 @@
 # task_files=($(find $task_dir -name '*.sh'))
 
 
-    # "tasks/model_states_depression.sh"
+    #     "tasks/model_states_depression.sh"
+    #     "tasks/size_effect_of_dataset.sh"
+    #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/model_states_depression.sh"
+    "tasks/size_effect_of_dataset.sh"
 
 )
 # SQLite database to track executed configuration files

@@ -341,7 +341,6 @@ def read_past_value(directory, check_metrice):
 
 def read_current_value(Y_pred, Y_true, check_metrice):
     if check_metrice == 'accuracy':
-        print('error', Y_true, Y_pred)
         return accuracy_score(Y_true, Y_pred)
     if check_metrice == 'sensitivity' or check_metrice == 'recall':
         return recall_score(Y_true, Y_pred)
@@ -389,6 +388,7 @@ def save_validation_acc_multi_task(output_directory, Y_pred, Y_true, check_metri
         past_metric = read_past_value(output_directory, check_metric[task_name])
         current_metric = read_current_value(Y_pred_binary, Y_true_binary, check_metric[task_name])
         hist_df_metrics = calculate_metrics(Y_true[:, i], Y_task_i, info['duration'])
+        
         save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
         print(f'Current saved file: {output_directory}' + save_file_name.replace('.txt', f'_{task_name}.txt'))
         print(f"Current {check_metric[task_name]}: {current_metric}")
