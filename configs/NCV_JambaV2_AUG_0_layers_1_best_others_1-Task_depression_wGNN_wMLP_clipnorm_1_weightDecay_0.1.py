@@ -72,7 +72,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     use_mamba_block = True, #
 )
 
-PARAMETER['jamba_MTL'] = {
+PARAMETER['jamba_MTL_V2'] = {
     'args': args,
     'config_file_path': [os.path.abspath(__file__)],
 }
