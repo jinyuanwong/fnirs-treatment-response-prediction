@@ -330,7 +330,7 @@ class Classifier_Transformer():
             
         model = tf.keras.Model(inputs=inputs, outputs=output_list)
         model.summary()
-        model.compile(optimizer=optimizer,
+        model.compile(optimizer=args.optimizer,
                       loss=args.loss,
                       metrics=args.metrics)
         self.model = model

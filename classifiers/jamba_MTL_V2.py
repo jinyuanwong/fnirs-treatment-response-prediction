@@ -23,7 +23,6 @@ class Classifier_Jamba():
         self.info = info
         self.params = params = info['parameter']
         args = self.params['args']
-        self.class_weights_dict = {0: 1, 1: args.classweight1}
         
         args.update_model_checkpoint(output_directory + 'checkpoint')
         self.callbacks.append(args.model_checkpoint)
@@ -33,39 +32,66 @@ class Classifier_Jamba():
 
         # Define input shape
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
-        x = layers.Dense(args.model_input_dims, activation=args.activation)(inputs_time_point)
-        # Define layers
-        x = conv1d_layer(args)(inputs_time_point)
-        x = RMSNorm()(x)
-        x = MambaBlock(args)(x)
-        x = RMSNorm()(x)
-        adj = generate_fnirs_adj_tf()
-        x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+        x = inputs_time_point
+        concate_input = []
         
-        for _ in range(args.num_layers):
-            x = Mamba_layer(args)(x)
-            x = Mamba_MoE_layer(args)(x)   
-            x = Transformer_layer(args)(x)
-            x = Attention_MoE_layer(args)(x)
-                
-        x = RMSNorm()(x)
-        # x = tf.concat([x, conv1d_layer(args)(x)], axis=-1)
-        # x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
-        if not args.use_lm_head: 
-            x = layers.Flatten()(x)
-        # x = layers.Dense(args.last_dense_units * 4, activation=args.activation, kernel_regularizer=tf.keras.regularizers.l2(args.l2_rate))(x)
-        # x = layers.Dropout(args.dropout_rate)(x)
-        x = layers.Dense(args.last_dense_units, activation=args.activation, kernel_regularizer=tf.keras.regularizers.l2(args.l2_rate))(x)
-        x = layers.Dropout(args.dropout_rate)(x)
-        x = RMSNorm()(x)
+        # MLP layersto do: should MLP be added here?
+        if args.use_mlp_layer:
+            x = layers.Dense(args.model_input_dims, activation=args.activation)(x)
+            mlp_x = RMSNorm()(x)
+            concate_input.append(mlp_x)
+            x = mlp_x
         
-        output_list = []
-        # Define outputs
-        for metric_name, _ in  args.metrics.items():
-            print('Check - order if it is right:', metric_name)
-            output_metric = layers.Dense(2, activation='softmax', name=metric_name)(MLP(args)(x))
-            output_list.append(output_metric)
+        # Conv1D layer
+        if args.use_conv1d_layer:
+            x = conv1d_layer(args)(x)
+            conv1d_x = RMSNorm()(x)
+            concate_input.append(conv1d_x)
+            x = conv1d_x
+        
+        # MambaBlock layer
+        if args.use_mamba_block:
+            x = MambaBlock(args)(tf.add_n(concate_input, axis=-1))
+            mamba_x = RMSNorm()(x)
+            concate_input.append(mamba_x)
+            x = mamba_x
+        
+        # GNN layer
+        if args.use_gnn_layer:
+            adj = generate_fnirs_adj_tf()
+            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(tf.add_n(concate_input, axis=-1))
+            gnn_x = RMSNorm()(x)
+            concate_input.append(gnn_x)
+            x = gnn_x
+        
+        # Concatenate all the layers
+        concat_x = tf.concat(concate_input, axis=-2)
+        x = concat_x
 
+        # Define outputs for multi-task learning
+        output_list = []
+        for metric_name, _ in args.metrics.items():
+            task_x = x
+            for _ in range(args.num_layers):
+                # x = Mamba_layer(args)(x)
+                # x = Mamba_MoE_layer(args)(x)   
+                # x = Transformer_layer(args)(x)
+                task_x = Attention_MoE_layer(args)(task_x)
+                task_x = RMSNorm()(task_x)  # Ensure RMSNorm is defined or replace with LayerNormalization
+            
+            while task_x.shape[-1] > 64:
+                task_x = layers.Dense(task_x.shape[-1] // 2, activation=args.activation)(task_x)
+                task_x = RMSNorm()(task_x)  # Ensure RMSNorm is defined or replace with LayerNormalization
+            
+            if not args.use_lm_head:
+                task_x = layers.Flatten()(task_x)
+            task_x = layers.Dense(args.last_dense_units, activation=args.activation, kernel_regularizer=tf.keras.regularizers.l2(args.l2_rate))(task_x)
+            task_x = layers.Dropout(args.dropout_rate)(task_x)
+            task_x = RMSNorm()(task_x)  # Ensure RMSNorm is defined or replace with LayerNormalization
+
+            output_metric = layers.Dense(args.num_classes, activation=args.final_activation, name=metric_name)(MLP(args)(task_x))
+            output_list.append(output_metric)
+            
         # Create model
         model = Model(inputs=inputs_time_point, outputs=output_list)
         model.summary()
@@ -96,16 +122,9 @@ class Classifier_Jamba():
             callbacks=self.callbacks,
             verbose=True,
             shuffle=True,
-            # class_weight=self.class_weights_dict
         )
         self.model.load_weights(self.output_directory + 'checkpoint')
-        
             
-        Y_test_pred = self.model.predict(X_test)
-        Y_true = np.argmax(Y_test, axis=1)
-        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
-        Y_val_true = np.argmax(Y_val, axis=1)
-
         duration = time.time() - start_time
         self.info['duration'] = duration
         

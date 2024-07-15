@@ -30,6 +30,7 @@ class MotherArgs:
     beta_2: float = 0.99
     epsilon: float = 1e-9
     clipnorm: float = 1.0
+    weight_decay: float = 0.004
     
     # model.complie parameters
     # these two the metrics for model compile, which will be shown during fitting
@@ -86,7 +87,8 @@ class MotherArgs:
                                         beta_1=self.beta_1,
                                         beta_2=self.beta_2,
                                         epsilon=self.epsilon,
-                                        clipnorm=self.clipnorm)
+                                        clipnorm=self.clipnorm,
+                                        weight_decay=self.weight_decay)
         else:
             raise ValueError(f"mode {mode} not supported in optimizer")
 

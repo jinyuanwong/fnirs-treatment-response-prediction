@@ -7,12 +7,19 @@ import os
 from utils.schedule import CustomLearningRateSchedule
 from utils.callbacks import reduceLRonplateau
 class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
+    
     n_heads: int = 4
     transformers_layers: int = 3
     n_experts: int = 4 # for MoE
     global_pooling: bool = False
     l2_rate: float = 0.001
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
+
+    # For jamba_MTL_V (V>V2)
+    use_mlp_layer: bool = True #
+    use_gnn_layer: bool = True #
+    use_conv1d_layer: bool = True #
+    use_mamba_block: bool = True #
 
     def __post_init__(self):
         super().__post_init__() 
