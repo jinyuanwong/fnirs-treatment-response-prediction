@@ -2,7 +2,7 @@
 
 
 # 使用当前时间作为随机种子
-from wandb.keras import WandbCallback
+# from wandb.keras import WandbCallback
 import sys
 import time
 from tensorflow.keras.callbacks import ModelCheckpoint

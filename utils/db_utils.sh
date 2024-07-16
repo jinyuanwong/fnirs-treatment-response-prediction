@@ -17,8 +17,9 @@ log_message() {
 has_executed() {
     task_file=$1
     config_file=$2
-    seed=$3
-    result=$(sqlite3 $db_file "SELECT EXISTS(SELECT 1 FROM experiments WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND status='completed');")
+    model=$3
+    seed=$4
+    result=$(sqlite3 $db_file "SELECT EXISTS(SELECT 1 FROM experiments WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND model=$model AND status='completed');")
     echo $result
 }
 
@@ -26,16 +27,18 @@ has_executed() {
 mark_executed() {
     task_file=$1
     config_file=$2
-    seed=$3
-    run_itr=$4
-    sqlite3 $db_file "UPDATE experiments SET status='completed', end_time=CURRENT_TIMESTAMP WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND run_itr='$run_itr';"
+    model=$3
+    seed=$4
+    run_itr=$5
+    sqlite3 $db_file "UPDATE experiments SET status='completed', end_time=CURRENT_TIMESTAMP WHERE task_file='$task_file' AND config_file='$config_file' AND seed=$seed AND model=$model AND run_itr='$run_itr';"
 }
 
 # Function to insert a new experiment record
 insert_experiment() {
     task_file=$1
     config_file=$2
-    seed=$3
-    run_itr=$4
-    sqlite3 $db_file "INSERT INTO experiments (task_file, config_file, seed, run_itr, status) VALUES ('$task_file', '$config_file', $seed, '$run_itr', 'running');"
+    model=$3
+    seed=$4
+    run_itr=$5
+    sqlite3 $db_file "INSERT INTO experiments (task_file, config_file, seed, model, run_itr, status) VALUES ('$task_file', '$config_file', $seed, $model, '$run_itr', 'running');"
 }

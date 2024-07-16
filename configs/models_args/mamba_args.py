@@ -14,7 +14,7 @@ class ModelArgs(MotherArgs):
 
     
     # Mamba parameter settings
-    classweight1: int = 15
+    classweight1: int = 1
     last_dense_units: int = 1024
     model_input_dims: int = 128
     model_states: int = 32

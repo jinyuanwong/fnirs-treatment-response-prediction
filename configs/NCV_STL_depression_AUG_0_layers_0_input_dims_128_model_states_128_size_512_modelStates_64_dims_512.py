@@ -41,10 +41,11 @@ PARAMETER['cnn_transformer'] = {
 args = Jamba_ModelArgs_extend_from_Mamba(
     monitor_metric_mode = 'min',
     monitor_metric_checkpoint = 'val_loss',
+    monitor_metric_early_stop = 'val_accuracy',
     load_previous_checkpoint = True,
     batch_size=64,
     classweight1=1,
-    patiences=calculate_patience(AUGMENT_RATIO),
+    patiences=calculate_patience(AUGMENT_RATIO, begin_patience=18),
     lr_begin=1e7,  # 1e7 -> 1e5
     model_input_dims=512,
     model_states=64,  # 64 -> 128
@@ -65,7 +66,7 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     projection_expand_factor=1,
 )
 
-PARAMETER['jamba_MTL'] = {
+PARAMETER['jamba_MTL_V2'] = PARAMETER['jamba_MTL'] = {
     'args': args,
     'config_file_path': [os.path.abspath(__file__)],
 }

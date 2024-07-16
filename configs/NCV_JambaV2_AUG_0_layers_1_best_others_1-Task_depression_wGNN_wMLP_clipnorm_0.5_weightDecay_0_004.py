@@ -38,9 +38,11 @@ PARAMETER['cnn_transformer'] = {
     'config_file_path': [os.path.abspath(__file__)],
 }
 
+    
 args = Jamba_ModelArgs_extend_from_Mamba(
     monitor_metric_mode = 'min',
     monitor_metric_checkpoint = 'val_loss',
+    monitor_metric_early_stop = 'val_accuracy',
     load_previous_checkpoint = True,
     batch_size=64,
     classweight1=1,
@@ -72,11 +74,10 @@ args = Jamba_ModelArgs_extend_from_Mamba(
     use_mamba_block = True, #
 )
 
-PARAMETER['jamba_MTL_V2'] = {
+PARAMETER['jamba_MTL_V2'] = PARAMETER['jamba_MTL'] = {
     'args': args,
     'config_file_path': [os.path.abspath(__file__)],
 }
-
 
 for model, val in PARAMETER.items():
     PARAMETER[model]['hb_path'] = 'nor_hb_simple_all_1d.npy'
