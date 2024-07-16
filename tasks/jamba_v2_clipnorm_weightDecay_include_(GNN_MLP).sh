@@ -1,4 +1,4 @@
-model=(
+models=(
 'jamba_MTL'
 )
 config_files=(
