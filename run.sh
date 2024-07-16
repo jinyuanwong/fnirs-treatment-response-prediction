@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/size_effect_of_dataset.sh"
+    "tasks/20240716_test_speed_of_different_model_states.sh"
 
 )
 # SQLite database to track executed configuration files
