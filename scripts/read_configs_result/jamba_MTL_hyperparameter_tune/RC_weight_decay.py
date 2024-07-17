@@ -8,7 +8,8 @@ def set_path():
         main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
     elif sys.platform == 'linux':
         print("Current system is Ubuntu")
-        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning' # '/root/autodl-tmp/fnirs-treatment-response-prediction'
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
+        # main_fold_path = '/root/autodl-tmp/fnirs-treatment-response-prediction'
     else:
         print("Current system is neither macOS nor Ubuntu")
     sys.path.append(main_fold_path)
@@ -42,7 +43,7 @@ Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
 
-aug = ['w', 'wo']
+aug = ['0_5', '1', '2']
 
 
 PARAMETER_NAME= f'Learning Rate'
@@ -55,7 +56,7 @@ model_config_dict = {}
 
 for index, val in enumerate(aug):
     # size - NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004
-    model_config_dict[val] = [f"jamba_v2_20240715_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_{val}GNN_wMLP_clipnorm_1_weightDecay_0_004" for i in range(len(seeds))]
+    model_config_dict[val] = [f"jamba_v2_20240717_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_{val}_weightDecay_0_004" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer
