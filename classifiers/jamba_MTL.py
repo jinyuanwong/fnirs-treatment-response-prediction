@@ -47,10 +47,10 @@ class Classifier_Jamba():
             x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
         
         for _ in range(args.num_layers):
-            x = Mamba_layer(args)(x)
-            x = Mamba_MoE_layer(args)(x)   
+            # x = Mamba_layer(args)(x)
+            # x = Mamba_MoE_layer(args)(x)   
             x = Transformer_layer(args)(x)
-            x = Attention_MoE_layer(args)(x)
+            # x = Attention_MoE_layer(args)(x)
             x = RMSNorm()(x)
         # x = tf.concat([x, conv1d_layer(args)(x)], axis=-1)
         # x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
@@ -65,8 +65,7 @@ class Classifier_Jamba():
         output_list = []
         # Define outputs
         for metric_name, _ in  args.metrics.items():
-            print('Check - order if it is right:', metric_name)
-            output_metric = layers.Dense(2, activation='softmax', name=metric_name)(MLP(args)(x))
+            output_metric = layers.Dense(args.num_classes, activation=args.final_activation, name=metric_name)(MLP(args)(x))
             output_list.append(output_metric)
 
         # Create model

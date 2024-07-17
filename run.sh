@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/20240716_lr_rate.sh"
+    "tasks/20240717_checkpoint_monitor_val_loss.sh"
 
 )
 # SQLite database to track executed configuration files

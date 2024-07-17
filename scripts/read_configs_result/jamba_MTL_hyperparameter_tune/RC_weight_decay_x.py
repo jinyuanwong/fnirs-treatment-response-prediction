@@ -46,7 +46,7 @@ Val_AUC_Threshold = 0
 aug = ['0_5', '1', '2']
 
 
-PARAMETER_NAME= f'Learning Rate'
+PARAMETER_NAME= f'Weight Decay'
 
 
 dataset = 'diagnosis514'
