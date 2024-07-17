@@ -23,7 +23,7 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
         if self.warmup_step == None:
             raise ValueError(f'warmup_step cannot be {self.warmup_step}')
         else:
-            self.set_learning_rate(self.lr_begin, self.warmup_step, mode='CustomLearningRateSchedule')
+            self.set_learning_rate(self.lr_begin, self.warmup_step, mode=self.lr_mode)
             
         # self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
         self.reduce_lr = reduceLRonplateau()

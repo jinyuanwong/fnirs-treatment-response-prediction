@@ -8,8 +8,7 @@ def set_path():
         main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
     elif sys.platform == 'linux':
         print("Current system is Ubuntu")
-        main_fold_path = '/root/autodl-tmp/fnirs-treatment-response-prediction' 
-        # main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning' # 
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning' # '/root/autodl-tmp/fnirs-treatment-response-prediction'
     else:
         print("Current system is neither macOS nor Ubuntu")
     sys.path.append(main_fold_path)
@@ -35,25 +34,18 @@ def delete_files_starting_with(directory, prefix):
         except Exception as e:
             print(e)
 
-model_name = 'jamba_MTL_V2'
+model_name = 'jamba_MTL'
         
 # seeds=[1720351610, 1720353641, 1720355734, 1720358054, 1720360139]
 seeds=[31415926, 27182818, 16180339, 12345678, 98765432]
 Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
-# size - 64
-# aug = np.arange(8).tolist()
-# dataSize = 64
 
-# size - 128
-# aug = np.arange(4).tolist()
-# dataSize = 128
+aug = ['1e-3', '1e-4', '1e-5', '1e-6', '2e-6', '5e-6', '1e-7', '5e-7']
 
-# # size - 256
-aug = ['w', 'wo']
 
-PARAMETER_NAME= 'Include MLP'
+PARAMETER_NAME= f'Learning Rate'
 
 
 dataset = 'diagnosis514'
@@ -63,7 +55,7 @@ model_config_dict = {}
 
 for index, val in enumerate(aug):
     # size - 64
-    model_config_dict[val] = [f"jamba_v2_20240715_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_{val}MLP_clipnorm_1_weightDecay_0_004" for i in range(len(seeds))]
+    model_config_dict[val] = [f"jamba_20240716_{seeds[i]}NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_size_512_modelStates_64_dims_512_lr_{val}" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer
@@ -130,9 +122,7 @@ def read_model_config_result(model_name, config_name, total_outer_k, total_inner
     # print('index_best:', np.mean(index_best))
     return np.mean(test_metrics, axis=0), np.mean(val_metrics,axis=0)
 
-all_test_metrics = []
-all_val_metrics = []
-all_metircs_name = []
+
 from utils.utils_mine import plot_evaluation_metrics_header
 
 metrics={
@@ -153,10 +143,17 @@ metrics={
 # metrics={
 #         'STL_degression': 'accuracy', 
 #         }
-for metric, val in metrics.items():
-    all_metircs_name.append(metric)
-    print()
-    plot_evaluation_metrics_header(table_name = 'Depression', parameter_name=PARAMETER_NAME, val_auc_threshold=Val_AUC_Threshold)     
+all_metircs_name = []    
+metric = 'depression'
+# for metric, val in metrics.items():
+print()
+
+plot_evaluation_metrics_header(table_name = 'Depression', parameter_name=PARAMETER_NAME, val_auc_threshold=Val_AUC_Threshold)     
+
+for model_name in ['jamba_MTL']:    
+    all_test_metrics = []
+    all_val_metrics = []
+    # all_metircs_name.append(metric)
     for aug_val, config_names in model_config_dict.items():
         rep_test_metric = []
         rep_val_metric = []
@@ -169,4 +166,4 @@ for metric, val in metrics.items():
         print_md_table_val_test_AUC(f"{aug_val}", np.mean(rep_test_metric, axis=0), np.mean(rep_val_metric,axis=0), print_table_header=False, already_balanced_accuracy=False)
         all_test_metrics.append(rep_test_metric.mean(axis=0))
         all_val_metrics.append(rep_val_metric.mean(axis=0))
-    print_md_table_val_test_AUC(f"Mean", np.mean(all_test_metrics, axis=0), np.mean(all_val_metrics,axis=0), print_table_header=False, already_balanced_accuracy=False)
+    print_md_table_val_test_AUC(model_name, np.mean(all_test_metrics, axis=0), np.mean(all_val_metrics,axis=0), print_table_header=False, already_balanced_accuracy=False)

@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/20240716_replicate_result_and_compare_jamba_V1_V2_monitor_val_accuracy_enlarge_patience_function.sh"
+    "tasks/20240716_lr_rate.sh"
 
 )
 # SQLite database to track executed configuration files

@@ -31,6 +31,7 @@ class MotherArgs:
     epsilon: float = 1e-9
     clipnorm: float = 1.0
     weight_decay: float = 0.004
+    lr_mode: str = 'CustomLearningRateSchedule' # 'CustomSchedule' 'constant' 'CustomLearningRateSchedule'
     
     # model.complie parameters
     # these two the metrics for model compile, which will be shown during fitting
@@ -64,12 +65,14 @@ class MotherArgs:
         else:
             self.model_checkpoint = None
         
-    def set_learning_rate(self, lr_begin, warmup_step, mode='default'):
+    def set_learning_rate(self, lr_begin, warmup_step, mode='CustomLearningRateSchedule'):
         print(f"Setting learning rate with mode {mode}")
-        if mode == 'default':
+        if mode == 'CustomSchedule':
             self.learning_rate = CustomSchedule(lr_begin, warmup_step)
         elif mode == 'CustomLearningRateSchedule':
             self.learning_rate = CustomLearningRateSchedule(warmup_step=warmup_step)
+        elif mode == 'constant':
+            self.learning_rate = lr_begin
         else:
             raise ValueError(f"mode {mode} not supported in set_learning_rate")
     
