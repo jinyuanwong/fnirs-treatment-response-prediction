@@ -30,17 +30,21 @@ class Classifier_Jamba():
         self.callbacks.append(args.earlystopping)
         self.callbacks.append(args.reduce_lr)                
         self.batch_size = args.batch_size
-
         # Define input shape
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
-        x = layers.Dense(args.model_input_dims, activation=args.activation)(inputs_time_point)
+        x = inputs_time_point
+        if args.use_mlp_layer:                
+            x = layers.Dense(args.model_input_dims, activation=args.activation)(x)
         # Define layers
-        x = conv1d_layer(args)(inputs_time_point)
-        x = RMSNorm()(x)
-        x = MambaBlock(args)(x)
-        x = RMSNorm()(x)
+        if args.use_conv1d_layer:        
+            x = conv1d_layer(args)(inputs_time_point)
+            x = RMSNorm()(x)
+        if args.use_mamba_block: 
+            x = MambaBlock(args)(x)
+            x = RMSNorm()(x)
         adj = generate_fnirs_adj_tf()
-        x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+        if args.use_gnn_layer: 
+            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
         
         for _ in range(args.num_layers):
             x = Mamba_layer(args)(x)

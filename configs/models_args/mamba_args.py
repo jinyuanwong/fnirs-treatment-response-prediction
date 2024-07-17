@@ -34,7 +34,7 @@ class ModelArgs(MotherArgs):
     load_previous_checkpoint: bool = True
 
     # For jamba_MTL_V (V>V2)
-    use_mlp_layer: bool = True #
+    use_mlp_layer: bool = False #
     use_gnn_layer: bool = True #
     use_conv1d_layer: bool = True #
     use_mamba_block: bool = True #
