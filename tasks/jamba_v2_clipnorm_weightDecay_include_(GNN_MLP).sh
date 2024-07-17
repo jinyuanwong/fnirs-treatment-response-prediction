@@ -12,7 +12,7 @@ config_files=(
 'NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_001' 
 'NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_1' 
 )
-itr_name='jamba_v2_20240715'
+itr_name='jamba_v2_20240717'
 seeds=(31415926 27182818 16180339 12345678 98765432)
 # python_file="./LOO_nested_CV_train_skf.py"
 python_file="./nested_CV_train.py"

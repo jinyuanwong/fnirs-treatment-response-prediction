@@ -66,7 +66,6 @@ class MotherArgs:
             self.model_checkpoint = None
         
     def set_learning_rate(self, lr_begin, warmup_step, mode='CustomLearningRateSchedule'):
-        print(f"Setting learning rate with mode {mode}")
         if mode == 'CustomSchedule':
             self.learning_rate = CustomSchedule(lr_begin, warmup_step)
         elif mode == 'CustomLearningRateSchedule':

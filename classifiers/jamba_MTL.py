@@ -51,8 +51,7 @@ class Classifier_Jamba():
             x = Mamba_MoE_layer(args)(x)   
             x = Transformer_layer(args)(x)
             x = Attention_MoE_layer(args)(x)
-                
-        x = RMSNorm()(x)
+            x = RMSNorm()(x)
         # x = tf.concat([x, conv1d_layer(args)(x)], axis=-1)
         # x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
         if not args.use_lm_head: 
