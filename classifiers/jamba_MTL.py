@@ -37,7 +37,7 @@ class Classifier_Jamba():
             x = layers.Dense(args.model_input_dims, activation=args.activation)(x)
         # Define layers
         if args.use_conv1d_layer:        
-            x = conv1d_layer(args)(inputs_time_point)
+            x = conv1d_layer(args)(x)
             x = RMSNorm()(x)
         if args.use_mamba_block: 
             x = MambaBlock(args)(x)
