@@ -12,9 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/20240717_patience.sh"
-    "tasks/20240717_w_wo_mamba_layer.sh"
-    "tasks/20240717_dropout.sh"
+    "tasks/20240717_num_layers.sh"
 )
 # SQLite database to track executed configuration files
 db_file="results/experiment_results.db"
