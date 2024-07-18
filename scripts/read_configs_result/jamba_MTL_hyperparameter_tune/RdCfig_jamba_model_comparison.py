@@ -8,8 +8,7 @@ def set_path():
         main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
     elif sys.platform == 'linux':
         print("Current system is Ubuntu")
-        # main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning'
-        main_fold_path = '/root/autodl-tmp/fnirs-treatment-response-prediction'
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning' # '/root/autodl-tmp/fnirs-treatment-response-prediction'
     else:
         print("Current system is neither macOS nor Ubuntu")
     sys.path.append(main_fold_path)
@@ -42,11 +41,19 @@ seeds=[31415926, 27182818, 16180339, 12345678, 98765432]
 Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
+# size - 64
+# aug = np.arange(8).tolist()
+# dataSize = 64
 
-aug = ['0_1', '0_001', '0_004']
+# size - 128
+# aug = np.arange(4).tolist()
+# dataSize = 128
 
+# # size - 256
+aug = np.arange(2).tolist()
+dataSize = 256
 
-PARAMETER_NAME= f'Weight Decay'
+PARAMETER_NAME= f'Jamba Version'
 
 
 dataset = 'diagnosis514'
@@ -55,8 +62,8 @@ model_config_dict = {}
 #     model_config_dict[seed] = [f"MTL_20240710_VF3_AugmentRatio_{seed}MTL_all_hb_simple_all_1d_NCV_nor_STL_depression_AUG_0_layers_0_input_dims_{aug[i]}" for i in range(len(aug))]
 
 for index, val in enumerate(aug):
-    # size - NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004
-    model_config_dict[val] = [f"jamba_v2_20240717_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_{val}" for i in range(len(seeds))]
+    # size - 64
+    model_config_dict[val] = [f"jamba_V-x_20240716_{seeds[i]}NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_size_512_modelStates_64_dims_512" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer
@@ -151,7 +158,7 @@ print()
 
 plot_evaluation_metrics_header(table_name = 'Depression', parameter_name=PARAMETER_NAME, val_auc_threshold=Val_AUC_Threshold)     
 
-for model_name in ['jamba_MTL']:    
+for model_name in ['jamba_MTL', 'jamba_MTL_V2']:    
     all_test_metrics = []
     all_val_metrics = []
     # all_metircs_name.append(metric)
@@ -164,7 +171,7 @@ for model_name in ['jamba_MTL']:
             rep_val_metric.append(val_metrics)
         rep_test_metric = np.array(rep_test_metric)
         rep_val_metric = np.array(rep_val_metric)
-        print_md_table_val_test_AUC(f"{aug_val}", np.mean(rep_test_metric, axis=0), np.mean(rep_val_metric,axis=0), print_table_header=False, already_balanced_accuracy=False)
+        # print_md_table_val_test_AUC(f"{aug_val}", np.mean(rep_test_metric, axis=0), np.mean(rep_val_metric,axis=0), print_table_header=False, already_balanced_accuracy=False)
         all_test_metrics.append(rep_test_metric.mean(axis=0))
         all_val_metrics.append(rep_val_metric.mean(axis=0))
     print_md_table_val_test_AUC(model_name, np.mean(all_test_metrics, axis=0), np.mean(all_val_metrics,axis=0), print_table_header=False, already_balanced_accuracy=False)

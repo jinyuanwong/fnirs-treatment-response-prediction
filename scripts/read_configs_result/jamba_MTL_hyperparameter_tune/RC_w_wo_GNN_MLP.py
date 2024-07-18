@@ -42,7 +42,7 @@ Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
 
-aug = ['wGNN_wMLP', 'wGNN_woMLP', 'woGNN_wMLP', 'woGNN_woMLP']
+aug = ['w_mamba', 'wo_mamba']
 
 
 PARAMETER_NAME= f'Learning Rate'
@@ -55,7 +55,7 @@ model_config_dict = {}
 
 for index, val in enumerate(aug):
     # size - NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004
-    model_config_dict[val] = [f"jamba_v2_20240715_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_{val}_clipnorm_1_weightDecay_0_004" for i in range(len(seeds))]
+    model_config_dict[val] = [f"jamba_20240717_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004_num_layer_0_{val}_dropout_0_3_patience_20" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer
