@@ -17,6 +17,8 @@ pip install dataclasses==0.6
 ```
 
 
+This repo used SQLite to save and read results.
+
 ## Initial SQLite 
 
 ```
@@ -24,63 +26,24 @@ sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db.sql
 ```
 
 - Referernce of SQLite 
-- [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)
+    - [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)
 
 ---
 
 ## 2. Train the model 
 
 ```
-nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response --msg test > /dev/null 2>&1 &
-nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_response --msg test > /dev/null 2>&1 &
-nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_remission --msg test > /dev/null 2>&1 &
-nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config posttreatment_remission --msg test > /dev/null 2>&1 &
-
-nohup bash ./response_prediction.sh --model gnn_transformer --validation loocv --config pretreatment_response_cv_5_mix_hb_frontal --msg loocv_v0 > /dev/null 2>&1 &
-
-./response_prediction.sh --model fusion_xgboost --validation loocv --config fusion_pretreatment_response --msg test
-
-
-#### keep running between frontal and temporal reigon 
-nohup ./run_automl.sh &`
+nohup ./run.sh &
 ```
 
 ---
 
 ## 3. To read the result
 
-- Validation method: loocv
-```
-python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 4 --dataset pretreatment_response 
-
-python scripts/plot/DL/read_SCVHO.py --model gnn_transformer --dataset posttreatment_response --max 5
-
-
-python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model gnn_transformer --max 1 --dataset posttreatment_remission --value_add_to_sensitivity_value 0.1
-python scripts/plot/DL/read_LOO_nestedCV_gnntr.py --model fusion_xgboost --max 2 --dataset pretreatment_response
-
-```
-
-- Validation method: Stratified CV with hold out
-```
-python scripts/plot/DL/read_SCVHO.py --model gnn_transformer --max 4
-```
-
-note: --max is the maximum iteration for each training fold that can be achieved.
-
 
 ---
 
 ## 4. SHAP explaining the model
-
----
-
-### Explaination of different files
-- train.py 
-    - Description: use this to train the deep learning model 
-
-- config.py 
-    - Description: this file consists data path you need to modify
 
 
 
