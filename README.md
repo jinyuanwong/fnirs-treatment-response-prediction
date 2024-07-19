@@ -1,6 +1,6 @@
 # Design of framework
 
-![Framework and SQLite Database Design](utils/imgs/SQLite%20databased%20design%20for%20MDD%20Classification%20V2.png)
+![Framework and SQLite Database Design](./utils/imgs/SQLite%20databased%20design%20for%20MDD%20Classification%20V2.png)
 
 ## 1. Install Environment (Should install conda first)
 
