@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_files=(
-    "tasks/20240718_data_precision.sh"
+    "tasks/20240719_clipping_method_value.sh"
 )
 # SQLite database to track executed configuration files
 db_file="results/experiment_results.db"

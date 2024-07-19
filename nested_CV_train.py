@@ -195,7 +195,6 @@ if __name__ == '__main__':
     default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
     print('config_file_name', config_file_name)
     tf.keras.backend.set_floatx(config.DATA_PRECISION)
-    print(f"tf.keras.backend.floatx() -> {tf.keras.backend.floatx()}"*88)    
     # save current file 
     config.PARAMETER[model_name]['config_file_path'].append(os.path.abspath(__file__))
     

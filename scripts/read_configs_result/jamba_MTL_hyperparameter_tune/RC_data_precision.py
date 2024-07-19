@@ -43,7 +43,7 @@ Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
 
-aug = ['_precision','_double_precision']
+aug = ['_half_precision', '_precision','_double_precision']
 print(f'aug: {aug}')
 
 PARAMETER_NAME= f'Batch Size'
@@ -56,8 +56,9 @@ model_config_dict = {}
 
 for index, val in enumerate(aug):
     # size - NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004
-    if val == '_precision': val = ''
-    model_config_dict[val] = [f"jamba_20240718_{seeds[i]}STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8{val}" for i in range(len(seeds))]
+    if val == '_precision': read_val = ''
+    else: read_val = val
+    model_config_dict[val] = [f"jamba_20240718_{seeds[i]}STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8{read_val}" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer

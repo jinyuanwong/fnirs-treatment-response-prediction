@@ -29,6 +29,8 @@ class MotherArgs:
     beta_1: float = 0.9
     beta_2: float = 0.99
     epsilon: float = 1e-9
+    clipping_method: str = 'clipnorm'
+    clipvalue: float = 1.0
     clipnorm: float = 1.0
     weight_decay: float = 0.004
     lr_mode: str = 'CustomLearningRateSchedule' # 'CustomSchedule' 'constant' 'CustomLearningRateSchedule'
@@ -84,13 +86,24 @@ class MotherArgs:
     
     @property
     def optimizer(self, mode='adamw'):
+        clipping_method = self.clipping_method
         if mode == 'adamw':
-            return keras.optimizers.AdamW(self.learning_rate,
-                                        beta_1=self.beta_1,
-                                        beta_2=self.beta_2,
-                                        epsilon=self.epsilon,
-                                        clipnorm=self.clipnorm,
-                                        weight_decay=self.weight_decay)
+            if clipping_method == 'clipnorm':
+                return keras.optimizers.AdamW(self.learning_rate,
+                                              beta_1=self.beta_1,
+                                              beta_2=self.beta_2,
+                                              epsilon=self.epsilon,
+                                              clipnorm=self.clipnorm,
+                                              weight_decay=self.weight_decay)
+            elif clipping_method == 'clipvalue':
+                return keras.optimizers.AdamW(self.learning_rate,
+                                              beta_1=self.beta_1,
+                                              beta_2=self.beta_2,
+                                              epsilon=self.epsilon,
+                                              clipvalue=self.clipvalue,
+                                              weight_decay=self.weight_decay)
+            else:
+                raise ValueError(f"clipping_method {clipping_method} not supported")
         else:
             raise ValueError(f"mode {mode} not supported in optimizer")
 
