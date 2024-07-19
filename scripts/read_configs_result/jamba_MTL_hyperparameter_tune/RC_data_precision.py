@@ -9,7 +9,7 @@ def set_path():
         main_fold_path = '/Users/shanxiafeng/Documents/Project/Research/fnirs-prognosis/code/fnirs-treatment-response-prediction'
     elif sys.platform == 'linux':
         print("Current system is Ubuntu")
-        main_fold_path = '/root/autodl-tmp/fnirs-treatment-response-prediction'
+        main_fold_path = '/home/jy/Documents/fnirs/treatment_response/fnirs-depression-deeplearning' # '/root/autodl-tmp/fnirs-treatment-response-prediction'
     else:
         print("Current system is neither macOS nor Ubuntu")
     sys.path.append(main_fold_path)
@@ -43,10 +43,10 @@ Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
 
-aug = np.arange(1, 10).tolist() + [50]
+aug = ['_precision','_double_precision']
+print(f'aug: {aug}')
 
-
-PARAMETER_NAME= f'Patiences'
+PARAMETER_NAME= f'Batch Size'
 
 
 dataset = 'diagnosis514'
@@ -56,7 +56,8 @@ model_config_dict = {}
 
 for index, val in enumerate(aug):
     # size - NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004
-    model_config_dict[val] = [f"jamba_20240717_{seeds[i]}NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004_num_layer_{val}" for i in range(len(seeds))]
+    if val == '_precision': val = ''
+    model_config_dict[val] = [f"jamba_20240718_{seeds[i]}STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8{val}" for i in range(len(seeds))]
     # head
     # model_config_dict[val] = [f"Baseline_Model_{seeds[i]}MTL_Transformer_baseline_d_model_64_n_head_{val}_layer_3" for i in range(len(seeds))]
     # layer

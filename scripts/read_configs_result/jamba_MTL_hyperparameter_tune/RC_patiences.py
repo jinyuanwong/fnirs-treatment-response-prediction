@@ -43,7 +43,7 @@ Val_AUC_Threshold = 0
 # aug = [0, 1, 2, 3]
 
 
-aug = np.arange(14, 30, 3).tolist()
+aug = np.arange(2, 30, 3).tolist()
 
 
 PARAMETER_NAME= f'Patiences'

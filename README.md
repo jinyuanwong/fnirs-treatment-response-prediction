@@ -23,6 +23,9 @@ pip install dataclasses==0.6
 sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db.sql
 ```
 
+- Referernce of SQLite 
+- [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)
+
 ---
 
 ## 2. Train the model 

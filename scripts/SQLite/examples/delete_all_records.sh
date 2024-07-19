@@ -9,3 +9,5 @@ DELETE FROM experiments;
 EOF
 
 echo "All records have been deleted from the experiments table."
+
+

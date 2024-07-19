@@ -301,7 +301,7 @@ def generate_fnirs_adj():
 def generate_fnirs_adj_tf():
     sp_matrix = generate_fnirs_adj()
     matrix_arr = sp_matrix.toarray()
-    tf_matrix = tf.convert_to_tensor(matrix_arr, dtype=tf.float32)
+    tf_matrix = tf.convert_to_tensor(matrix_arr, dtype=tf.keras.backend.floatx())
     return tf_matrix
 
 

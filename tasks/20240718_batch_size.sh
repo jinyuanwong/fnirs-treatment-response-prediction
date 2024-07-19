@@ -1,0 +1,20 @@
+
+models=(
+'jamba_MTL'
+)
+config_files=(
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_1'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_2'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_4'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_16'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_32'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_64'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_128'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_256'
+'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_512'
+)
+itr_name='jamba_20240718'
+seeds=(31415926 27182818 16180339 12345678 98765432)
+# python_file="./LOO_nested_CV_train_skf.py"
+python_file="./nested_CV_train.py"
