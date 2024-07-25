@@ -2,7 +2,7 @@ import numpy as np
 DATA_PRECISION='float32' # set the data precision float32 is single precisio
 DATABASE_PATH='results/experiment_results.db'
 INPUT_HB_TYPE = ['prognosis/pretreatment_response'] 
-SPECIFY_FOLD=5
+INNER_FOLD = SPECIFY_FOLD = 4
 
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 20
 

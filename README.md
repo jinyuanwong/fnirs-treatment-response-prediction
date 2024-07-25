@@ -23,7 +23,7 @@ pip install dataclasses==0.6
 
 ## Initial SQLite 
 
-This repo used SQLite to save and read results. As using a Database to store result should be more convenient as we and move the result and read the results easily using a Database.
+This repo used SQLite to save and read results. As using a Database to store result should be more convenient as we can move the result and read the results easily using a Database.
 
 ### The design of the database
 
@@ -57,14 +57,6 @@ To start a task, you should modify the task_path in the `./run.sh` and type the 
 
 
 # Design of framework
-
-
-
-
-
-
-
-
 
 - Referernce of SQLite 
     - [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)

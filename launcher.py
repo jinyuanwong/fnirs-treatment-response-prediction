@@ -55,7 +55,6 @@ class TrainModel():
         self.data, self.label = data, label
         
     def nested_cross_validation(self, inner_k, total_inner_k, outer_k, total_outer_k, seed, MSG):
-        msg = MSG
         classifier_name = self.model_mame
         archive = self.all_archive
         
@@ -74,10 +73,15 @@ class TrainModel():
 
         if config.AUGMENT_RATIO != 0: X_train, Y_train = augment_data(X_train, Y_train, ratio=config.AUGMENT_RATIO, min_delete_ch=config.MIN_DELETE_CHANNEL, max_delete_ch=config.MAX_DELETE_CHANNEL)
         print(f'X_train - {X_train.shape}, X_val - {X_val.shape}, X_test - {X_test.shape}')
-                    
-        output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
-        archive + \
-        f'/{msg}/' + f"/{seed}/nested_cross_validation_outer_{total_outer_k}_inner_{total_inner_k}/outer_{outer_k}_inner_{inner_k}" + '/'
+        
+        result_fold = os.getcwd() + '/results'
+        validation_fold_name = f"{self.config.VALIDATION_METHOD}_outer_{total_outer_k}_inner_{total_inner_k}"
+        current_fold_name = f"outer_{outer_k}_inner_{inner_k}"
+        output_directory = f"{result_fold}/model_{self.model_mame}/dataset_{archive}/{MSG}/seed_{seed}/{validation_fold_name}/{current_fold_name}/"
+        
+        # output_directory = /' + classifier_name + '/' + \
+        # archive + \
+        # f'/{MSG}' + f"/{seed}/{self.config.VALIDATION_METHOD}_outer_{total_outer_k}_inner_{total_inner_k}/outer_{outer_k}_inner_{inner_k}" + '/'
 
         print(f'output_directory -> {output_directory}')
         create_directory(output_directory)
@@ -174,7 +178,7 @@ class TrainModel():
     
         print(f'using nested_cross_validation inner_fold: {inner_k} outer_fold: {outer_k}...')
         if self.config.VALIDATION_METHOD == 'nested_cross_validation':
-            self.nested_cross_validation(inner_k, self.config.SPECIFY_FOLD, outer_k, config.OUTER_FOLD, seed, MSG)
+            self.nested_cross_validation(inner_k, self.config.INNER_FOLD, outer_k, config.OUTER_FOLD, seed, MSG)
         else:
             raise ValueError('Please specify the validation method in config file')
         print('Successfully nested_cross_validation...')
@@ -207,7 +211,7 @@ if __name__ == '__main__':
     # save current file 
     config.PARAMETER[model_name]['config_file_path'].append(os.path.abspath(__file__))
     
-    MSG = arg[2] + arg[3] # message = arg[2]
+    MSG = f"task_{arg[2]}/config_{arg[3]}" 
     
     info = {'seed': seed,
             'message': MSG,
@@ -227,7 +231,7 @@ if __name__ == '__main__':
     
     performance_ids = []
     for outer_k in range(config.OUTER_FOLD):
-        for inner_k in range(config.SPECIFY_FOLD):
+        for inner_k in range(config.INNER_FOLD):
 
             performance_output = classifier.split_data_and_build_model_to_train(inner_k, outer_k, info, config, seed, MSG)
             
@@ -254,9 +258,9 @@ if __name__ == '__main__':
     update_result_id_in_experiment(experiment_id=experiment_id, result_id=result_id, db_path=config.DATABASE_PATH)
           
             
-    # for k in range(config.SPECIFY_FOLD):
+    # for k in range(config.INNER_FOLD):
     #     print(f'using stratified_k_fold_cross_validation_with_holdout...{k}')
-    #     classifier.stratified_k_fold_cross_validation_with_holdout(k, config.SPECIFY_FOLD, seed, config.HOLD_OUT_DIV, MSG)
+    #     classifier.stratified_k_fold_cross_validation_with_holdout(k, config.INNER_FOLD, seed, config.HOLD_OUT_DIV, MSG)
     #     print('Successfully stratified_k_fold_cross_validation_with_holdout...')
     #     print('Building classifier...')
     #     classifier.build_classifier(info)

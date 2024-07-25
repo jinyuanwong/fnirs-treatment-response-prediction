@@ -264,7 +264,7 @@ if __name__ == '__main__':
     from utils.utils_mine import plot_evaluation_metrics_header
     from utils.fnirs_utils import print_md_table_val_test_AUC
     DATABASE_PATH = "results/experiment_results.db"
-    task_file_path = sys.argv[1] if len(sys.argv) > 1 else "tasks/20240724_t2_retrain_multiple_time.sh"
+    task_file_path = sys.argv[1] if len(sys.argv) > 1 else "tasks/20240725_update_framwork.sh"
     if os.path.exists(task_file_path):
         read_task_file(task_file_path)
     else:

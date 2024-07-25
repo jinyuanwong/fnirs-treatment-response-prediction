@@ -13,7 +13,7 @@ from classifiers.loss.focal_loss import focal_loss
 # }
 from configs.mdd_classification_jamba import *
 INPUT_HB_TYPE = ['diagnosis514']
-SPECIFY_FOLD = 4
+INNER_FOLD = SPECIFY_FOLD = 4
 OUTER_FOLD = 5
 STRATIFIED_CV_TOTAL_TRAININING_TIME = 5
 MAX_EPOCHS = 1000
