@@ -13,7 +13,7 @@ In `tasks/file.sh`, you should write the following parameters:
 5. __launcher_name__: Launching python file to start training and predicting.
 6. __db_file__: SQlite3 path that will store the result.
 
-### To start a task
+
 ```
 ./run.sh
 ```
