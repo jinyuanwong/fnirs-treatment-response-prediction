@@ -173,7 +173,10 @@ class TrainModel():
     def split_data_and_build_model_to_train(self, inner_k, outer_k, info, config, seed, MSG):
     
         print(f'using nested_cross_validation inner_fold: {inner_k} outer_fold: {outer_k}...')
-        classifier.nested_cross_validation(inner_k, config.SPECIFY_FOLD, outer_k, config.OUTER_FOLD, seed, MSG)
+        if self.config.VALIDATION_METHOD == 'nested_cross_validation':
+            self.nested_cross_validation(inner_k, self.config.SPECIFY_FOLD, outer_k, config.OUTER_FOLD, seed, MSG)
+        else:
+            raise ValueError('Please specify the validation method in config file')
         print('Successfully nested_cross_validation...')
         print('Building classifier...')
         classifier.build_classifier(info)

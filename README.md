@@ -33,7 +33,7 @@ This repo used SQLite to save and read results. As using a Database to store res
 ### To initilise the database
 
 ```
-sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db.sql
+sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db_v2.sql
 ```
 
 ## First - Write a Task File

@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_names=(
-    "20240724_t2_retrain_multiple_time"
+    "20240725_update_framwork"
 )
 # SQLite database to track executed configuration files
 db_file="results/experiment_results.db"
