@@ -2,20 +2,21 @@
 
 # Getting Started
 
-## First - write a task file 
+## First - Write a Task File
 
-In `tasks/file.sh`, you should write the following parameters:
+In `tasks/file.sh`, you should define the following parameters:
 
-1. __model_names__: Specify which model you will use (can be multiples).
-2. __config_names__:  Specify which config you will use (can be multiples).
-3. __run_itr__: Specify which config you will use (only support one now).
-4. __seeds__: This will change the input data shuffling and change train, val, test data, and also data augmentation. 
-5. __launcher_name__: Launching python file to start training and predicting.
-6. __db_file__: SQlite3 path that will store the result.
+1. **model_names**: Specify the models you will use (can be multiple).
+2. **config_names**: Specify the configurations you will use (can be multiple).
+3. **run_itr**: Specify the iteration for the run (only supports one currently).
+4. **seeds**: Define the seeds to change input data shuffling, and affect train, validation, test data, and data augmentation.
+5. **launcher_name**: The Python file used to start training and predicting.
+6. **db_file**: The path to the SQLite3 database that will store the results.
 
+## Running a Task
 
-To start a task, running this:
-```
+To start a task, run the following command:
+```sh
 ./run.sh
 ```
 
