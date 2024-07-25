@@ -42,7 +42,7 @@ In `tasks/file.sh`, you should define the following parameters:
 
 1. **model_names**: Specify the models you will use (can be multiple).
 2. **config_names**: Specify the configurations you will use (can be multiple).
-3. **run_itr**: Specify the iteration for the run (only supports one currently).
+3. **run_itr**: Specify the iteration for the run (only supports one currently). You can think of this as "Round Information"
 4. **seeds**: Define the seeds to change input data shuffling, and affect train, validation, test data, and data augmentation.
 5. **launcher_name**: The Python file used to start training and predicting.
 6. **db_file**: The path to the SQLite3 database that will store the results.
