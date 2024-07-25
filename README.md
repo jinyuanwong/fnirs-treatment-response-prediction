@@ -64,7 +64,7 @@ To start a task, you should modify the task_path in the `./run.sh` and type the 
 
 ## To try (model)
 - Adversarial machine learning 
-    - https://adversarial-ml-tutorial.org/introduction/
+    - [Adversarial Robustness - Theory and Practice](https://adversarial-ml-tutorial.org/introduction/)
 
 - Liquid Neural network
 
