@@ -69,6 +69,23 @@ nohup ./run.sh &
 
 ---
 
+# Some directions
+
+## Already tried and implemented
+- Multi-task Learning 
+
+## To try (model)
+- Adversarial machine learning 
+    - https://adversarial-ml-tutorial.org/introduction/
+
+- Liquid Neural network
+
+- Neural architecture search 
+
+## To try (framwork)
+- parallel training 
+- pipepline 
+
 
 
 
