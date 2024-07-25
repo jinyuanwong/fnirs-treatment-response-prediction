@@ -6,10 +6,13 @@
 
 In `tasks/file.sh`, you should write the following parameters:
 
-1. model_names: Specify which model you will use (can be multiples).
-2. config_names:  Specify which config you will use (can be multiples).
-3. run_itr: Specify which config you will use (only support one now).
-4. seeds: This will change the input data shuffling and change train, val, test data, and also data augmentation.
+1. __model_names__: Specify which model you will use (can be multiples).
+2. __config_names__:  Specify which config you will use (can be multiples).
+3. __run_itr__: Specify which config you will use (only support one now).
+4. __seeds__: This will change the input data shuffling and change train, val, test data, and also data augmentation. 
+5. __launcher_name__: Launching python file to start training and predicting.
+6. __db_file__: SQlite3 path that will store the result.
+
 
 use this file: 
 ```
