@@ -14,6 +14,7 @@ In `tasks/file.sh`, you should write the following parameters:
 6. __db_file__: SQlite3 path that will store the result.
 
 
+To start a task, running this:
 ```
 ./run.sh
 ```
