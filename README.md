@@ -58,8 +58,6 @@ To start a task, you should modify the task_path in the `./run.sh` and type the 
 
 # Design of framework
 
-- Referernce of SQLite 
-    - [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)
 
 ---
 
@@ -71,35 +69,15 @@ nohup ./run.sh &
 
 ---
 
-## 3. To read the result
-
-
----
-
-## 4. SHAP explaining the model
 
 
 
-### For simple running the code and training 
+# References
 
-- simply use this bash file to train the file
-    > `scripts/bash/response_prediction.sh`
-
-- use this bash file to terminate the file
-
-
-### Compare and run different tradition machine learning models 
-- `./scripts/ML/train_5_models.py`
-    - "Random Forest": RandomForestClassifier(),
-    - "SVM": SVC(),
-    - "KNN": KNeighborsClassifier(),  # 注意：KNN通常没有random_state参数
-    - "Decision Tree": DecisionTreeClassifier()
-
-### To validate and reproduce the result
-- `./scripts/ML/validate_model.py`
+## To improve deep learning training experience you can read this:
+    - [Deep Learning Tuning Playbook](https://github.com/google-research/tuning_playbook?tab=readme-ov-file#who-is-this-document-for)
 
 
 
-# File function
-- DL_main.ipynb 
- - plot all and average metircs of GNN and save into a csv file call metrics.txt under results/prognosis_mix_hb
+## Referernce of SQLite 
+- [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)
