@@ -5,7 +5,7 @@
 models=(
 'jamba_MTL'
 )
-config_files=(
+config_names=(
 'NCV_STL_depression_best_all_checkpoint_monitor_val_loss_begin_patience_15_dropout_rate_0_3'
 'NCV_STL_depression_best_all_checkpoint_monitor_val_accuracy_begin_patience_15_dropout_rate_0_3'
 )

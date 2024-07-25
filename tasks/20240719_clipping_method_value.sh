@@ -1,7 +1,7 @@
 models=(
 'jamba_MTL'
 )
-config_files=(
+config_names=(
 'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_64_clipvalue_2'
 'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_64_clipvalue_1'
 'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_64_clipvalue_0_5'

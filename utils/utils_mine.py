@@ -389,13 +389,13 @@ def save_validation_acc_multi_task(output_directory, Y_pred, Y_true, check_metri
         current_metric = read_current_value(Y_pred_binary, Y_true_binary, check_metric[task_name])
         hist_df_metrics = calculate_metrics(Y_true[:, i], Y_task_i, info['duration'])
         
-        save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
+        # save_data_to_file(output_directory + save_file_name.replace('.txt', f'_{task_name}.txt'), hist_df_metrics, info)
         print(f'Current saved file: {output_directory}' + save_file_name.replace('.txt', f'_{task_name}.txt'))
         print(f"Current {check_metric[task_name]}: {current_metric}")
 
         metrics[task_name] = current_metric > past_metric
 
-    return any(metrics.values())
+    return hist_df_metrics
 
 def save_validation_pred_regression(output_directory, info):
     save_data_to_file(output_directory + 'val_acc.txt', [], info)
@@ -1062,3 +1062,21 @@ def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)    
+    
+    
+def set_seed_for_tf(config):
+    """
+    Sets the seed for TensorFlow based on the configuration provided.
+
+    If the configuration object has a 'MODEL_SEED' attribute that is not None,
+    the function sets the TensorFlow random seed to this value.
+    Otherwise, it prints a message indicating that the TensorFlow seed will 
+    be the same as the seed for the experiment.
+
+    Args:
+        config (object): Configuration object that may contain a 'MODEL_SEED' attribute.
+    """
+    if hasattr(config, 'MODEL_SEED') and config.MODEL_SEED is not None:
+        tf.random.set_seed(config.MODEL_SEED)
+    else:
+        print("Seed for tensorflow will be the same as the seed for the experiment")

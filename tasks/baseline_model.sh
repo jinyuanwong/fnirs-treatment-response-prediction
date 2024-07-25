@@ -1,6 +1,6 @@
 model='cnn_transformer'
 
-config_files=(
+config_names=(
 'MTL_Transformer_baseline_d_model_16_n_head_1_layer_3'
 'MTL_Transformer_baseline_d_model_32_n_head_1_layer_3'
 'MTL_Transformer_baseline_d_model_64_n_head_1_layer_3'

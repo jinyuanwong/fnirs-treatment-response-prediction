@@ -1,6 +1,6 @@
 
 model='jamba_MTL'
-config_files=(
+config_names=(
 'NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_size_256_rep_0'
 'NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_size_256_rep_1'
 'NCV_STL_depression_AUG_0_layers_0_input_dims_128_model_states_128_size_128_rep_0'

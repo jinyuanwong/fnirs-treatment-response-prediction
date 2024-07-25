@@ -9,10 +9,12 @@ from utils.utils import *
 from utils.utils_mine import generate_fnirs_adj_tf
 from classifiers.layer.conv1d import conv1d_layer
 from classifiers.layer.mamba import MambaBlock
-from classifiers.layer.gnn import GNN
+from classifiers.layer.gnn import gnn_layer
 from classifiers.layer.rmsnorm import RMSNorm
 from classifiers.model.jamba import Transformer_layer, Attention_MoE_layer, Mamba_layer, Mamba_MoE_layer
 from classifiers.layer.mlp import MLP
+from utils.fnirs_utils import delete_checkpoints
+import json
 class Classifier_Jamba():
     def __init__(self, output_directory, callbacks, input_shape, epochs, sweep_config, info):
 
@@ -24,44 +26,64 @@ class Classifier_Jamba():
         self.params = params = info['parameter']
         args = self.params['args']
         self.class_weights_dict = {0: 1, 1: args.classweight1}
-        
         args.update_model_checkpoint(output_directory + 'checkpoint')
         self.callbacks.append(args.model_checkpoint)
         self.callbacks.append(args.earlystopping)
-        self.callbacks.append(args.reduce_lr)                
+        if args.reduce_lr is not None: self.callbacks.append(args.reduce_lr)                
         self.batch_size = args.batch_size
         # Define input shape
         inputs_time_point = tf.keras.Input(shape=input_shape[1:])
         x = inputs_time_point
-        if args.use_mlp_layer:                
-            x = layers.Dense(args.model_input_dims, activation=args.activation)(x)
+        
+
+        
         # Define layers
         if args.use_conv1d_layer:        
             x = conv1d_layer(args)(x)
-            x = RMSNorm()(x)
+            x = args.normalization_layer()(x)
+        # move mlp_layer from "before conv1d" to "after conv1d"
+        if args.use_mlp_layer:                
+            x = layers.Dense(args.model_input_dims, activation=args.activation)(x)
+            x = args.normalization_layer()(x)
+
         if args.use_mamba_block: 
             x = MambaBlock(args)(x)
-            x = RMSNorm()(x)
-        adj = generate_fnirs_adj_tf()
-        if args.use_gnn_layer: 
-            x = GNN(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+            x = args.normalization_layer()(x)
+        # move the gnn layer to first 
         
+        if args.use_gnn_layer: 
+            adj = generate_fnirs_adj_tf()
+            x = gnn_layer(args.gnn_type)(args.model_internal_dim, adj, args.activation, args.dropout_rate)(x)
+            x = args.normalization_layer()(x)
+            
         for _ in range(args.num_layers):
             # x = Mamba_layer(args)(x)
             # x = Mamba_MoE_layer(args)(x)   
             x = Transformer_layer(args)(x)
             # x = Attention_MoE_layer(args)(x)
-            x = RMSNorm()(x)
+            x = args.normalization_layer()(x)
         # x = tf.concat([x, conv1d_layer(args)(x)], axis=-1)
         # x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
+
         if not args.use_lm_head: 
             x = layers.Flatten()(x)
+
+ 
+        
         # x = layers.Dense(args.last_dense_units * 4, activation=args.activation, kernel_regularizer=tf.keras.regularizers.l2(args.l2_rate))(x)
         # x = layers.Dropout(args.dropout_rate)(x)
         x = layers.Dense(args.last_dense_units, activation=args.activation, kernel_regularizer=tf.keras.regularizers.l2(args.l2_rate))(x)
         x = layers.Dropout(args.dropout_rate)(x)
-        x = RMSNorm()(x)
-        
+        x = args.normalization_layer()(x)
+
+        if args.branch_revert_last_two_dimension:
+            y = tf.transpose(inputs_time_point, perm=[0, 2, 1])
+            y = layers.Dense(args.model_input_dims, activation=args.activation)(y)
+            y = layers.GlobalAveragePooling1D(data_format='channels_first')(y)#
+            y = args.normalization_layer()(y)
+            y = layers.Flatten()(y)
+            x = tf.concat([x, y], axis=-1)       
+                    
         output_list = []
         # Define outputs
         for metric_name, _ in  args.metrics.items():
@@ -104,23 +126,42 @@ class Classifier_Jamba():
         
             
         Y_test_pred = self.model.predict(X_test)
-        Y_true = np.argmax(Y_test, axis=1)
-        Y_val_pred = np.argmax(self.model.predict(X_val), axis=1)
-        Y_val_true = np.argmax(Y_val, axis=1)
+        Y_val_pred = self.model.predict(X_val)
 
         duration = time.time() - start_time
         self.info['duration'] = duration
         
-        save_validation_acc_multi_task(self.output_directory, self.model.predict(X_val), Y_val, self.params['args'].metrics, self.info)
-        save_validation_acc_multi_task(self.output_directory, self.model.predict(X_test), Y_test, self.params['args'].metrics, self.info, save_file_name='test_acc.txt')
+        val_performance_metrics = save_validation_acc_multi_task(self.output_directory, self.model.predict(X_val), Y_val, self.params['args'].metrics, self.info)
+        test_performance_metrics = save_validation_acc_multi_task(self.output_directory, self.model.predict(X_test), Y_test, self.params['args'].metrics, self.info, save_file_name='test_acc.txt')
         
-        save_hist_file(hist, self.output_directory)
+        # save_hist_file(hist, self.output_directory)
         # if check_if_save_model(self.output_directory, self.model.predict(X_test), Y_test, self.info['monitor_metric'], self.info):
         #     save_logs(self.model, self.output_directory, None, hist, Y_test_pred, Y_test, duration, lr=True, is_saving_checkpoint=False, hyperparameters=None)
 
-        print(f'Training time is {duration}')
-        if self.params.get('config_file_path') is not None:
-            save_current_file_to_folder(self.params['config_file_path'] + [os.path.abspath(__file__)], self.output_directory)
+        # print(f'Training time is {duration}')
+        # if self.params.get('config_file_path') is not None:
+        #     save_current_file_to_folder(self.params['config_file_path'] + [os.path.abspath(__file__)], self.output_directory)
+
+        # SQL operation
+        serialized_history = {key: [float(val) for val in values] for key, values in hist.history.items()}
+        serialized_val_performance_metrics = {key: [float(val) for val in values] for key, values in val_performance_metrics.items()}
+        serialized_test_performance_metrics = {key: [float(val) for val in values] for key, values in test_performance_metrics.items()}
+        performance_output = {
+            'history': json.dumps(serialized_history),
+            'y_test_true': json.dumps(Y_test.tolist()),
+            'y_test_pred':json.dumps(Y_test_pred.tolist()),
+            'y_val_true': json.dumps(Y_val.tolist()),
+            'y_val_pred': json.dumps(Y_val_pred.tolist()),
+            'duration': duration,
+            'name_performance_metrics': ','.join(val_performance_metrics.columns.to_list()),
+            'val_performance_metrics': json.dumps(serialized_val_performance_metrics),
+            'test_performance_metrics': json.dumps(serialized_test_performance_metrics),
+        }
+        
+        # delete checkpoint if self.params['args'].delete_checkpoint == True
+        if self.params['args'].delete_checkpoint:
+            delete_checkpoints(self.output_directory)
+        return performance_output
 
     def predict(self):
         pass

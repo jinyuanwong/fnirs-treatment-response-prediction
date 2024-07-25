@@ -1,5 +1,5 @@
 model='jamba_MTL'
-config_files=(
+config_names=(
 'MTL_all_hb_simple_all_1d_NCV_nor_STL_depression_AUG_0_layers_0_input_dims_256_female'
 'MTL_all_hb_simple_all_1d_NCV_nor_STL_depression_AUG_0_layers_0_input_dims_256_male'
 )

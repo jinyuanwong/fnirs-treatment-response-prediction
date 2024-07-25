@@ -3,7 +3,7 @@
 models=(
 'jamba_MTL'
 )
-config_files=(
+config_names=(
 
 )
 itr_name='jamba_20240716'

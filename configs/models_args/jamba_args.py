@@ -5,7 +5,9 @@ from tensorflow.keras.callbacks import EarlyStopping
 import math
 import os
 from utils.schedule import CustomLearningRateSchedule
-from utils.callbacks import reduceLRonplateau
+from dataclasses import dataclass
+
+@dataclass
 class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     
     n_heads: int = 4
@@ -14,17 +16,13 @@ class Jamba_ModelArgs_extend_from_Mamba(ModelArgs):
     global_pooling: bool = False
     l2_rate: float = 0.001
     # lr_scheduler = LearningRateScheduler(sinusoidal_lr)
+    gnn_type: str = 'GNN' # GNN, GCN
 
-
+    branch_revert_last_two_dimension: bool = False # this is used to combine channel-first and channel-last 
 
     def __post_init__(self):
         super().__post_init__() 
 
-        if self.warmup_step == None:
-            raise ValueError(f'warmup_step cannot be {self.warmup_step}')
-        else:
-            self.set_learning_rate(self.lr_begin, self.warmup_step, mode=self.lr_mode)
-            
+
         # self.earlystopping = EarlyStopping(monitor=self.monitor_metric_early_stop, patience=self.patiences)
-        self.reduce_lr = reduceLRonplateau()
     

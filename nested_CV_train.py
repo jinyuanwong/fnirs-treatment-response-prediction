@@ -9,6 +9,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from utils.utils_mine import *
 from utils.fnirs_utils import augment_data
+from utils.utils_sql import insert_record_into_db, update_result_id_in_experiment
 import tensorflow as tf
 import tensorflow.keras as keras
 from datetime import date
@@ -76,7 +77,7 @@ class TrainModel():
                     
         output_directory = os.getcwd() + '/results/' + classifier_name + '/' + \
         archive + \
-        f'/{msg}/' + f"nested_cross_validation_outer_{total_outer_k}_inner_{total_inner_k}/outer_{outer_k}_inner_{inner_k}" + '/'
+        f'/{msg}/' + f"/{seed}/nested_cross_validation_outer_{total_outer_k}_inner_{total_inner_k}/outer_{outer_k}_inner_{inner_k}" + '/'
 
         print(f'output_directory -> {output_directory}')
         create_directory(output_directory)
@@ -161,46 +162,51 @@ class TrainModel():
     def train(self, ):
         if self.adj_path:
             if self.cli_demo_path:
-                self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test, self.adj_train, self.adj_val, self.adj_test, self.cli_demo_train, self.cli_demo_val, self.cli_demo_test)
+                performance_output = self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test, self.adj_train, self.adj_val, self.adj_test, self.cli_demo_train, self.cli_demo_val, self.cli_demo_test)
             else:
-                self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test, self.adj_train, self.adj_val, self.adj_test)
+                performance_output = self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test, self.adj_train, self.adj_val, self.adj_test)
         else:
-            self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test)
+            performance_output = self.model.fit(self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test)
         del self.model
         del self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test
-        
-    def split_data_and_build_model_to_train(self, inner_k, outer_k, info, config, current_time, MSG):
+        return performance_output
+    def split_data_and_build_model_to_train(self, inner_k, outer_k, info, config, seed, MSG):
     
         print(f'using nested_cross_validation inner_fold: {inner_k} outer_fold: {outer_k}...')
-        classifier.nested_cross_validation(inner_k, config.SPECIFY_FOLD, outer_k, config.OUTER_FOLD, current_time, MSG)
+        classifier.nested_cross_validation(inner_k, config.SPECIFY_FOLD, outer_k, config.OUTER_FOLD, seed, MSG)
         print('Successfully nested_cross_validation...')
         print('Building classifier...')
         classifier.build_classifier(info)
         print('Successfully built classifier...')
         print('Training classifier...')
-        classifier.train()
+        performance_output = classifier.train()
+        return performance_output
 
 model_names = ['transformer', 'gnn_transformer',
                'dim_transformer', 'dgi_transformer', 'yu_gnn']
 if __name__ == '__main__':
     arg = sys.argv
     model_name = arg[1]
+    run_itr = arg[2]
     config_file_name = 'configs.' + arg[3]
     config_name = arg[3]
-    current_time = int(arg[4])
-    set_seed(current_time)
-
-
+    seed = int(arg[4])
+    experiment_id = arg[5]
+    
+    config_file_name = config_file_name.replace('/', '.')
     config = importlib.import_module(config_file_name)
+    
+    set_seed(seed) # set seed for data split, augmentation 
+    set_seed_for_tf(config) # set seed for tensorflow if config.MODEL_SEED exists
+        
     default_hb_fold_path = config.DEFAULT_HB_FOLD_PATH
-    print('config_file_name', config_file_name)
     tf.keras.backend.set_floatx(config.DATA_PRECISION)
     # save current file 
     config.PARAMETER[model_name]['config_file_path'].append(os.path.abspath(__file__))
     
     MSG = arg[2] + arg[3] # message = arg[2]
     
-    info = {'current_time_seed': current_time,
+    info = {'seed': seed,
             'message': MSG,
             'parameter': config.PARAMETER[model_name],
             'monitor_metric': config.MONITOR_METRIC
@@ -215,12 +221,39 @@ if __name__ == '__main__':
     classifier = TrainModel(model_name, config=config)
 
     classifier.read_data_label(fnirs_data_path)
+    
+    performance_ids = []
     for outer_k in range(config.OUTER_FOLD):
         for inner_k in range(config.SPECIFY_FOLD):
-            classifier.split_data_and_build_model_to_train(inner_k, outer_k, info, config, current_time, MSG)
+
+            performance_output = classifier.split_data_and_build_model_to_train(inner_k, outer_k, info, config, seed, MSG)
+            
+            # write performance into database
+            performance_output['seed'] = seed
+            performance_output['fold_name'] = 'outer_' + str(outer_k) + '_inner_' + str(inner_k)
+            performance_output['performance_id'] = 'Pid_' + str(int(time.time()))
+            performance_ids.append(performance_output['performance_id'])
+            
+            insert_record_into_db(table_name='performances', record=performance_output, db_path=config.DATABASE_PATH)
+
+    result_id = 'Rid_' + str(int(time.time()))
+    # SQLite operation
+    result_output = {
+        'result_id': result_id,
+        'config_name': config_name,
+        'model_name': model_name,
+        'launcher_name': os.path.basename(os.path.abspath(__file__)),
+        'run_itr': run_itr,
+        'performance_ids': ','.join(performance_ids),
+    }
+    insert_record_into_db(table_name='results', record=result_output, db_path=config.DATABASE_PATH)
+    
+    update_result_id_in_experiment(experiment_id=experiment_id, result_id=result_id, db_path=config.DATABASE_PATH)
+          
+            
     # for k in range(config.SPECIFY_FOLD):
     #     print(f'using stratified_k_fold_cross_validation_with_holdout...{k}')
-    #     classifier.stratified_k_fold_cross_validation_with_holdout(k, config.SPECIFY_FOLD, current_time, config.HOLD_OUT_DIV, MSG)
+    #     classifier.stratified_k_fold_cross_validation_with_holdout(k, config.SPECIFY_FOLD, seed, config.HOLD_OUT_DIV, MSG)
     #     print('Successfully stratified_k_fold_cross_validation_with_holdout...')
     #     print('Building classifier...')
     #     classifier.build_classifier(info)

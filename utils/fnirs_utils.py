@@ -888,6 +888,15 @@ def print_md_table_val_test(model_name, test_result, val_result, print_table_hea
 
 
 def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table_header=True, already_balanced_accuracy=False):
+    """ 
+    Args: 
+        test_result: list of 4 values [accuracy, sensitivity, specificity, AUC]
+        val_result: list of 4 values [accuracy, sensitivity, specificity, AUC]
+        
+    Function:
+        print | test_accuracy |
+    
+    """
     if print_table_header:
         plot_evaluation_metrics_header()
 
@@ -901,13 +910,13 @@ def print_md_table_val_test_AUC(model_name, test_result, val_result, print_table
     if not already_balanced_accuracy:
         test_result[0] = (test_result[1] + test_result[2]) / 2
         val_result[0] = (val_result[1] + val_result[2]) / 2
-    for val in test_result:
-        print(f' {val*100:.2f}  |', end='')
-    for val_index, val in enumerate(val_result):
-        if val_result.shape[0]==5 and val_index == 4:
-            print(f' {val:.1f}  |', end='')     
+    for value in test_result:
+        print(f' {value*100:.2f}  |', end='')
+    for value_index, value in enumerate(val_result):
+        if val_result.shape[0]==5 and value_index == 4:
+            print(f' {value:.1f}  |', end='')     
         else:
-            print(f' {val*100:.2f}  |', end='')       
+            print(f' {value*100:.2f}  |', end='')       
     print('')
 
 
@@ -1260,3 +1269,14 @@ def augment_data(X_train, Y_train, noise_level=2, scale_range=(0.7, 1.3), shift_
     Y_train_combined = np.concatenate((Y_train, Y_train_augmented), axis=0)
     
     return X_train_combined, Y_train_combined
+
+
+import glob
+def delete_checkpoints(output_directory):
+    checkpoint_pattern = os.path.join(output_directory, 'checkpoint*')
+    checkpoint_files = glob.glob(checkpoint_pattern)
+
+    for checkpoint_file in checkpoint_files:
+        if os.path.exists(checkpoint_file):
+            os.remove(checkpoint_file)
+            print(f"Deleted {checkpoint_file}")

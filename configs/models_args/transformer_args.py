@@ -28,12 +28,7 @@ class Transformer_ModelArgs(MotherArgs):
         self.kernel_size = [self.kernel_size_1, self.kernel_size_2]
         self.stride_size = [self.stride_size_1, self.stride_size_2]
         
-        # set learning rate
-        if self.warmup_step == None:
-            raise ValueError(f'warmup_step cannot be {self.warmup_step}')
-        else:
-            self.set_learning_rate(self.lr_begin, self.warmup_step, mode='CustomLearningRateSchedule')
-        
+
         # set final_activation
         if self.num_classes == None:
             raise ValueError(f'num classes cannot be {self.num_classes}')

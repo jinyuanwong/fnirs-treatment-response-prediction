@@ -9,6 +9,7 @@ import tensorflow.keras as keras
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import os 
 from configs.models_args.model_args import MotherArgs
+
 @dataclass
 class ModelArgs(MotherArgs):
 
@@ -39,8 +40,7 @@ class ModelArgs(MotherArgs):
     use_conv1d_layer: bool = True #
     use_mamba_block: bool = True #
         
-    lr_begin: int = 100000
-    warmup_step: int = 4000
+
 
 
     def __post_init__(self):
@@ -61,11 +61,6 @@ class ModelArgs(MotherArgs):
             else:
                 self.set_final_activation()
         
-        if self.warmup_step == None:
-            raise ValueError(f'warmup_step cannot be {self.warmup_step}')
-        else:
-            self.set_learning_rate(self.lr_begin, self.warmup_step, mode='CustomLearningRateSchedule')
-
         if self.loss == None:
             raise ValueError(f"loss cannot be {self.loss}")
         

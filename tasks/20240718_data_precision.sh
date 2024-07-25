@@ -2,7 +2,7 @@
 models=(
 'jamba_MTL'
 )
-config_files=(
+config_names=(
 'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8_double_precision'
 'STL_depression_NCV_best_v1_wo_mamba_wo_mlp_batch_8_half_precision'
 )

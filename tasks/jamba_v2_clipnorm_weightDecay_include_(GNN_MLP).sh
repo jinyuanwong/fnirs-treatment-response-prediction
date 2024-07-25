@@ -1,7 +1,7 @@
 models=(
 'jamba_MTL'
 )
-config_files=(
+config_names=(
 'NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_woMLP_clipnorm_1_weightDecay_0_004' 
 'NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_0_5_weightDecay_0_004' 
 'NCV_JambaV2_AUG_0_layers_1_best_others_1-Task_depression_wGNN_wMLP_clipnorm_1_weightDecay_0_004' 

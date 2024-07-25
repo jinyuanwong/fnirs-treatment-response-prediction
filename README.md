@@ -1,3 +1,12 @@
+
+
+To run a model: 
+
+use this file: 
+```
+./run.sh
+```
+
 # Design of framework
 
 ![Framework and SQLite Database Design](./utils/imgs/SQLite%20databased%20design%20for%20MDD%20Classification%20V2.png)

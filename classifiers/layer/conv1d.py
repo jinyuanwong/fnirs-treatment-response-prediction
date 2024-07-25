@@ -12,10 +12,10 @@ class conv1d_layer(layers.Layer):
                                     activation=args.activation,
                                     data_format='channels_first',)
     def call(self, inputs):
-        x = rearrange(inputs, 'b l d -> b d l')
+        x = rearrange(inputs, 'b d l -> b l d')
         # print('1 x shape:', x.shape)
         x = self.conv1d(x)
         # print('2 x shape:', x.shape)
-        x = rearrange(x, 'b d l -> b l d')
+        x = rearrange(x, 'b l d -> b d l')
         # print('3 x shape:', x.shape)
         return x
