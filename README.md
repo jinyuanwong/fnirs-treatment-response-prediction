@@ -2,33 +2,9 @@
 
 # Getting Started
 
-## First - Write a Task File
+## Installing Enviroment 
 
-In `tasks/file.sh`, you should define the following parameters:
-
-1. **model_names**: Specify the models you will use (can be multiple).
-2. **config_names**: Specify the configurations you will use (can be multiple).
-3. **run_itr**: Specify the iteration for the run (only supports one currently).
-4. **seeds**: Define the seeds to change input data shuffling, and affect train, validation, test data, and data augmentation.
-5. **launcher_name**: The Python file used to start training and predicting.
-6. **db_file**: The path to the SQLite3 database that will store the results.
-
-## Running a Task
-
-To start a task, run the following command:
 ```sh
-./run.sh
-```
-
-
-
-# Design of framework
-
-![Framework and SQLite Database Design](./utils/imgs/SQLite%20databased%20design%20for%20MDD%20Classification%20V2.png)
-
-## 1. Install Environment (Should install conda first)
-
-```
 conda create -n tf python==3.9
 conda init
 conda activate tf
@@ -45,13 +21,50 @@ pip install dataclasses==0.6
 ```
 
 
-This repo used SQLite to save and read results.
-
 ## Initial SQLite 
+
+This repo used SQLite to save and read results. As using a Database to store result should be more convenient as we and move the result and read the results easily using a Database.
+
+### The design of the database
+
+![Framework and SQLite Database Design](./utils/imgs/SQLite%20databased%20design%20for%20MDD%20Classification%20V2x.png)
+
+
+### To initilise the database
 
 ```
 sqlite3 ./results/experiment_results.db < ./scripts/SQLite/sql/init_db.sql
 ```
+
+## First - Write a Task File
+
+In `tasks/file.sh`, you should define the following parameters:
+
+1. **model_names**: Specify the models you will use (can be multiple).
+2. **config_names**: Specify the configurations you will use (can be multiple).
+3. **run_itr**: Specify the iteration for the run (only supports one currently).
+4. **seeds**: Define the seeds to change input data shuffling, and affect train, validation, test data, and data augmentation.
+5. **launcher_name**: The Python file used to start training and predicting.
+6. **db_file**: The path to the SQLite3 database that will store the results.
+
+## Running a Task
+
+To start a task, you should modify the task_path in the `./run.sh` and type the following command:
+```sh
+./run.sh
+```
+
+
+
+# Design of framework
+
+
+
+
+
+
+
+
 
 - Referernce of SQLite 
     - [Who needs MLflow when you have SQLite?](https://ploomber.io/blog/experiment-tracking/)

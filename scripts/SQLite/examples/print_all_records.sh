@@ -8,8 +8,8 @@ sqlite3 $db_file <<EOF
 .headers on
 .mode column
 
-SELECT * FROM experiments;
-
+SELECT * FROM results
+LIMIT 2;
 
 
 
