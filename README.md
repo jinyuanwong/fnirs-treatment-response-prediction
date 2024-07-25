@@ -55,18 +55,6 @@ To start a task, you should modify the task_path in the `./run.sh` and type the 
 ```
 
 
-
-# Design of framework
-
-
----
-
-## 2. Train the model 
-
-```
-nohup ./run.sh &
-```
-
 ---
 
 # Some directions
