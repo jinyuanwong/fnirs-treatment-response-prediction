@@ -1,11 +1,23 @@
 
 
-To run a model: 
+# Getting Started
+
+## First - write a task file 
+
+In `tasks/file.sh`, you should write the following parameters:
+
+1. model_names: Specify which model you will use (can be multiples).
+2. config_names:  Specify which config you will use (can be multiples).
+3. run_itr: Specify which config you will use (only support one now).
+4. seeds: This will change the input data shuffling and change train, val, test data, and also data augmentation.
 
 use this file: 
 ```
 ./run.sh
 ```
+- tasks/example.sh
+    - launcher_name: 
+    - 
 
 # Design of framework
 
