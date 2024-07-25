@@ -80,7 +80,7 @@ To start a task, you should modify the task_path in the `./run.sh` and type the 
 # References
 
 ## To improve deep learning training experience you can read this:
-    - [Deep Learning Tuning Playbook](https://github.com/google-research/tuning_playbook?tab=readme-ov-file#who-is-this-document-for)
+- [Deep Learning Tuning Playbook](https://github.com/google-research/tuning_playbook?tab=readme-ov-file#who-is-this-document-for)
 
 
 
