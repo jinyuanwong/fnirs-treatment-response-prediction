@@ -412,6 +412,23 @@ def change_file_data_label_path(file_path, data_name, label_name):
     # Write the modified content back to the file
     with open(file_path, 'w') as file:
         file.writelines(content)
+
+def frequency_modulation(value, base_frequency=0.05, scaling_factor=1e6, sampling_rate=1, duration=375):
+    t = np.linspace(0, duration, int(sampling_rate * duration), endpoint=False)
+    # Scale the constant value to ensure it significantly affects the frequency
+    
+    modulated_frequency = value * scaling_factor * base_frequency
+    modulated_signal = np.cos(2 * np.pi * modulated_frequency * t) * value
+    return modulated_signal + t * value/100
+
+
+def encode_magnitude(data):
+    num_subjects, num_channels, num_datapoint = data.shape
+    encoded_data = np.zeros((num_subjects, num_channels, num_datapoint))
+    for subject in range(num_subjects):
+        for channel in range(num_channels):
+            encoded_data[subject, channel] = data[subject, channel] + frequency_modulation(np.mean(data[subject, channel]), duration=num_datapoint)
+    return encoded_data
         
 if __name__ == '__main__':
     hb_data_all, label_all, hamd_all, multi_task_label = obtain_hb_data_label_hamd()
@@ -500,3 +517,18 @@ if __name__ == '__main__':
             else:
                 raise Exception(f"File {file} does not exist.")
             print(f"\'{config_file[:-3]}\'")
+            
+            
+            
+    # Encode magnitude of the data
+    encoded_mag_hb_simple_all_1d = encode_magnitude(hb_simple_all_1d)
+    nor_all_hb_simple_all_1d = (hb_simple_all_1d - np.mean(hb_simple_all_1d) )/ np.std(hb_simple_all_1d)
+    nor_ind_encoded_mag_hb_simple_all_1d = normalize_individual(encoded_mag_hb_simple_all_1d)
+    nor_all_encoded_mag_hb_simple_all_1d = (encoded_mag_hb_simple_all_1d - np.mean(encoded_mag_hb_simple_all_1d) )/ np.std(encoded_mag_hb_simple_all_1d)
+    nor_01_encoded_mag_hb_simple_all_1d = (encoded_mag_hb_simple_all_1d - np.min(encoded_mag_hb_simple_all_1d)) / (np.max(encoded_mag_hb_simple_all_1d) - np.min(encoded_mag_hb_simple_all_1d))
+    np.save(save_fold + 'encoded_mag_hb_simple_all_1d.npy', encoded_mag_hb_simple_all_1d)
+    np.save(save_fold + 'nor_all_hb_simple_all_1d.npy', nor_all_hb_simple_all_1d)
+    np.save(save_fold + 'nor_ind_encoded_mag_hb_simple_all_1d.npy', nor_ind_encoded_mag_hb_simple_all_1d)
+    np.save(save_fold + 'nor_all_encoded_mag_hb_simple_all_1d.npy', nor_all_encoded_mag_hb_simple_all_1d)
+    np.save(save_fold + 'nor_01_encoded_mag_hb_simple_all_1d.npy', nor_01_encoded_mag_hb_simple_all_1d)
+    

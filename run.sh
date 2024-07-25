@@ -12,7 +12,7 @@
     #     "tasks/input_dimension_classification_depression.sh"
 
 task_names=(
-    "20240725_update_framwork"
+    "20240725_data_encoding_magnitude"
 )
 # SQLite database to track executed configuration files
 db_file="results/experiment_results.db"
