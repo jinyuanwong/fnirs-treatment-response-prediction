@@ -6,11 +6,11 @@ model_names=(
     'jamba_MTL'
 )
 config_names=(
-    'STL_depression_NCV_best_v4y_nor-ind'
     'STL_depression_NCV_best_v4y_nor-all'
+    'STL_depression_NCV_best_v4y_nor-ind'
+    'STL_depression_NCV_best_v4y_nor-01-magnitude-encoded'
     'STL_depression_NCV_best_v4y_nor-ind-magnitude-encoded'
     'STL_depression_NCV_best_v4y_nor-all-magnitude-encoded'
-    'STL_depression_NCV_best_v4y_nor-01-magnitude-encoded'
 )
 run_itr='jamba_20240725'
 seeds=(31415926 27182818 16180339 12345678 98765432)
